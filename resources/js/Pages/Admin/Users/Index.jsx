@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,10 +19,13 @@ import {
     Filter,
     Users,
     IdCard,
-    UserPlus
+    UserPlus,
+    Edit,
+    Trash2,
+    Eye
 } from 'lucide-react';
 
-export default function AllUsers({ users }) {
+export default function Index({ users }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [departmentFilter, setDepartmentFilter] = useState('all');
     const [sessionFilter, setSessionFilter] = useState('all');
@@ -51,6 +54,12 @@ export default function AllUsers({ users }) {
         });
     };
 
+    const handleDelete = (user) => {
+        if (confirm(`Are you sure you want to delete ${user.name}?`)) {
+            router.delete(route('admin.users.destroy', user.id));
+        }
+    };
+
     return (
         <AdminAuthenticatedLayout
             header={
@@ -59,7 +68,7 @@ export default function AllUsers({ users }) {
                         All Users
                     </h2>
                     <div className="flex items-center gap-3">
-                        <Link href="/admin/users/create">
+                        <Link href={route('admin.users.create')}>
                             <Button className="flex items-center gap-2">
                                 <UserPlus className="h-4 w-4" />
                                 Add User
@@ -169,14 +178,34 @@ export default function AllUsers({ users }) {
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="text-right">
-                                                <Badge variant="outline" className="text-xs mb-2">
-                                                    Joined {formatDate(user.created_at)}
-                                                </Badge>
-                                                <Badge variant="secondary" className="block text-xs">
-                                                    {user.usertype || 'User'}
-                                                </Badge>
+                                            <div className="flex items-center gap-2">
+                                                <Link href={route('admin.users.show', user.id)}>
+                                                    <Button variant="outline" size="sm">
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
+                                                </Link>
+                                                <Link href={route('admin.users.edit', user.id)}>
+                                                    <Button variant="outline" size="sm">
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                </Link>
+                                                <Button 
+                                                    variant="outline" 
+                                                    size="sm" 
+                                                    onClick={() => handleDelete(user)}
+                                                    className="text-red-600 hover:text-red-700"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
                                             </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 mt-2">
+                                            <Badge variant="outline" className="text-xs">
+                                                Joined {formatDate(user.created_at)}
+                                            </Badge>
+                                            <Badge variant="secondary" className="text-xs">
+                                                {user.usertype || 'User'}
+                                            </Badge>
                                         </div>
                                     </CardHeader>
                                     <CardContent className="space-y-4">

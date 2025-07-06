@@ -34,7 +34,11 @@ const adminNavData = {
       items: [
         {
           title: "All Users",
-          url: "/admin/users/all",
+          url: "/admin/users",
+        },
+        {
+          title: "Add User",
+          url: "/admin/users/create",
         },
         {
           title: "New User Requests",

@@ -1,7 +1,8 @@
 <?php
 
-use App\Http\Controllers\Admin\AdminLoginController;
+use App\Http\Controllers\Admin\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Admin\UserApprovalController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -32,8 +33,8 @@ require __DIR__.'/auth.php';
 Route::prefix('admin')->name('admin.')->group(function () {
     // Admin Guest Routes
     Route::middleware('guest:admin')->group(function () {
-        Route::get('login', [AdminLoginController::class, 'create'])->name('login');
-        Route::post('login', [AdminLoginController::class, 'store']);
+        Route::get('login', [AuthenticatedSessionController::class, 'create'])->name('login');
+        Route::post('login', [AuthenticatedSessionController::class, 'store']);
     });
 
     // Admin Authenticated Routes
@@ -44,12 +45,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
         // User Management Routes
         Route::prefix('users')->name('users.')->group(function () {
-            Route::get('pending', [UserApprovalController::class, 'index'])->name('pending');
+            // User CRUD routes
+            Route::get('/', [UserController::class, 'index'])->name('index');
+            Route::get('create', [UserController::class, 'create'])->name('create');
+            Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::get('{user}', [UserController::class, 'show'])->name('show');
+            Route::get('{user}/edit', [UserController::class, 'edit'])->name('edit');
+            Route::put('{user}', [UserController::class, 'update'])->name('update');
+            Route::delete('{user}', [UserController::class, 'destroy'])->name('destroy');
+            
+            // Legacy route for existing sidebar links
             Route::get('all', [UserApprovalController::class, 'allUsers'])->name('all');
+            
+            // User approval routes
+            Route::get('pending', [UserApprovalController::class, 'index'])->name('pending');
             Route::post('{id}/approve', [UserApprovalController::class, 'approve'])->name('approve');
             Route::delete('{id}/reject', [UserApprovalController::class, 'reject'])->name('reject');
         });
 
-        Route::post('logout', [AdminLoginController::class, 'destroy'])->name('logout');
+        Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])->name('logout');
     });
 });
