@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AdminLoginController;
+use App\Http\Controllers\Admin\UserApprovalController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +41,14 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('dashboard', function () {
             return Inertia::render('Admin/Dashboard');
         })->name('dashboard');
+
+        // User Management Routes
+        Route::prefix('users')->name('users.')->group(function () {
+            Route::get('pending', [UserApprovalController::class, 'index'])->name('pending');
+            Route::get('all', [UserApprovalController::class, 'allUsers'])->name('all');
+            Route::post('{id}/approve', [UserApprovalController::class, 'approve'])->name('approve');
+            Route::delete('{id}/reject', [UserApprovalController::class, 'reject'])->name('reject');
+        });
 
         Route::post('logout', [AdminLoginController::class, 'destroy'])->name('logout');
     });

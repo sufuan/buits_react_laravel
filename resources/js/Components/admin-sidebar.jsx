@@ -34,15 +34,11 @@ const adminNavData = {
       items: [
         {
           title: "All Users",
-          url: "/admin/users",
-        },
-        {
-          title: "Create User",
-          url: "/admin/users/create",
+          url: "/admin/users/all",
         },
         {
           title: "New User Requests",
-          url: "/admin/users/requests",
+          url: "/admin/users/pending",
         },
       ],
     },

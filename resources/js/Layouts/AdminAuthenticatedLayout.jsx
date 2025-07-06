@@ -2,6 +2,7 @@ import { AdminSidebar } from '@/components/admin-sidebar';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
+import { Toaster } from '@/components/ui/sonner';
 import { usePage } from '@inertiajs/react';
 
 export default function AdminAuthenticatedLayout({ header, children }) {
@@ -45,6 +46,7 @@ export default function AdminAuthenticatedLayout({ header, children }) {
                     </main>
                 </div>
             </SidebarInset>
+            <Toaster />
         </SidebarProvider>
     );
 }

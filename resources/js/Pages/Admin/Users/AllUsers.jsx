@@ -1,0 +1,256 @@
+import React, { useState } from 'react';
+import { Head } from '@inertiajs/react';
+import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { 
+    User, 
+    Mail, 
+    Phone, 
+    GraduationCap, 
+    Calendar, 
+    MapPin, 
+    Search,
+    Filter,
+    Users,
+    IdCard
+} from 'lucide-react';
+
+export default function AllUsers({ users }) {
+    const [searchTerm, setSearchTerm] = useState('');
+    const [departmentFilter, setDepartmentFilter] = useState('all');
+    const [sessionFilter, setSessionFilter] = useState('all');
+
+    // Get unique departments and sessions for filters
+    const departments = [...new Set(users.map(user => user.department))].sort();
+    const sessions = [...new Set(users.map(user => user.session))].sort();
+
+    // Filter users based on search and filters
+    const filteredUsers = users.filter(user => {
+        const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            user.member_id?.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        const matchesDepartment = departmentFilter === 'all' || user.department === departmentFilter;
+        const matchesSession = sessionFilter === 'all' || user.session === sessionFilter;
+
+        return matchesSearch && matchesDepartment && matchesSession;
+    });
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    };
+
+    return (
+        <AdminAuthenticatedLayout
+            header={
+                <div className="flex items-center justify-between">
+                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                        All Users
+                    </h2>
+                    <Badge variant="secondary" className="text-sm">
+                        {filteredUsers.length} of {users.length} Users
+                    </Badge>
+                </div>
+            }
+        >
+            <Head title="All Users" />
+
+            <div className="py-12">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+                    {/* Filters */}
+                    <Card className="mb-6">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2">
+                                <Filter className="h-5 w-5" />
+                                Filters
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        placeholder="Search by name, email, or member ID..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-10"
+                                    />
+                                </div>
+                                <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Filter by department" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Departments</SelectItem>
+                                        {departments.map(dept => (
+                                            <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                <Select value={sessionFilter} onValueChange={setSessionFilter}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Filter by session" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All Sessions</SelectItem>
+                                        {sessions.map(session => (
+                                            <SelectItem key={session} value={session}>{session}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Users List */}
+                    {filteredUsers.length === 0 ? (
+                        <Card>
+                            <CardContent className="flex flex-col items-center justify-center py-12">
+                                <Users className="h-12 w-12 text-gray-400 mb-4" />
+                                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                    {searchTerm || departmentFilter !== 'all' || sessionFilter !== 'all' 
+                                        ? 'No users found' 
+                                        : 'No users yet'
+                                    }
+                                </h3>
+                                <p className="text-gray-500 text-center">
+                                    {searchTerm || departmentFilter !== 'all' || sessionFilter !== 'all'
+                                        ? 'Try adjusting your search criteria.'
+                                        : 'Users will appear here once they are approved.'
+                                    }
+                                </p>
+                            </CardContent>
+                        </Card>
+                    ) : (
+                        <div className="grid gap-6">
+                            {filteredUsers.map((user) => (
+                                <Card key={user.id} className="overflow-hidden">
+                                    <CardHeader className="pb-4">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-center space-x-4">
+                                                <Avatar className="h-12 w-12">
+                                                    <AvatarImage src={user.image} alt={user.name} />
+                                                    <AvatarFallback>
+                                                        {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                                    </AvatarFallback>
+                                                </Avatar>
+                                                <div>
+                                                    <CardTitle className="text-lg">{user.name}</CardTitle>
+                                                    <CardDescription className="flex items-center gap-2">
+                                                        <Mail className="h-4 w-4" />
+                                                        {user.email}
+                                                    </CardDescription>
+                                                    {user.member_id && (
+                                                        <div className="flex items-center gap-2 mt-1">
+                                                            <IdCard className="h-4 w-4 text-blue-500" />
+                                                            <span className="text-sm font-mono text-blue-600">
+                                                                {user.member_id}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <div className="text-right">
+                                                <Badge variant="outline" className="text-xs mb-2">
+                                                    Joined {formatDate(user.created_at)}
+                                                </Badge>
+                                                <Badge variant="secondary" className="block text-xs">
+                                                    {user.usertype || 'User'}
+                                                </Badge>
+                                            </div>
+                                        </div>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                            <div className="flex items-center gap-2">
+                                                <Phone className="h-4 w-4 text-gray-500" />
+                                                <span>{user.phone}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <GraduationCap className="h-4 w-4 text-gray-500" />
+                                                <span>{user.department}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Calendar className="h-4 w-4 text-gray-500" />
+                                                <span>Session: {user.session}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-gray-500">Roll:</span>
+                                                <span>{user.class_roll}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-gray-500">Gender:</span>
+                                                <span className="capitalize">{user.gender}</span>
+                                            </div>
+                                            {user.blood_group && (
+                                                <div className="flex items-center gap-2">
+                                                    <span className="text-gray-500">Blood:</span>
+                                                    <span>{user.blood_group}</span>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {user.skills && (
+                                            <>
+                                                <Separator />
+                                                <div className="text-sm">
+                                                    <span className="font-medium text-gray-700">Skills:</span>
+                                                    <p className="text-gray-600 mt-1">{user.skills}</p>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {(user.current_address || user.permanent_address) && (
+                                            <>
+                                                <Separator />
+                                                <div className="space-y-2 text-sm">
+                                                    {user.current_address && (
+                                                        <div className="flex items-start gap-2">
+                                                            <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
+                                                            <div>
+                                                                <span className="font-medium">Current Address:</span>
+                                                                <p className="text-gray-600">{user.current_address}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                    {user.permanent_address && user.permanent_address !== user.current_address && (
+                                                        <div className="flex items-start gap-2">
+                                                            <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
+                                                            <div>
+                                                                <span className="font-medium">Permanent Address:</span>
+                                                                <p className="text-gray-600">{user.permanent_address}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {user.transaction_id && (
+                                            <>
+                                                <Separator />
+                                                <div className="text-sm text-gray-500">
+                                                    Transaction ID: {user.transaction_id}
+                                                </div>
+                                            </>
+                                        )}
+                                    </CardContent>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </AdminAuthenticatedLayout>
+    );
+}

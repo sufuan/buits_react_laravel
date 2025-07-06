@@ -21,6 +21,25 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'phone',
+        'department',
+        'session',
+        'usertype',
+        'gender',
+        'date_of_birth',
+        'blood_group',
+        'class_roll',
+        'father_name',
+        'mother_name',
+        'current_address',
+        'permanent_address',
+        'is_approved',
+        'member_id',
+        'transaction_id',
+        'to_account',
+        'image',
+        'skills',
+        'custom-form',
     ];
 
     /**
@@ -43,6 +62,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'date_of_birth' => 'date',
+            'is_approved' => 'boolean',
         ];
     }
 }
