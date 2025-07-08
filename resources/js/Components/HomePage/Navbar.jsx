@@ -223,7 +223,7 @@ const NavBar = () => {
 
   // Debug: Log hamburger button position, refs, and styles
   useEffect(() => {
-    if (isMobileMenuOpen && hamburgerRef.current) {
+    if (hamburgerRef.current) {
       const rect = hamburgerRef.current.getBoundingClientRect();
       const buttonStyles = window.getComputedStyle(hamburgerRef.current);
       console.log("Hamburger button position and styles:", {
@@ -375,9 +375,7 @@ const NavBar = () => {
           { "hamburger-open": isMobileMenuOpen }
         )}
         style={{
-          backgroundColor: isMobileMenuOpen ? "rgb(239, 68, 68)" : "transparent",
-          border: isMobileMenuOpen ? "2px solid white" : "none",
-          borderRadius: isMobileMenuOpen ? "0.375rem" : "0",
+          backgroundColor: "transparent",
           zIndex: 100001,
         }}
       >
