@@ -196,7 +196,7 @@ const NavBar = () => {
               <button
                 onClick={toggleAudioIndicator}
                 className={clsx(
-                  "md:hidden flex items-center space-x-0.5 fixed top-6 right-20",
+                  "md:hidden flex items-center space-x-0.5 fixed top-6 right-16",
                   { hidden: isMobileMenuOpen }
                 )}
               >
@@ -314,11 +314,11 @@ const NavBar = () => {
           ))}
         </div>
 
-        {/* Mobile Audio Button */}
+        {/* Mobile Audio Button in Overlay */}
         <div className="absolute bottom-20">
           <button
             onClick={toggleAudioIndicator}
-            className="flex items-center space-x-0.5"
+            className={clsx("flex items-center space-x-4 overlay-audio")}
           >
             {[1, 2, 3, 4].map((bar) => (
               <div
