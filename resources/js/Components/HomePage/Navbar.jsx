@@ -16,16 +16,11 @@ const NavBar = () => {
   // State for mobile menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Debug state to toggle overlay opacity and disable animations
-  const [debugMode, setDebugMode] = useState(false);
-
-  // Refs for audio, navigation container, and hamburger lines
+  // Refs for audio, navigation container, and menu items
   const audioElementRef = useRef(null);
   const navContainerRef = useRef(null);
   const mobileMenuRef = useRef(null);
-  const hamburgerRef = useRef(null);
   const menuItemsRef = useRef([]);
-  const hamburgerLineRefs = useRef([]);
 
   const { y: currentScrollY } = useWindowScroll();
   const [isNavVisible, setIsNavVisible] = useState(true);
@@ -33,135 +28,52 @@ const NavBar = () => {
 
   // Toggle audio and visual indicator
   const toggleAudioIndicator = () => {
-    console.log("Audio toggled. isAudioPlaying:", !isAudioPlaying);
     setIsAudioPlaying((prev) => !prev);
     setIsIndicatorActive((prev) => !prev);
   };
 
-  // Toggle mobile menu state
+  // Toggle mobile menu with animations
   const toggleMobileMenu = (e) => {
     e.stopPropagation();
-    console.log("Hamburger clicked. isMobileMenuOpen:", !isMobileMenuOpen);
-    setIsMobileMenuOpen((prev) => !prev);
-  };
-
-  // Animate mobile menu and ensure overlay visibility
-  useEffect(() => {
-    if (isMobileMenuOpen && mobileMenuRef.current && !debugMode) {
-      console.log("Animating mobile menu open. mobileMenuRef:", mobileMenuRef.current);
+    if (!isMobileMenuOpen) {
+      // Open menu
+      setIsMobileMenuOpen(true);
       document.body.classList.add("menu-open");
-      document.body.style.backgroundColor = "transparent";
-      document.documentElement.style.backgroundColor = "transparent";
 
-      // Set overlay to visible immediately
-      gsap.set(mobileMenuRef.current, {
-        y: "0%",
-        opacity: 1,
-        zIndex: 9998,
-        backgroundColor: "#CCFF00",
-        force3D: true,
-      });
+      // Animate overlay
+      gsap.fromTo(
+        mobileMenuRef.current,
+        { y: "-100%", opacity: 0 },
+        { y: "0%", opacity: 1, duration: 0.5, ease: "power2.out" }
+      );
 
-      // Animate menu items
-      if (menuItemsRef.current.length > 0 && menuItemsRef.current.every((item) => item !== null)) {
-        console.log("Animating menu items. Count:", menuItemsRef.current.length);
-        gsap.fromTo(
-          menuItemsRef.current,
-          { y: 50, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.6,
-            stagger: 0.1,
-            ease: "power2.out",
-          }
-        );
-      } else {
-        console.warn("Menu items not ready for animation:", menuItemsRef.current);
-      }
-
-      // Log overlay styles
-      const styles = window.getComputedStyle(mobileMenuRef.current);
-      console.log("Overlay styles:", {
-        opacity: styles.opacity,
-        transform: styles.transform,
-        backgroundColor: styles.backgroundColor,
-        zIndex: styles.zIndex,
-      });
-    } else if (!isMobileMenuOpen && mobileMenuRef.current && !debugMode) {
-      console.log("Animating mobile menu close");
+      // Staggered animation for menu items
+      gsap.fromTo(
+        menuItemsRef.current,
+        { y: 50, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.1,
+          delay: 0.2,
+          ease: "power2.out",
+        }
+      );
+    } else {
+      // Close menu
       document.body.classList.remove("menu-open");
-      document.body.style.backgroundColor = "";
-      document.documentElement.style.backgroundColor = "";
 
+      // Animate overlay out
       gsap.to(mobileMenuRef.current, {
         y: "-100%",
         opacity: 0,
         duration: 0.4,
         ease: "power2.out",
-        onComplete: () => {
-          console.log("Mobile menu closed");
-        },
+        onComplete: () => setIsMobileMenuOpen(false),
       });
     }
-  }, [isMobileMenuOpen, debugMode]);
-
-  // Force hamburger line styles with GSAP
-  useEffect(() => {
-    if (hamburgerLineRefs.current.every((line) => line !== null)) {
-      console.log("Applying GSAP styles for hamburger", isMobileMenuOpen ? "open" : "closed");
-      if (isMobileMenuOpen) {
-        gsap.set(hamburgerLineRefs.current[0], {
-          transform: "rotate(45deg) translate(5.5px, 5.5px)",
-          backgroundColor: "black",
-          opacity: 1,
-          transformOrigin: "center",
-          zIndex: 100002,
-          force3D: true,
-        });
-        gsap.set(hamburgerLineRefs.current[1], {
-          opacity: 0,
-          backgroundColor: "black",
-          transformOrigin: "center",
-          zIndex: 100002,
-          force3D: true,
-        });
-        gsap.set(hamburgerLineRefs.current[2], {
-          transform: "rotate(-45deg) translate(5.5px, -5.5px)",
-          backgroundColor: "black",
-          opacity: 1,
-          transformOrigin: "center",
-          zIndex: 100002,
-          force3D: true,
-        });
-      } else {
-        gsap.set(hamburgerLineRefs.current, {
-          transform: "rotate(0deg) translate(0px, 0px)",
-          backgroundColor: "white",
-          opacity: 1,
-          transformOrigin: "center",
-          zIndex: 100002,
-          force3D: true,
-        });
-      }
-      // Log hamburger line styles immediately
-      hamburgerLineRefs.current.forEach((line, index) => {
-        if (line) {
-          const styles = window.getComputedStyle(line);
-          console.log(`Hamburger line ${index + 1} styles:`, {
-            transform: styles.transform,
-            opacity: styles.opacity,
-            backgroundColor: styles.backgroundColor,
-            zIndex: styles.zIndex,
-            display: styles.display,
-            visibility: styles.visibility,
-          });
-        }
-      });
-    } else {
-      console.warn("Hamburger line refs not ready:", hamburgerLineRefs.current);
-    }
-  }, [isMobileMenuOpen]);
+  };
 
   // Manage audio playback
   useEffect(() => {
@@ -220,69 +132,6 @@ const NavBar = () => {
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
   }, [isMobileMenuOpen]);
-
-  // Debug: Log hamburger button position, refs, and styles
-  useEffect(() => {
-    if (hamburgerRef.current) {
-      const rect = hamburgerRef.current.getBoundingClientRect();
-      const buttonStyles = window.getComputedStyle(hamburgerRef.current);
-      console.log("Hamburger button position and styles:", {
-        top: rect.top,
-        right: rect.right,
-        left: rect.left,
-        bottom: rect.bottom,
-        zIndex: buttonStyles.zIndex,
-        backgroundColor: buttonStyles.backgroundColor,
-        display: buttonStyles.display,
-        visibility: buttonStyles.visibility,
-      });
-      console.log("Refs status:", {
-        mobileMenuRef: mobileMenuRef.current,
-        menuItemsRef: menuItemsRef.current,
-        hamburgerLineRefs: hamburgerLineRefs.current,
-      });
-      if (navContainerRef.current) {
-        const styles = window.getComputedStyle(navContainerRef.current);
-        console.log("Nav container styles:", {
-          backgroundColor: styles.backgroundColor,
-          zIndex: styles.zIndex,
-          position: styles.position,
-        });
-      }
-      const bodyStyles = window.getComputedStyle(document.body);
-      const htmlStyles = window.getComputedStyle(document.documentElement);
-      console.log("Body styles:", {
-        backgroundColor: bodyStyles.backgroundColor,
-        zIndex: bodyStyles.zIndex,
-      });
-      console.log("HTML styles:", {
-        backgroundColor: htmlStyles.backgroundColor,
-        zIndex: htmlStyles.zIndex,
-      });
-      // Check for overlapping elements
-      const elementsAtPoint = document.elementsFromPoint(rect.left + 10, rect.top + 10);
-      console.log("Elements at hamburger position:", elementsAtPoint.map(el => ({
-        tag: el.tagName,
-        class: el.className,
-        zIndex: window.getComputedStyle(el).zIndex,
-      })));
-    }
-  }, [isMobileMenuOpen]);
-
-  // Debug: Toggle debug mode with a key press (e.g., 'd')
-  useEffect(() => {
-    const handleKeyPress = (e) => {
-      if (e.key === "d") {
-        setDebugMode((prev) => !prev);
-        console.log("Debug mode toggled:", !debugMode);
-      }
-    };
-    window.addEventListener("keydown", handleKeyPress);
-    return () => window.removeEventListener("keydown", handleKeyPress);
-  }, [debugMode]);
-
-  // Log state during render
-  console.log("Rendering NavBar. isMobileMenuOpen:", isMobileMenuOpen);
 
   return (
     <>
@@ -346,7 +195,10 @@ const NavBar = () => {
               {/* Mobile Audio Button */}
               <button
                 onClick={toggleAudioIndicator}
-                className="ml-4 md:hidden flex items-center space-x-0.5"
+                className={clsx(
+                  "md:hidden flex items-center space-x-0.5 fixed top-6 right-20",
+                  { hidden: isMobileMenuOpen }
+                )}
               >
                 {[1, 2, 3, 4].map((bar) => (
                   <div
@@ -365,10 +217,9 @@ const NavBar = () => {
         </header>
       </div>
 
-      {/* Hamburger Menu Button - Moved outside nav container */}
+      {/* Hamburger Menu Button */}
       <button
         key={`hamburger-${isMobileMenuOpen}`}
-        ref={hamburgerRef}
         onClick={toggleMobileMenu}
         className={clsx(
           "md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1.5 pointer-events-auto fixed top-6 right-6",
@@ -380,22 +231,38 @@ const NavBar = () => {
         }}
       >
         <div
-          key="line1"
-          ref={(el) => (hamburgerLineRefs.current[0] = el)}
-          className={clsx("w-6 h-0.5 hamburger-line", { open: isMobileMenuOpen })}
-          style={{ zIndex: 100002 }}
+          className={clsx("w-6 h-0.5 transition-all duration-300", {
+            "bg-black": isMobileMenuOpen,
+            "bg-white": !isMobileMenuOpen,
+          })}
+          style={{
+            transform: isMobileMenuOpen
+              ? "rotate(45deg) translateY(8px)"
+              : "rotate(0deg) translateY(0px)",
+            zIndex: 100002,
+          }}
         ></div>
         <div
-          key="line2"
-          ref={(el) => (hamburgerLineRefs.current[1] = el)}
-          className={clsx("w-6 h-0.5 hamburger-line", { open: isMobileMenuOpen })}
-          style={{ zIndex: 100002 }}
+          className={clsx("w-6 h-0.5 transition-all duration-300", {
+            "bg-black": isMobileMenuOpen,
+            "bg-white": !isMobileMenuOpen,
+          })}
+          style={{
+            opacity: isMobileMenuOpen ? 0 : 1,
+            zIndex: 100002,
+          }}
         ></div>
         <div
-          key="line3"
-          ref={(el) => (hamburgerLineRefs.current[2] = el)}
-          className={clsx("w-6 h-0.5 hamburger-line", { open: isMobileMenuOpen })}
-          style={{ zIndex: 100002 }}
+          className={clsx("w-6 h-0.5 transition-all duration-300", {
+            "bg-black": isMobileMenuOpen,
+            "bg-white": !isMobileMenuOpen,
+          })}
+          style={{
+            transform: isMobileMenuOpen
+              ? "rotate(-45deg) translateY(-8px)"
+              : "rotate(0deg) translateY(0px)",
+            zIndex: 100002,
+          }}
         ></div>
       </button>
 
@@ -416,7 +283,6 @@ const NavBar = () => {
           bottom: 0,
           margin: 0,
           padding: 0,
-          opacity: debugMode ? 0.5 : 1,
           zIndex: 9998,
         }}
         onClick={toggleMobileMenu}
