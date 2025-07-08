@@ -4,9 +4,16 @@ import { Separator } from '@/components/ui/separator';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from '@/components/ui/breadcrumb';
 import { Toaster } from '@/components/ui/sonner';
 import { usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 
 export default function AdminAuthenticatedLayout({ header, children }) {
     const admin = usePage().props.auth.admin;
+
+    useEffect(() => {
+        if (!admin) {
+            window.location.href = route('admin.login');
+        }
+    }, [admin]);
 
     return (
         <SidebarProvider>

@@ -4,11 +4,16 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Exports\UsersExport;
+use App\Exports\UsersTemplateExport;
+use App\Imports\UsersImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Inertia\Inertia;
+use Maatwebsite\Excel\Facades\Excel;
+
 
 class UserController extends Controller
 {
@@ -281,7 +286,7 @@ class UserController extends Controller
         $sessionYear = explode('-', $session);
         $lastTwoDigitsOfSession = substr(end($sessionYear), -2);
 
-        // Fetch the last member ID by ordering the users table by 'id' in descending order
+        // Fetch the last member ID by ordering the users table in descending order
         $lastMember = User::orderBy('id', 'desc')->first();
 
         // Initialize the default starting number
@@ -298,5 +303,53 @@ class UserController extends Controller
         $newMemberId = $departmentCode . $lastTwoDigitsOfSession . str_pad($newFormNumber, 4, '0', STR_PAD_LEFT);
 
         return $newMemberId;
+    }
+
+    /**
+     * Export users to Excel.
+     */
+    public function export()
+    {
+        return Excel::download(new UsersExport, 'users.xlsx');
+    }
+
+    /**
+     * Import users from Excel.
+     */
+    public function import(Request $request)
+    {
+        try {
+            $request->validate([
+                'file' => 'required|mimes:xlsx,xls,csv'
+            ]);
+
+            Log::info('Starting user import...');
+
+            $import = new UsersImport;
+            Excel::import($import, $request->file('file'));
+
+            Log::info('User import completed successfully');
+            return back()->with('success', 'Users imported successfully!');
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            $failures = $e->failures();
+            $errors = [];
+            foreach ($failures as $failure) {
+                $errors[] = "Row {$failure->row()}: " . implode(', ', $failure->errors());
+            }
+            Log::error('Import validation failed: ' . implode(' | ', $errors));
+            return back()->withErrors(['error' => 'Validation failed: ' . implode(' | ', $errors)]);
+        } catch (\Exception $e) {
+            Log::error('User import failed: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            return back()->withErrors(['error' => 'Import failed: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Download Excel template for import.
+     */
+    public function template()
+    {
+        return Excel::download(new UsersTemplateExport, 'users_template.xlsx');
     }
 }

@@ -49,6 +49,9 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [UserController::class, 'index'])->name('index');
             Route::get('create', [UserController::class, 'create'])->name('create');
             Route::post('/', [UserController::class, 'store'])->name('store');
+            Route::get('export', [UserController::class, 'export'])->name('export');
+            Route::get('template', [UserController::class, 'template'])->name('template');
+            Route::post('import', [UserController::class, 'import'])->name('import');
             Route::get('{user}', [UserController::class, 'show'])->name('show');
             Route::get('{user}/edit', [UserController::class, 'edit'])->name('edit');
             Route::put('{user}', [UserController::class, 'update'])->name('update');

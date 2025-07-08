@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, useForm, usePage } from '@inertiajs/react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -12,11 +12,16 @@ export default function Login({ status, canResetPassword }) {
         remember: '',
     });
 
+    const admin = usePage().props.auth.admin;
+
     useEffect(() => {
+        if (admin) {
+            window.location.href = route('admin.dashboard');
+        }
         return () => {
             reset('password');
         };
-    }, []);
+    }, [admin]);
 
     const submit = (e) => {
         e.preventDefault();

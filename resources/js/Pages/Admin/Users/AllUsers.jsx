@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,7 +19,10 @@ import {
     Filter,
     Users,
     IdCard,
-    UserPlus
+    UserPlus,
+    Download,
+    Upload,
+    FileSpreadsheet
 } from 'lucide-react';
 
 export default function AllUsers({ users }) {
@@ -51,6 +54,28 @@ export default function AllUsers({ users }) {
         });
     };
 
+    const handleExport = () => {
+        window.location.href = route('admin.users.export');
+    };
+
+    const handleImport = (event) => {
+        const file = event.target.files[0];
+        if (file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            router.post(route('admin.users.import'), formData, {
+                onSuccess: () => {
+                    event.target.value = '';
+                }
+            });
+        }
+    };
+
+    const handleDownloadTemplate = () => {
+        window.location.href = route('admin.users.template');
+    };
+
     return (
         <AdminAuthenticatedLayout
             header={
@@ -59,6 +84,27 @@ export default function AllUsers({ users }) {
                         All Users
                     </h2>
                     <div className="flex items-center gap-3">
+                        <Button onClick={handleDownloadTemplate} variant="outline" className="flex items-center gap-2">
+                            <FileSpreadsheet className="h-4 w-4" />
+                            Template
+                        </Button>
+                        <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
+                            <Download className="h-4 w-4" />
+                            Export
+                        </Button>
+                        <div className="relative">
+                            <input
+                                type="file"
+                                accept=".xlsx,.xls,.csv"
+                                onChange={handleImport}
+                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                id="import-file"
+                            />
+                            <Button variant="outline" className="flex items-center gap-2">
+                                <Upload className="h-4 w-4" />
+                                Import
+                            </Button>
+                        </div>
                         <Link href="/admin/users/create">
                             <Button className="flex items-center gap-2">
                                 <UserPlus className="h-4 w-4" />
