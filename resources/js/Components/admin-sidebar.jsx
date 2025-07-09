@@ -11,6 +11,11 @@ import {
   Settings,
   Cog,
   Heart,
+  Award, // New Icon
+  BookType, // New Icon
+  LayoutTemplate, // New Icon
+  FileSignature, // New Icon
+  History, // New Icon
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -84,6 +89,29 @@ const adminNavData = {
         {
           title: "Approve Volunteer Request",
           url: "/admin/volunteers/approve",
+        },
+      ],
+    },
+    {
+      title: "Certificate",
+      url: "#",
+      icon: Award,
+      items: [
+        {
+          title: "Types",
+          url: "/admin/certificates/types",
+        },
+        {
+          title: "Templates",
+          url: "/admin/certificates/templates",
+        },
+        {
+          title: "Certificate",
+          url: "/admin/certificates/generate",
+        },
+        {
+          title: "Certificate Record",
+          url: "/admin/certificates/record",
         },
       ],
     },
