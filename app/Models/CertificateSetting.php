@@ -11,8 +11,7 @@ class CertificateSetting extends Model
 
     protected $fillable = [
         'key',
-        'value',
-        'school_id'
+        'value'
     ];
     
   

@@ -26,8 +26,7 @@ class CertificateTemplate extends Model
         'signature_image',
         'signature_name',
         'content',
-        'status',
-        'school_id'
+        'status'
     ];
     protected $casts = ['qr_code' => 'array'];
     

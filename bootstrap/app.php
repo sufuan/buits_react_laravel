@@ -12,7 +12,22 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo(fn (Request $request) => route('login'));
+        $middleware->redirectGuestsTo(function (Request $request) {
+            // Check if this is an admin route
+            if ($request->routeIs('admin.*')) {
+                return route('admin.login');
+            }
+            // Default to regular login for web routes
+            return route('login');
+        });
+
+        $middleware->redirectUsersTo(function (Request $request) {
+            // Redirect authenticated users based on guard
+            if ($request->routeIs('admin.*')) {
+                return route('admin.dashboard');
+            }
+            return route('dashboard');
+        });
 
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,

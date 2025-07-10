@@ -36,6 +36,41 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
+// Test route for debugging certificate template save
+Route::get('/test-template-save', function () {
+    try {
+        $template = new \App\Models\CertificateTemplate();
+        $template->name = 'Test Template ' . now();
+        $template->certificate_type_id = 1;
+        $template->layout = 1;
+        $template->width = '210mm';
+        $template->height = '297mm';
+        $template->user_photo_style = 1;
+        $template->user_image_size = '100';
+        $template->qr_image_size = '100';
+        $template->content = 'Test content';
+        $template->status = 1;
+        $template->qr_code = '["admission_no"]';
+
+        $result = $template->save();
+
+        $check = \App\Models\CertificateTemplate::find($template->id);
+
+        return response()->json([
+            'save_result' => $result,
+            'template_id' => $template->id,
+            'exists_in_db' => $check ? true : false,
+            'template_data' => $check ? $check->toArray() : null,
+            'all_templates_count' => \App\Models\CertificateTemplate::count()
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ], 500);
+    }
+});
+
 require __DIR__ . '/auth.php';
 
 Route::prefix('admin')->name('admin.')->group(function () {
@@ -50,7 +85,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('admin')->group(function () {
 
         // Admin Dashboard
-        Route::get('dashboard', fn () => Inertia::render('Admin/Dashboard'))->name('dashboard');
+        Route::get('dashboard', fn() => Inertia::render('Admin/Dashboard'))->name('dashboard');
 
         // ================= User Management =================
         Route::prefix('users')->name('users.')->group(function () {
@@ -72,8 +107,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         });
 
         // ================= Certificate Module =================
-        Route::prefix('certificate')->as('certificate.')->group(function () {
-
+        Route::prefix('certificate')->name('certificate.')->group(function () {
             // ----- Certificate Types -----
             Route::prefix('types')->name('types.')->group(function () {
                 Route::get('/', [CertificateTypeController::class, 'index'])->name('index');
@@ -84,19 +118,41 @@ Route::prefix('admin')->name('admin.')->group(function () {
             });
 
             // ----- Certificate Templates -----
-            Route::controller(CertificateTemplateController::class)->group(function () {
-                Route::get('templates', 'index')->name('templates');
-                Route::post('templates-store', 'storeOrUpdate')->name('template-store');
-                Route::get('template', 'create')->name('template-create');
-                Route::get('template/{template_id}', 'edit')->name('template_edit');
-                Route::get('template-design/{template_id}', 'design')->name('template_design');
-                Route::post('template-design', 'updateDesign')->name('template_design_update');
-                Route::get('template-reset-design/{template_id}', 'designReset')->name('template_design_reset');
-                Route::get('template-delete/{template_id}', 'delete')->name('template_delete');
-                Route::post('template-type', 'templateType')->name('templateType');
-                Route::post('template-preview', 'preview')->name('preview');
+            Route::group(['prefix' => 'templates', 'as' => 'templates.'], function () {
+                // List all templates
+                Route::get('/', [CertificateTemplateController::class, 'index'])->name('index');
+
+                // Show form to create a new template
+                Route::get('create', [CertificateTemplateController::class, 'create'])->name('create');
+
+                // Store or update a template
+                Route::post('/', [CertificateTemplateController::class, 'storeOrUpdate'])->name('store');
+
+                // Show form to edit a template
+                Route::get('{template}/edit', [CertificateTemplateController::class, 'edit'])->name('edit');
+
+                // Show design page for a template
+                Route::get('{template}/design', [CertificateTemplateController::class, 'design'])->name('design');
+
+                // Update design POST
+                Route::post('design/update', [CertificateTemplateController::class, 'updateDesign'])->name('design.update');
+
+                // Reset design for a template
+                Route::get('{template}/design/reset', [CertificateTemplateController::class, 'designReset'])->name('design.reset');
+
+                // Delete a template
+                Route::delete('{template}', [CertificateTemplateController::class, 'delete'])->name('destroy');
+
+                // Fetch template type details (AJAX)
+                Route::post('type', [CertificateTemplateController::class, 'templateType'])->name('type');
+
+                // Preview template (AJAX)
+                Route::post('preview', [CertificateTemplateController::class, 'preview'])->name('preview');
             });
 
+
+
+            
             // ----- Certificate Settings -----
             Route::controller(CertificateSettingController::class)->group(function () {
                 Route::get('settings', 'index')->name('settings');

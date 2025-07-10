@@ -19,8 +19,7 @@ class CertificateRecord extends Model
         'class_id',
         'section_id',
         'exam_id',
-        'academic_id',
-        'school_id'
+        'academic_id'
     ];
     
    public function user(){
