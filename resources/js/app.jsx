@@ -1,4 +1,5 @@
 import '../css/index.css';
+import '../css/admin.css';
 import './bootstrap';
 
 import React from 'react';

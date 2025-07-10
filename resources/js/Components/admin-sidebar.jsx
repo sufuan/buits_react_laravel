@@ -97,24 +97,13 @@ const adminNavData = {
       url: "#",
       icon: Award,
       items: [
-        {
-          title: "Types",
-          url: "/admin/certificates/types",
-        },
-        {
-          title: "Templates",
-          url: "/admin/certificates/templates",
-        },
-        {
-          title: "Certificate",
-          url: "/admin/certificates/generate",
-        },
-        {
-          title: "Certificate Record",
-          url: "/admin/certificates/record",
-        },
+        { title: "Types", url: "/admin/certificate/types" },
+        { title: "Templates", url: "/admin/certificate/templates" },
+        { title: "Generate", url: "/admin/certificate/generate" },
+        { title: "Records", url: "/admin/certificate/records" },
       ],
     },
+
     {
       title: "Settings",
       url: "#",
