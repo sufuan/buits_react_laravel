@@ -1,30 +1,48 @@
-import React, { useState } from 'react';
-import { router } from '@inertiajs/react';
+import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
+import { useState } from 'react';
+import { Rnd } from 'react-rnd';
 
-export default function Design({ template }) {
-  const [design, setDesign] = useState(template?.design?.design_content || '');
+const defaultElements = [
+  { id: 'name', text: '{name}', x: 100, y: 100 },
+  { id: 'father_name', text: '{father_name}', x: 100, y: 150 },
+  { id: 'qrCode', text: '{qrCode}', x: 500, y: 100 },
+];
 
-  const handleSave = () => {
-    router.post(route('admin.certificate.templates.updateDesign'), {
-      template_id: template.id,
-      design_content: design,
-    }, {
-      preserveScroll: true,
-    });
+export default function CertificateDesigner() {
+  const [elements, setElements] = useState(defaultElements);
+
+  const handleDragStop = (id, d) => {
+    setElements((prev) =>
+      prev.map((el) => (el.id === id ? { ...el, x: d.x, y: d.y } : el))
+    );
   };
 
   return (
-    <div>
-      <h1>Design Template: {template.name}</h1>
-
-      <textarea
-        rows={20}
-        className="w-full border p-2"
-        value={design}
-        onChange={(e) => setDesign(e.target.value)}
+    <AdminAuthenticatedLayout>
+    <div className="relative w-full h-screen overflow-hidden">
+      <img
+        src="/certificate-background.png"
+        alt="Certificate Background"
+        className="absolute top-0 left-0 w-full h-full object-contain z-0"
       />
 
-      <button onClick={handleSave}>Save Design</button>
+      <div className="absolute top-0 left-0 w-full h-full z-10">
+        {elements.map((el) => (
+          <Rnd
+            key={el.id}
+            size={{ width: 'auto', height: 'auto' }}
+            position={{ x: el.x, y: el.y }}
+            onDragStop={(e, d) => handleDragStop(el.id, d)}
+            bounds="parent"
+            enableResizing={false}
+          >
+            <div className="px-2 py-1 text-black font-semibold border border-gray-400 bg-white rounded shadow cursor-move">
+              {el.text}
+            </div>
+          </Rnd>
+        ))}
+      </div>
     </div>
+    </AdminAuthenticatedLayout>
   );
 }
