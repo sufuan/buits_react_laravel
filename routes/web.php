@@ -36,40 +36,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-// Test route for debugging certificate template save
-Route::get('/test-template-save', function () {
-    try {
-        $template = new \App\Models\CertificateTemplate();
-        $template->name = 'Test Template ' . now();
-        $template->certificate_type_id = 1;
-        $template->layout = 1;
-        $template->width = '210mm';
-        $template->height = '297mm';
-        $template->user_photo_style = 1;
-        $template->user_image_size = '100';
-        $template->qr_image_size = '100';
-        $template->content = 'Test content';
-        $template->status = 1;
-        $template->qr_code = '["admission_no"]';
 
-        $result = $template->save();
-
-        $check = \App\Models\CertificateTemplate::find($template->id);
-
-        return response()->json([
-            'save_result' => $result,
-            'template_id' => $template->id,
-            'exists_in_db' => $check ? true : false,
-            'template_data' => $check ? $check->toArray() : null,
-            'all_templates_count' => \App\Models\CertificateTemplate::count()
-        ]);
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => $e->getMessage(),
-            'trace' => $e->getTraceAsString()
-        ], 500);
-    }
-});
 
 require __DIR__ . '/auth.php';
 

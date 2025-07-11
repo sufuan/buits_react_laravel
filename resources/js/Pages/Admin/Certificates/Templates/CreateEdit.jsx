@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { useForm, usePage } from '@inertiajs/react';
-import { toast } from 'sonner';
+import { useForm, router, usePage } from '@inertiajs/react';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import { toast } from 'sonner';
 // Import Pinyon Script font
 import '@fontsource/pinyon-script';
 
@@ -100,6 +100,25 @@ import { Alert, AlertDescription } from '@/Components/ui/alert';
 import { Separator } from '@/Components/ui/separator';
 
 export default function CertificateTemplateForm({ auth, types = [], editData = null, canAdd = true }) {
+  const { data, setData, post, processing, errors } = useForm({
+    id: editData?.id || '',
+    name: editData?.name || '',
+    type_id: editData?.certificate_type_id || '',
+    layout: editData?.layout || '',
+    height: editData?.height?.replace('mm', '') || '',
+    width: editData?.width?.replace('mm', '') || '',
+    status: editData?.status || 1,
+    qr_code_student: editData?.qr_code ? JSON.parse(editData.qr_code) : ['admission_no'],
+    qr_code_staff: editData?.qr_code ? JSON.parse(editData.qr_code) : ['staff_id'],
+    user_photo_style: editData?.user_photo_style ?? 0,
+    user_image_size: editData?.user_image_size || '',
+    qr_image_size: editData?.qr_image_size || '',
+    content: editData?.content || '',
+    background_image: null,
+    signature_image: null,
+    logo_image: null,
+  });
+
   const { flash } = usePage().props;
 
   useEffect(() => {
@@ -142,33 +161,7 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
     }
   };
 
-  // Initialize form data with defaults or editData
-  const { data, setData, post, processing, errors } = useForm({
-    id: editData?.id || '',
-    name: editData?.name || '',
-    type_id: editData?.certificate_type_id || '',
-    layout: editData?.layout || '',
-    height: editData?.height ? editData.height.replace('mm', '') : '',
-    width: editData?.width ? editData.width.replace('mm', '') : '',
-    status: editData?.status || 1,
-    qr_code_student: editData?.qr_code
-      ? parseQRCode(editData.qr_code).filter(opt =>
-          ['admission_no', 'roll_no', 'date_of_birth', 'certificate_number', 'link'].includes(opt)
-        )
-      : ['admission_no'],
-    qr_code_staff: editData?.qr_code
-      ? parseQRCode(editData.qr_code).filter(opt =>
-          ['staff_id', 'joining_date', 'certificate_number', 'link'].includes(opt)
-        )
-      : ['staff_id'],
-    user_photo_style: editData?.user_photo_style ?? 0,
-    user_image_size: editData?.user_image_size || '',
-    qr_image_size: editData?.qr_image_size || '',
-    content: editData?.content || '',
-    background_image: null,
-    signature_image: null,
-    logo_image: null,
-  });
+
 
   // State for UI toggles
   const [showStudentQR, setShowStudentQR] = useState(false);
@@ -262,32 +255,60 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
   function onSubmit(e) {
     e.preventDefault();
 
+
+
+    // Validate required fields before submission
+    if (!data.content || data.content.trim() === '' || data.content === '<p><br></p>') {
+      toast.error('Certificate content is required');
+      return;
+    }
+
+    if (!data.type_id) {
+      toast.error('Certificate type is required');
+      return;
+    }
+
+    if (!data.name || data.name.trim() === '') {
+      toast.error('Certificate name is required');
+      return;
+    }
+
+    // Create FormData object
     const formData = new FormData();
 
-    // Add all form data
+    // Append all form fields
     Object.keys(data).forEach(key => {
-      if (key === 'background_image' || key === 'signature_image' || key === 'logo_image') {
-        if (data[key] && data[key] instanceof File) {
+      if (key === 'qr_code_student' || key === 'qr_code_staff') {
+        // Convert arrays to JSON strings
+        if (data[key] && data[key].length > 0) {
+          formData.append(key, JSON.stringify(data[key]));
+        }
+      } else if (key === 'background_image' || key === 'signature_image' || key === 'logo_image') {
+        // Only append files if they exist and are File objects
+        if (data[key] instanceof File) {
           formData.append(key, data[key]);
         }
-      } else if (key === 'qr_code_student' || key === 'qr_code_staff') {
-        // Convert arrays to JSON strings
-        formData.append(key, JSON.stringify(data[key]));
       } else {
-        formData.append(key, data[key] || '');
+        // Append all other fields
+        formData.append(key, data[key] === null ? '' : data[key]);
       }
     });
 
-    post(route('admin.certificate.templates.store'), {
-      data: formData,
+
+
+    // Both store and update use the same endpoint
+    post(route('admin.certificate.templates.store'), formData, {
       forceFormData: true,
       preserveScroll: true,
       onSuccess: () => {
-        // Handle success
-        console.log('Template saved successfully');
+        // Show success message
+        toast.success('Certificate template saved successfully!');
+        // Redirect immediately to see the new template
+        router.visit(route('admin.certificate.templates.index'));
       },
       onError: (errors) => {
-        console.error('Validation errors:', errors);
+        console.error('Form submission errors:', errors);
+        toast.error('Failed to save template. Please check the form and try again.');
       }
     });
   }
@@ -552,8 +573,8 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
                     type="number"
                     value={data.qr_image_size}
                     onChange={e => setData('qr_image_size', e.target.value)}
-                    min="0"
-                    placeholder="Enter QR code image size"
+                    min="100"
+                    placeholder="Enter QR code image size (minimum 100)"
                   />
                 </div>
               </div>
@@ -627,10 +648,7 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
                       ref={quillRef}
                       theme="snow"
                       value={data.content}
-                      onChange={value => {
-                        console.log('ReactQuill onChange (Edit):', value);
-                        setData('content', value);
-                      }}
+                      onChange={value => setData('content', value)}
                       modules={modules}
                       formats={formats}
                       className="bg-white rounded-md h-[300px]"
@@ -755,7 +773,7 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
                     .ql-snow .ql-size-36 { font-size: 36px; }
                   `}</style>
                 </div>
-                {errors.body && <p className="text-red-500 text-sm">{errors.body}</p>}
+                {errors.content && <p className="text-red-500 text-sm">{errors.content}</p>}
               </div>
 
               {/* Submit Button */}

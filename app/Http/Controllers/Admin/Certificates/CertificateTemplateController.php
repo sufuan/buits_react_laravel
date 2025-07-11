@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\CertificateType;
@@ -35,9 +34,10 @@ class CertificateTemplateController extends Controller
 
     public function create(): Response
     {
-        return Inertia::render('Admin/Certificates/Templates/Create', [
+        return Inertia::render('Admin/Certificates/Templates/CreateEdit', [
             'page_title' => 'Create Certificate Template',
             'types' => CertificateType::all(),
+            'canAdd' => true,
         ]);
     }
 
@@ -54,13 +54,16 @@ class CertificateTemplateController extends Controller
 
     public function storeOrUpdate(Request $request)
     {
+
         $request->validate([
             'type_id' => 'required',
             'name' => 'required',
             'layout' => 'required',
             'height' => 'required',
             'width' => 'required',
-            'background_image' => 'nullable',
+            'background_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'signature_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+            'logo_image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'user_photo_style' => 'required',
             'user_image_size' => 'required_unless:user_photo_style,0',
             'content' => [
@@ -89,21 +92,13 @@ class CertificateTemplateController extends Controller
         ]);
 
         DB::beginTransaction();
-
-        // Debug: Check if template exists before transaction
-        if ($request->id) {
-            $existingTemplate = CertificateTemplate::find($request->id);
-            Log::info('Existing template found:', $existingTemplate ? $existingTemplate->toArray() : ['not found']);
-        }
-
-        DB::beginTransaction();
         try {
-            $template = CertificateTemplate::findOrNew($request->id);
-            Log::info('Template object created/found:', [
-                'id' => $template->id,
-                'exists' => $template->exists,
-                'is_new' => !$template->exists
-            ]);
+            // Fix: Use findOrNew properly - if id is empty, create new
+            $template = $request->id ? CertificateTemplate::find($request->id) : new CertificateTemplate();
+
+            if (!$template) {
+                $template = new CertificateTemplate();
+            }
 
             $template->certificate_type_id = $request->type_id;
             $template->name = $request->name;
@@ -111,65 +106,59 @@ class CertificateTemplateController extends Controller
             $template->layout = $request->layout;
             $template->height = floatval($request->height) . 'mm';
             $template->width = floatval($request->width) . 'mm';
+
             // Determine QR code based on certificate type
             $certificateType = CertificateType::find($request->type_id);
             if ($certificateType && $certificateType->usertype === 'student') {
-                $template->qr_code = json_encode(array_values($request->qr_code_student ?: ['admission_no']));
+                $qrData = $request->qr_code_student ?: ['admission_no'];
+                $template->qr_code = json_encode(array_values($qrData));
             } else {
-                $template->qr_code = json_encode(array_values($request->qr_code_staff ?: ['staff_id']));
+                $qrData = $request->qr_code_staff ?: ['staff_id'];
+                $template->qr_code = json_encode(array_values($qrData));
             }
+
             $template->qr_image_size = $request->qr_image_size;
             $template->user_photo_style = $request->user_photo_style;
-            $template->user_image_size = $request->user_image_size;
+            $template->user_image_size = $request->user_image_size ?: null;
             $template->content = $request->content;
 
+            // Handle file uploads
             if ($request->hasFile('background_image')) {
-                $template->background_image = $request->file('background_image')->store('public/certificate');
+                $path = $request->file('background_image')->store('certificate', 'public');
+                $template->background_image = $path;
             }
 
             if ($request->hasFile('signature_image')) {
-                $template->signature_image = $request->file('signature_image')->store('public/certificate');
+                $path = $request->file('signature_image')->store('certificate', 'public');
+                $template->signature_image = $path;
             }
 
             if ($request->hasFile('logo_image')) {
-                $template->logo_image = $request->file('logo_image')->store('public/certificate');
+                $path = $request->file('logo_image')->store('certificate', 'public');
+                $template->logo_image = $path;
             }
 
-            Log::info('Template data before save:', $template->toArray());
-
-            $saved = $template->save();
-            Log::info('Template save result:', ['saved' => $saved]);
-
-            if ($saved) {
-                $freshTemplate = $template->fresh();
-                Log::info('Template after save (fresh from DB):', $freshTemplate ? $freshTemplate->toArray() : ['not found']);
-            }
+            $template->save();
 
             // Create or update design record
             if (!$template->design) {
-                Log::info('Creating new design record for template');
                 CertificateTemplateDesign::create([
                     'certificate_template_id' => $template->id,
                     'design_content' => null
                 ]);
             } else {
-                Log::info('Updating existing design record');
                 $template->design->design_content = null;
                 $template->design->save();
             }
 
             DB::commit();
-            Log::info('Transaction committed successfully');
-
-            // Final check - does the template exist in DB?
-            $finalCheck = CertificateTemplate::find($template->id);
-            Log::info('Final DB check:', $finalCheck ? $finalCheck->toArray() : ['not found in DB']);
 
             return redirect()->route('admin.certificate.templates.index')->with('success', $request->id
                 ? 'Certificate Template Updated Successfully'
                 : 'Certificate Template Created Successfully');
         } catch (\Throwable $th) {
             DB::rollBack();
+
             return redirect()->back()->with('error', $th->getMessage());
         }
     }

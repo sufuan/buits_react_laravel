@@ -8,7 +8,7 @@ import { ScrollArea } from '@/Components/ui/scroll-area';
 import { Separator } from '@/Components/ui/separator';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 import { Badge } from '@/Components/ui/badge';
-import { toast } from 'sonner';
+  import { toast } from 'sonner';
 
 export default function Index({ templates, auth }) {
   const { flash } = usePage().props;
@@ -67,6 +67,65 @@ export default function Index({ templates, auth }) {
                             <Badge variant="secondary" className="max-w-fit">
                               {template.type?.name || 'No Type'}
                             </Badge>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            <div className="aspect-square relative bg-gray-50 rounded-md overflow-hidden">
+                              {template.background_image ? (
+                                <img
+                                  src={`/storage/${template.background_image}`}
+                                  alt="Background"
+                                  className="w-full h-full object-cover"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className="w-full h-full flex items-center justify-center text-xs text-gray-400"
+                                style={{ display: template.background_image ? 'none' : 'flex' }}
+                              >
+                                {template.background_image ? 'Image Error' : 'No Background'}
+                              </div>
+                            </div>
+                            <div className="aspect-square relative bg-gray-50 rounded-md overflow-hidden">
+                              {template.logo_image ? (
+                                <img
+                                  src={`/storage/${template.logo_image}`}
+                                  alt="Logo"
+                                  className="w-full h-full object-contain p-1"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className="w-full h-full flex items-center justify-center text-xs text-gray-400"
+                                style={{ display: template.logo_image ? 'none' : 'flex' }}
+                              >
+                                {template.logo_image ? 'Image Error' : 'No Logo'}
+                              </div>
+                            </div>
+                            <div className="aspect-square relative bg-gray-50 rounded-md overflow-hidden">
+                              {template.signature_image ? (
+                                <img
+                                  src={`/storage/${template.signature_image}`}
+                                  alt="Signature"
+                                  className="w-full h-full object-contain p-1"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null}
+                              <div
+                                className="w-full h-full flex items-center justify-center text-xs text-gray-400"
+                                style={{ display: template.signature_image ? 'none' : 'flex' }}
+                              >
+                                {template.signature_image ? 'Image Error' : 'No Signature'}
+                              </div>
+                            </div>
                           </div>
                           <div className="flex items-center space-x-2 pt-2">
                             <Button
