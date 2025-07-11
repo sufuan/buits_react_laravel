@@ -133,7 +133,7 @@ export default function Create({ auth, types = [], canAdd = true }) {
     status: 1,
     qr_code_student: ['admission_no'],
     qr_code_staff: ['staff_id'],
-    user_photo_style: 1,
+    user_photo_style: 0,
     user_image_size: '100',
     qr_image_size: '100',
     content: '',
@@ -150,7 +150,14 @@ export default function Create({ auth, types = [], canAdd = true }) {
   const [usableTags, setUsableTags] = useState([]);
 
   // Ref for Quill editor
-  const quillRef = React.useRef();
+  const quillRef = React.useRef(null);
+  const [quill, setQuill] = useState(null);
+
+  useEffect(() => {
+    if (quillRef.current) {
+      setQuill(quillRef.current.getEditor());
+    }
+  }, []);
 
   // Handle certificate type change
   function onCertificateTypeChange(value) {
@@ -186,10 +193,19 @@ export default function Create({ auth, types = [], canAdd = true }) {
 
   // Handle inserting tag into Quill editor
   function insertTag(tag) {
-    const quill = quillRef.current.getEditor();
-    const range = quill.getSelection(true);
-    quill.insertText(range.index, tag, 'user');
-    quill.setSelection(range.index + tag.length, 0);
+    if (quill) {
+      const range = quill.getSelection(true);
+      if (range) {
+        quill.insertText(range.index, tag);
+        quill.setSelection(range.index + tag.length);
+      } else {
+        // If no selection, insert at the end
+        const length = quill.getLength();
+        quill.insertText(length - 1, tag);
+        quill.setSelection(length - 1 + tag.length);
+      }
+      quill.focus();
+    }
   }
 
   // Handle layout change
@@ -265,12 +281,21 @@ export default function Create({ auth, types = [], canAdd = true }) {
       ['bold', 'italic', 'underline', 'strike'],
       [{ 'color': [] }, { 'background': [] }],
       [{ 'script': 'sub'}, { 'script': 'super' }],
-      [{ 'header': 1 }, { 'header': 2 }, 'blockquote', 'code-block'],
+      [{ 'header': 1 }, { 'header': 2 }, 'blockquote'],
       [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
       [{ 'direction': 'rtl' }, { 'align': [] }],
-      ['link', 'image', 'video'],
+      ['link', 'image'],
       ['clean']
     ],
+    clipboard: {
+      matchVisual: false
+    },
+    keyboard: {
+      bindings: {
+        tab: false,
+        'tab shift': false
+      }
+    }
   };
 
   const quillFormats = [
@@ -383,9 +408,13 @@ export default function Create({ auth, types = [], canAdd = true }) {
                 {/* User Photo Style */}
                 <div>
                   <Label>User Photo Style</Label>
-                  <Select onValueChange={value => setData('user_photo_style', value)}>
+                  <Select 
+                    defaultValue="0"
+                    value={data.user_photo_style.toString()}
+                    onValueChange={value => setData('user_photo_style', Number(value))}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Select photo style" />
+                      <SelectValue>No Photo</SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="0">No Photo</SelectItem>
@@ -396,17 +425,16 @@ export default function Create({ auth, types = [], canAdd = true }) {
                 </div>
 
                 {/* User Image Size */}
-                {data.user_photo_style !== '0' && (
-                  <div>
-                    <Label htmlFor="user_image_size">User Image Size (px)</Label>
-                    <Input
-                      id="user_image_size"
-                      type="number"
-                      value={data.user_image_size}
-                      onChange={e => setData('user_image_size', e.target.value)}
-                    />
-                  </div>
-                )}
+                <div>
+                  <Label htmlFor="user_image_size">User Image Size (px)</Label>
+                  <Input
+                    id="user_image_size"
+                    type="number"
+                    value={data.user_image_size}
+                    onChange={e => setData('user_image_size', e.target.value)}
+                    disabled={data.user_photo_style === 0}
+                  />
+                </div>
 
                 {/* QR Code Size */}
                 <div>

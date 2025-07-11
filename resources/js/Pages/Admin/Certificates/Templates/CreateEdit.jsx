@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, router, usePage } from '@inertiajs/react';
 import ReactQuill from 'react-quill';
+// For access to static methods
+const Quill = ReactQuill.Quill;
 import 'react-quill/dist/quill.snow.css';
 import { toast } from 'sonner';
 // Import Pinyon Script font
@@ -12,8 +14,35 @@ const styles = `
   .ql-font-arial { font-family: Arial, sans-serif; }
   .ql-font-times-new-roman { font-family: "Times New Roman", Times, serif; }
   .ql-font-georgia { font-family: Georgia, serif; }
-  .ql-font-verdana { font-family: Verdana, sans-serif; }
-  .ql-font-helvetica { font-family: Helvetica, sans-serif; }
+  .ql-font-verdana { font-family: Ver                    <div>
+                      <ReactQuill
+                        ref={quillRef}
+                        theme="snow"
+                        value={data.content}
+                        onChange={value => setData('content', value)}
+                        modules={quillModules}
+                        formats={quillFormats}
+                        className="bg-white rounded-md h-[300px]"
+                        style={{
+                          height: '300px',
+                        }}
+                        placeholder="Enter certificate content..."
+                      />
+                    </div>rif; }
+  .ql-font-helvetica { fon                    <div ref={quillRef}>
+                      <ReactQuill
+                        theme="snow"
+                        value={data.content}
+                        onChange={value => setData('content', value)}
+                        modules={quillModules}
+                        formats={quillFormats}
+                        className="bg-white rounded-md h-[300px]"
+                        style={{
+                          height: '300px',
+                        }}
+                        placeholder="Enter certificate content..."
+                      />
+                    </div>vetica, sans-serif; }
   .ql-font-garamond { font-family: Garamond, serif; }
   .ql-font-tahoma { font-family: Tahoma, sans-serif; }
   .ql-font-courier-new { font-family: "Courier New", Courier, monospace; }
@@ -111,8 +140,8 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
     qr_code_student: editData?.qr_code ? JSON.parse(editData.qr_code) : ['admission_no'],
     qr_code_staff: editData?.qr_code ? JSON.parse(editData.qr_code) : ['staff_id'],
     user_photo_style: editData?.user_photo_style ?? 0,
-    user_image_size: editData?.user_image_size || '',
-    qr_image_size: editData?.qr_image_size || '',
+    user_image_size: editData?.user_image_size || '100',
+    qr_image_size: editData?.qr_image_size || '100',
     content: editData?.content || '',
     background_image: null,
     signature_image: null,
@@ -217,16 +246,32 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
     setData(key, options);
   }
 
+  // Quill editor setup
+  const quillRef = React.useRef(null);
+  const [quill, setQuill] = useState(null);
+
+  useEffect(() => {
+    if (quillRef.current) {
+      setQuill(quillRef.current.getEditor());
+    }
+  }, []);
+
   // Handle inserting tag into Quill editor
   function insertTag(tag) {
-    const quill = quillRef.current.getEditor();
-    const range = quill.getSelection(true);
-    quill.insertText(range.index, tag, 'user');
-    quill.setSelection(range.index + tag.length, 0);
+    if (quill) {
+      const range = quill.getSelection(true);
+      if (range) {
+        quill.insertText(range.index, tag);
+        quill.setSelection(range.index + tag.length);
+      } else {
+        // If no selection, insert at the end
+        const length = quill.getLength();
+        quill.insertText(length - 1, tag);
+        quill.setSelection(length - 1 + tag.length);
+      }
+      quill.focus();
+    }
   }
-
-  // Quill ref for inserting tags
-  const quillRef = React.useRef(null);
 
   // Layout change handler to auto adjust width & height
   function onLayoutChange(e) {
@@ -331,6 +376,15 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
       [{ align: [] }],
       ['clean'],
     ],
+    clipboard: {
+      matchVisual: false
+    },
+    keyboard: {
+      bindings: {
+        tab: false,
+        'tab shift': false
+      }
+    }
   };
 
   // React Quill formats and whitelist
@@ -541,30 +595,46 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
 
               {/* Image Settings */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-                <div className="space-y-2">
-                  <Label htmlFor="user_photo_style">User Image Shape</Label>
-                  <Select value={data.user_photo_style.toString()} onValueChange={value => setData('user_photo_style', value)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select User Image Shape" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="0">No Photo</SelectItem>
-                      <SelectItem value="1">Circle</SelectItem>
-                      <SelectItem value="2">Square</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+                <div>
+                  <div className="space-y-2">
+                    <Label htmlFor="user_photo_style">User Image Shape</Label>
+                    <Select 
+                      value={data.user_photo_style.toString()}
+                      onValueChange={value => {
+                        const numValue = Number(value);
+                        setData('user_photo_style', numValue);
+                        // Reset user_image_size when selecting "No Photo"
+                        if (numValue === 0) {
+                          setData('user_image_size', '100');
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select photo style">
+                          {data.user_photo_style === 0 ? 'No Photo' : data.user_photo_style === 1 ? 'Circle' : 'Square'}
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">No Photo</SelectItem>
+                        <SelectItem value="1">Circle</SelectItem>
+                        <SelectItem value="2">Square</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="user_image_size">User Image Size (px)</Label>
-                  <Input
-                    type="number"
-                    value={data.user_image_size}
-                    onChange={e => setData('user_image_size', e.target.value)}
-                    min="0"
-                    disabled={data.user_photo_style === '0' || data.user_photo_style === ''}
-                    placeholder="Enter user image size"
-                  />
+                  {/* User Image Size - Only show when photo style is circle or square */}
+                  {Number(data.user_photo_style) > 0 && (
+                    <div className="space-y-2">
+                      <Label htmlFor="user_image_size">User Image Size (px)</Label>
+                      <Input
+                        type="number"
+                        value={data.user_image_size}
+                        onChange={e => setData('user_image_size', e.target.value)}
+                        min="0"
+                        placeholder="Enter user image size"
+                      />
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -658,7 +728,7 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
                       placeholder="Enter certificate content..."
                     />
                   </div>
-                  <style jsx global>{`
+                  <style>{`
                     @import url('https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap');
                     .quill-editor-container .ql-container {
                       height: calc(300px - 42px); /* 42px is the toolbar height */
