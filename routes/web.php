@@ -105,7 +105,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::post('design/update', [CertificateTemplateController::class, 'updateDesign'])->name('design.update');
 
                 // Reset design for a template
-                Route::get('{template}/design/reset', [CertificateTemplateController::class, 'designReset'])->name('design.reset');
+               Route::post('{template}/design/reset', [CertificateTemplateController::class, 'designReset'])->name('design.reset');
 
                 // Delete a template
                 Route::delete('{template}', [CertificateTemplateController::class, 'delete'])->name('destroy');

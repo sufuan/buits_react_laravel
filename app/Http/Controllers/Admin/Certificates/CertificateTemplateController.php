@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\CertificateType;
@@ -168,7 +169,7 @@ class CertificateTemplateController extends Controller
         return Inertia::render('Admin/Certificates/Templates/Design', [
             'page_title' => 'Design Certificate Template',
             'types' => CertificateType::all(),
-            'editData' => CertificateTemplate::with('type')->findOrFail($id),
+            'editData' => CertificateTemplate::with(['type', 'design'])->findOrFail($id),
         ]);
     }
 
@@ -177,35 +178,108 @@ class CertificateTemplateController extends Controller
         try {
             $template = CertificateTemplate::findOrFail($id);
             if ($template->design) {
-                $template->design->design_content = '';
+                $template->design->design_content = null;
                 $template->design->save();
+            } else {
+                // Create design record if it doesn't exist
+                CertificateTemplateDesign::create([
+                    'certificate_template_id' => $template->id,
+                    'design_content' => null
+                ]);
             }
-
-            return back()->with('success', 'Certificate Template Design Reset Successfully');
-        } catch (\Throwable $th) {
-            return back()->with('error', $th->getMessage());
-        }
-    }
-
-    public function updateDesign(Request $request)
-    {
-        try {
-            $design = CertificateTemplateDesign::firstOrNew([
-                'certificate_template_id' => $request->template_id,
-            ]);
-
-            $design->design_content = $request->design_content;
-            $design->save();
 
             return response()->json([
                 'status' => 'success',
-                'message' => 'Design updated successfully',
+                'message' => 'Certificate Template Design Reset Successfully'
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 'error',
-                'message' => $th->getMessage(),
+                'message' => $th->getMessage()
+            ], 500);
+        }
+    }
+
+  public function updateDesign(Request $request)
+    {
+      
+        Log::info('UpdateDesign Method Called', [
+            'method' => $request->method(),
+            'url' => $request->url(),
+            'all_data' => $request->all(),
+            'headers' => $request->headers->all()
+        ]);
+
+        try {
+            // Basic validation
+            if (!$request->has('template_id')) {
+                throw new \Exception('Template ID is required');
+            }
+
+            if (!$request->has('design_content')) {
+                throw new \Exception('Design content is required');
+            }
+
+            $templateId = $request->template_id;
+            $designContent = $request->design_content;
+
+            Log::info('Processing Design Update', [
+                'template_id' => $templateId,
+                'design_content_length' => strlen($designContent),
+                'design_content_preview' => substr($designContent, 0, 200) . '...'
             ]);
+
+            // Check if template exists
+            $template = CertificateTemplate::find($templateId);
+            if (!$template) {
+                throw new \Exception('Template not found with ID: ' . $templateId);
+            }
+
+            Log::info('Template Found', ['template_name' => $template->name]);
+
+            // Find or create design record
+            $design = CertificateTemplateDesign::where('certificate_template_id', $templateId)->first();
+
+            if (!$design) {
+                Log::info('Creating new design record');
+                $design = new CertificateTemplateDesign();
+                $design->certificate_template_id = $templateId;
+            } else {
+                Log::info('Updating existing design record', ['design_id' => $design->id]);
+            }
+
+            $design->design_content = $designContent;
+            $saved = $design->save();
+
+            Log::info('Design Save Result', [
+                'saved' => $saved,
+                'design_id' => $design->id,
+                'template_id' => $design->certificate_template_id
+            ]);
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Design updated successfully',
+                'design_id' => $design->id,
+                'template_id' => $templateId,
+            ]);
+        } catch (\Throwable $th) {
+            Log::error('UpdateDesign Error', [
+                'error' => $th->getMessage(),
+                'trace' => $th->getTraceAsString(),
+                'request_data' => $request->all(),
+                'file' => $th->getFile(),
+                'line' => $th->getLine()
+            ]);
+
+            return response()->json([
+                'status' => 'error',
+                'message' => $th->getMessage(),
+                'debug' => [
+                    'file' => $th->getFile(),
+                    'line' => $th->getLine()
+                ]
+            ], 500);
         }
     }
 
@@ -252,30 +326,111 @@ class CertificateTemplateController extends Controller
             $certificate = CertificateTemplate::with('design')->findOrFail($request->template);
 
             $design = $request->design_content;
-            $logo = asset($certificate->logo_image);
-            $signature = asset($certificate->signature_image);
-            $defaultLogo = asset('Modules/Certificate/Resources/assets/signature.png');
-            $qrCodeImg = asset('Modules/Certificate/Resources/assets/qr.jpg');
-            $userImg = asset('Modules/Certificate/Resources/assets/user.png');
 
-            $user_image = '<img src="' . $userImg . '" style="width:' . $certificate->user_image_size . 'px; border-radius:' . ($certificate->user_photo_style == 1 ? '50%' : '0') . ';">';
-            $qr_image = '<img src="' . $qrCodeImg . '" style="width:' . $certificate->qr_image_size . 'px;">';
+            // Get asset URLs
+            $logoUrl = $certificate->logo_image ? asset('storage/' . $certificate->logo_image) : '';
+            $signatureUrl = $certificate->signature_image ? asset('storage/' . $certificate->signature_image) : '';
+            $backgroundUrl = $certificate->background_image ? asset('storage/' . $certificate->background_image) : '';
 
-            $final_html = str_replace([
-                '{certificate_logo}',
-                '{user_image}',
-                '{certificate_no}',
-                '{logo_image}',
-                '{issue_date}',
-                '{qrCode}',
-            ], [
-                $logo,
-                $user_image,
-                $certificate_setting->value . '445',
-                '<img src="' . $defaultLogo . '">',
-                now()->format('d-m-Y'),
-                $qr_image,
-            ], $design);
+            // Default placeholder images
+            $defaultQrImg = asset('storage/certificate/qr-placeholder.png');
+            $defaultUserImg = asset('storage/certificate/user-placeholder.png');
+
+            // Create user image HTML
+            $userImageStyle = 'width:' . ($certificate->user_image_size ?: '100') . 'px; height:' . ($certificate->user_image_size ?: '100') . 'px;';
+            if ($certificate->user_photo_style == 1) {
+                $userImageStyle .= ' border-radius: 50%;';
+            }
+            $user_image = '<img src="' . $defaultUserImg . '" style="' . $userImageStyle . ' object-fit: cover;">';
+
+            // Create QR code HTML
+            $qrSize = $certificate->qr_image_size ?: '100';
+            $qr_image = '<img src="' . $defaultQrImg . '" style="width:' . $qrSize . 'px; height:' . $qrSize . 'px;">';
+
+            // Certificate number
+            $certificateNumber = ($certificate_setting ? $certificate_setting->value : 'CERT') . '-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+
+            // Sample data for preview
+            $sampleData = [
+                '{certificate_logo}' => $logoUrl ? '<img src="' . $logoUrl . '" style="max-width: 100px; max-height: 100px;">' : '',
+                '{user_image}' => $user_image,
+                '{certificate_no}' => $certificateNumber,
+                '{logo_image}' => $logoUrl ? '<img src="' . $logoUrl . '" style="max-width: 100px; max-height: 100px;">' : '',
+                '{issue_date}' => now()->format('d-m-Y'),
+                '{qrCode}' => $qr_image,
+                '{student_name}' => 'John Doe',
+                '{staff_name}' => 'Jane Smith',
+                '{course_name}' => 'Sample Course',
+                '{designation}' => 'Sample Designation',
+                '{certificate_date}' => now()->format('d-m-Y'),
+                '{{student_name}}' => 'John Doe',
+                '{{staff_name}}' => 'Jane Smith',
+                '{{course_name}}' => 'Sample Course',
+                '{{designation}}' => 'Sample Designation',
+                '{{certificate_date}}' => now()->format('d-m-Y'),
+            ];
+
+            // Replace placeholders in design
+            $final_html = str_replace(array_keys($sampleData), array_values($sampleData), $design);
+
+            // Wrap in a container with background
+            $containerStyle = 'position: relative; width: 100%; height: 100%;';
+            if ($backgroundUrl) {
+                $containerStyle .= ' background-image: url(' . $backgroundUrl . '); background-size: cover; background-position: center;';
+            }
+
+            $final_html = '<div style="' . $containerStyle . '">' . $final_html . '</div>';
+
+            // Default placeholder images
+            $defaultQrImg = asset('placeholders/qr-placeholder.svg');
+            $defaultUserImg = asset('placeholders/user-placeholder.svg');
+
+            // Create user image HTML
+            $userImageStyle = 'width:' . ($certificate->user_image_size ?: '100') . 'px; height:' . ($certificate->user_image_size ?: '100') . 'px;';
+            if ($certificate->user_photo_style == 1) {
+                $userImageStyle .= ' border-radius: 50%;';
+            }
+            $user_image = '<img src="' . $defaultUserImg . '" style="' . $userImageStyle . ' object-fit: cover;">';
+
+            // Create QR code HTML
+            $qrSize = $certificate->qr_image_size ?: '100';
+            $qr_image = '<img src="' . $defaultQrImg . '" style="width:' . $qrSize . 'px; height:' . $qrSize . 'px;">';
+
+            // Certificate number
+            $certificateNumber = ($certificate_setting ? $certificate_setting->value : 'CERT') . '-' . date('Y') . '-' . str_pad(rand(1, 9999), 4, '0', STR_PAD_LEFT);
+
+            // Sample data for preview
+            $sampleData = [
+                '{certificate_logo}' => $logoUrl ? '<img src="' . $logoUrl . '" style="max-width: 100px; max-height: 100px;">' : '',
+                '{user_image}' => $user_image,
+                '{certificate_no}' => $certificateNumber,
+                '{logo_image}' => $logoUrl ? '<img src="' . $logoUrl . '" style="max-width: 100px; max-height: 100px;">' : '',
+                '{issue_date}' => now()->format('d-m-Y'),
+                '{qrCode}' => $qr_image,
+                '{student_name}' => 'John Doe',
+                '{staff_name}' => 'Jane Smith',
+                '{course_name}' => 'Sample Course',
+                '{designation}' => 'Sample Designation',
+                '{certificate_date}' => now()->format('d-m-Y'),
+                '{{student_name}}' => 'John Doe',
+                '{{staff_name}}' => 'Jane Smith',
+                '{{course_name}}' => 'Sample Course',
+                '{{designation}}' => 'Sample Designation',
+                '{{certificate_date}}' => now()->format('d-m-Y'),
+            ];
+
+            // Replace placeholders in design
+            $final_html = str_replace(array_keys($sampleData), array_values($sampleData), $design);
+
+            // Wrap in a container with background and proper constraints
+            $containerStyle = 'position: relative; width: ' . $certificate->width . '; height: ' . $certificate->height . '; overflow: hidden; margin: 0 auto;';
+            if ($backgroundUrl) {
+                $containerStyle .= ' background-image: url(' . $backgroundUrl . '); background-size: cover; background-position: center; background-repeat: no-repeat;';
+            } else {
+                $containerStyle .= ' background-color: #ffffff; border: 1px solid #e5e7eb;';
+            }
+
+            $final_html = '<div style="' . $containerStyle . '">' . $final_html . '</div>';
 
             return response()->json([
                 'status' => 'success',
