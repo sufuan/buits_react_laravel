@@ -7,7 +7,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 use App\Models\CertificateType;
@@ -49,7 +48,7 @@ class CertificateTemplateController extends Controller
         return Inertia::render('Admin/Certificates/Templates/CreateEdit', [
             'page_title' => 'Edit Certificate Template',
             'types' => CertificateType::all(),
-            'editData' => CertificateTemplate::with('type')->findOrFail($id),
+            'editData' => CertificateTemplate::with('type', 'design')->findOrFail($id),
         ]);
     }
 
@@ -200,85 +199,38 @@ class CertificateTemplateController extends Controller
         }
     }
 
-  public function updateDesign(Request $request)
+ public function updateDesign(Request $request)
     {
-      
-        Log::info('UpdateDesign Method Called', [
-            'method' => $request->method(),
-            'url' => $request->url(),
-            'all_data' => $request->all(),
-            'headers' => $request->headers->all()
-        ]);
-
         try {
-            // Basic validation
-            if (!$request->has('template_id')) {
-                throw new \Exception('Template ID is required');
-            }
-
-            if (!$request->has('design_content')) {
-                throw new \Exception('Design content is required');
-            }
+            // Validate the request
+            $request->validate([
+                'template_id' => 'required|exists:certificate_templates,id',
+                'design_content' => 'required|string',
+            ]);
 
             $templateId = $request->template_id;
             $designContent = $request->design_content;
-
-            Log::info('Processing Design Update', [
-                'template_id' => $templateId,
-                'design_content_length' => strlen($designContent),
-                'design_content_preview' => substr($designContent, 0, 200) . '...'
-            ]);
-
-            // Check if template exists
-            $template = CertificateTemplate::find($templateId);
-            if (!$template) {
-                throw new \Exception('Template not found with ID: ' . $templateId);
-            }
-
-            Log::info('Template Found', ['template_name' => $template->name]);
 
             // Find or create design record
             $design = CertificateTemplateDesign::where('certificate_template_id', $templateId)->first();
 
             if (!$design) {
-                Log::info('Creating new design record');
                 $design = new CertificateTemplateDesign();
                 $design->certificate_template_id = $templateId;
-            } else {
-                Log::info('Updating existing design record', ['design_id' => $design->id]);
             }
 
             $design->design_content = $designContent;
-            $saved = $design->save();
-
-            Log::info('Design Save Result', [
-                'saved' => $saved,
-                'design_id' => $design->id,
-                'template_id' => $design->certificate_template_id
-            ]);
+            $design->save();
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Design updated successfully',
                 'design_id' => $design->id,
-                'template_id' => $templateId,
             ]);
         } catch (\Throwable $th) {
-            Log::error('UpdateDesign Error', [
-                'error' => $th->getMessage(),
-                'trace' => $th->getTraceAsString(),
-                'request_data' => $request->all(),
-                'file' => $th->getFile(),
-                'line' => $th->getLine()
-            ]);
-
             return response()->json([
                 'status' => 'error',
                 'message' => $th->getMessage(),
-                'debug' => [
-                    'file' => $th->getFile(),
-                    'line' => $th->getLine()
-                ]
             ], 500);
         }
     }
