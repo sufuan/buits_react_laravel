@@ -26,6 +26,17 @@ Route::get('/', function () {
     ]);
 });
 
+// Certificate verification route (public)
+Route::get('/certificate/verify', function () {
+    return Inertia::render('Certificate/Verify');
+})->name('certificate.verify');
+
+// Test route for certificate generation
+Route::get('/test-certificate-generate', function () {
+    $controller = new App\Http\Controllers\Admin\Certificates\GenerateCertificateController();
+    return $controller->index();
+})->middleware(['auth:admin']);
+
 Route::get('/dashboard', function () {
     return Inertia::render('Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
@@ -128,14 +139,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
 
             // ----- Certificate Generation -----
             Route::controller(GenerateCertificateController::class)->group(function () {
-                Route::get('generate/staff-certificate', 'staffCertificate')->name('generate-staff-certificate');
-                Route::post('generate/staff-certificate', 'staffCertificateSearch')->name('generate-staff-certificate-search');
-                Route::get('generate-certificate-staff', 'generateCertificateStaff')->name('generate-certificate-staff');
-
                 Route::get('generate', 'index')->name('generate');
-                Route::post('generate', 'getStudentList')->name('generate-get-list');
-                Route::get('generate-certificate', 'generateCertificate')->name('generate-certificate');
-                Route::post('save-generated-certificate', 'store')->name('certificate-save');
+                Route::get('generate/users', 'getUsersList')->name('generate.users');
+                Route::post('generate/certificates', 'generateCertificates')->name('generate.certificates');
+                Route::post('generate/save', 'saveCertificates')->name('generate.save');
             });
 
             // ----- Certificate Records -----
