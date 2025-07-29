@@ -439,20 +439,30 @@ export default function CertificateDesigner({ editData, auth }) {
                   </div>
                 </div>
                 <div className="p-6">
-                  <div className="flex justify-center">
+                  <div className="flex justify-center items-center overflow-hidden">
                     <div
-                      className="bg-white border border-gray-300 shadow-lg"
                       style={{
                         width: `${canvasSize.width}mm`,
                         height: `${canvasSize.height}mm`,
                         maxWidth: '100%',
                         maxHeight: '70vh',
+                        aspectRatio: `${canvasSize.width} / ${canvasSize.height}`,
                       }}
                     >
                       <div
-                        dangerouslySetInnerHTML={{ __html: previewHtml }}
-                        className="w-full h-full"
-                      />
+                        className="bg-white border border-gray-300 shadow-lg"
+                        style={{
+                          width: `${canvasSize.width}mm`,
+                          height: `${canvasSize.height}mm`,
+                          transformOrigin: 'top left',
+                          transform: `scale(min(1, calc(100% / ${canvasSize.width}mm), calc(70vh / ${canvasSize.height}mm)))`,
+                        }}
+                      >
+                        <div
+                          dangerouslySetInnerHTML={{ __html: previewHtml }}
+                          className="w-full h-full"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
