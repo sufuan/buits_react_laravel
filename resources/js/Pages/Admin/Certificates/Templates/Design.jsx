@@ -128,12 +128,15 @@ export default function CertificateDesigner({ editData, auth }) {
         setElements(templateElements);
       }
     }
-  }, [editData]);
+  }, [editData?.id]); // Only re-run when template ID changes, not on every editData change
 
   const handleDragStop = (id, d) => {
-    setElements((prev) =>
-      prev.map((el) => (el.id === id ? { ...el, x: d.x, y: d.y } : el))
-    );
+    console.log(`Dragging ${id} to position:`, d);
+    setElements((prev) => {
+      const updated = prev.map((el) => (el.id === id ? { ...el, x: d.x, y: d.y } : el));
+      console.log('Updated elements:', updated);
+      return updated;
+    });
   };
 
   const handleResize = (id, ref, position) => {
@@ -332,9 +335,13 @@ const calculateScale = (widthMm, heightMm) => {
                 <div className="absolute top-0 left-0 w-full h-full z-10">
                   {elements.map((el) => (
                     <Rnd
-                      key={el.id}
-                      position={{ x: el.x * zoom, y: el.y * zoom }}
-                      size={{ width: el.width * zoom, height: el.height * zoom }}
+                      key={`${el.id}-${el.x}-${el.y}`}
+                      default={{
+                        x: el.x * zoom,
+                        y: el.y * zoom,
+                        width: el.width * zoom,
+                        height: el.height * zoom,
+                      }}
                       onDragStop={(e, d) => handleDragStop(el.id, { x: d.x / zoom, y: d.y / zoom })}
                       onResize={(e, direction, ref, delta, position) =>
                         handleResize(el.id, ref, { x: position.x / zoom, y: position.y / zoom })
