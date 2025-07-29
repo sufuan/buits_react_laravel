@@ -33,7 +33,6 @@ export default function CertificateDesigner({ editData, auth }) {
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const canvasRef = useRef(null);
 
-  // Initialize elements from template data
   useEffect(() => {
     if (editData) {
       const width = parseFloat(editData.width?.replace('mm', '') || 210);
@@ -58,7 +57,6 @@ export default function CertificateDesigner({ editData, auth }) {
         });
       }
 
-      // Add logo if exists
       if (editData.logo_image) {
         templateElements.push({
           id: 'logo',
@@ -72,7 +70,6 @@ export default function CertificateDesigner({ editData, auth }) {
         });
       }
 
-      // Add signature if exists
       if (editData.signature_image) {
         templateElements.push({
           id: 'signature',
@@ -86,7 +83,6 @@ export default function CertificateDesigner({ editData, auth }) {
         });
       }
 
-      // Add QR code placeholder
       if (editData.qr_code && editData.qr_image_size) {
         const qrSize = parseInt(editData.qr_image_size) || 100;
         templateElements.push({
@@ -102,7 +98,6 @@ export default function CertificateDesigner({ editData, auth }) {
         });
       }
 
-      // Add user photo placeholder if enabled
       if (editData.user_photo_style > 0) {
         const userSize = parseInt(editData.user_image_size) || 100;
         templateElements.push({
@@ -117,7 +112,6 @@ export default function CertificateDesigner({ editData, auth }) {
         });
       }
 
-      // Initialize from saved design if exists
       if (editData.design?.design_content) {
         try {
           const savedDesign = JSON.parse(editData.design.design_content);
@@ -162,18 +156,13 @@ export default function CertificateDesigner({ editData, auth }) {
     if (!editData?.id) return;
 
     setSaving(true);
-     try {
-      console.log('Saving design with elements:', elements);
+    try {
       const response = await axios.post(route('admin.certificate.templates.design.update'), {
         template_id: editData.id,
         design_content: JSON.stringify(elements),
       });
-
-      console.log('Save response:', response.data);
       toast.success('Design saved successfully');
     } catch (error) {
-      console.error('Error saving design:', error);
-      console.error('Error details:', error.response?.data);
       toast.error('Failed to save design: ' + (error.response?.data?.message || error.message));
     } finally {
       setSaving(false);
@@ -183,19 +172,15 @@ export default function CertificateDesigner({ editData, auth }) {
   const resetDesign = async () => {
     if (!editData?.id) return;
 
-    if (!window.confirm('Are you sure you want to reset the design? This will remove all custom positioning and restore default layout.')) {
-      return;
-    }
+    if (!window.confirm('Are you sure you want to reset the design?')) return;
 
     try {
       const response = await axios.post(route('admin.certificate.templates.design.reset', editData.id));
       if (response.data.status === 'success') {
-        // Reload the page to get fresh data
         router.reload();
         toast.success('Design reset successfully');
       }
     } catch (error) {
-      console.error('Error resetting design:', error);
       toast.error('Failed to reset design');
     }
   };
@@ -214,7 +199,6 @@ export default function CertificateDesigner({ editData, auth }) {
         setShowPreview(true);
       }
     } catch (error) {
-      console.error('Error previewing design:', error);
       toast.error('Failed to preview design');
     }
   };
@@ -223,7 +207,6 @@ export default function CertificateDesigner({ editData, auth }) {
     return elements
       .map((el) => {
         const style = `position:absolute;left:${el.x}px;top:${el.y}px;width:${el.width}px;height:${el.height}px;`;
-
         if (el.type === 'image') {
           return `<img src="${el.src}" style="${style}"/>`;
         } else if (el.type === 'qr' || el.type === 'photo') {
@@ -239,9 +222,23 @@ export default function CertificateDesigner({ editData, auth }) {
     setZoom(factor);
   };
 
+  //  Scale calculator for preview
+const calculateScale = (widthMm, heightMm) => {
+  const mmToPx = (mm) => mm * 3.7795; // convert mm to px
+  const screenW = window.innerWidth * 0.9;
+  const screenH = window.innerHeight * 0.8;
+
+  const wPx = mmToPx(widthMm);
+  const hPx = mmToPx(heightMm);
+
+  return Math.min(screenW / wPx, screenH / hPx, 1); // never scale above 100%
+};
+
+
   return (
     <AdminAuthenticatedLayout user={auth?.user}>
       <div className="min-h-screen bg-gray-50">
+        {/* Top Bar */}
         <div className="bg-white border-b border-gray-200 px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
@@ -249,35 +246,35 @@ export default function CertificateDesigner({ editData, auth }) {
                 variant="ghost"
                 size="sm"
                 onClick={() => router.visit(route('admin.certificate.templates.index'))}
-                className="flex items-center space-x-2"
               >
-                <ArrowLeft className="w-4 h-4" />
-                <span>Back to Templates</span>
+                <ArrowLeft className="w-4 h-4 mr-1" />
+                Back to Templates
               </Button>
               <div>
                 <h1 className="text-xl font-semibold text-gray-900">Certificate Designer</h1>
                 <p className="text-sm text-gray-500">{editData?.name || 'Untitled Template'}</p>
               </div>
             </div>
-
             <div className="flex items-center space-x-3">
               <Button onClick={resetDesign} variant="outline" size="sm">
                 <RotateCcw className="w-4 h-4" />
-                <span>Reset</span>
+                Reset
               </Button>
               <Button onClick={previewDesign} variant="outline" size="sm">
                 <Eye className="w-4 h-4" />
-                <span>Preview</span>
+                Preview
               </Button>
               <Button onClick={saveDesign} disabled={saving} size="sm">
                 <Save className="w-4 h-4" />
-                <span>{saving ? 'Saving...' : 'Save Design'}</span>
+                {saving ? 'Saving...' : 'Save Design'}
               </Button>
             </div>
           </div>
         </div>
 
+        {/* Layout */}
         <div className="flex h-[calc(100vh-80px)]">
+          {/* Sidebar */}
           <div className="w-64 bg-white border-r border-gray-200 p-4">
             <Card>
               <CardHeader className="pb-3">
@@ -300,17 +297,6 @@ export default function CertificateDesigner({ editData, auth }) {
                     ))}
                   </div>
                 </div>
-
-                <div>
-                  <label className="text-xs font-medium text-gray-700 mb-2 block">Elements</label>
-                  <div className="space-y-1 text-xs">
-                    <div className="flex items-center justify-between p-2 bg-gray-50 rounded">
-                      <span>Total Elements</span>
-                      <Badge variant="secondary">{elements.length}</Badge>
-                    </div>
-                  </div>
-                </div>
-
                 <div>
                   <label className="text-xs font-medium text-gray-700 mb-2 block">Canvas Size</label>
                   <div className="text-xs text-gray-600">
@@ -321,6 +307,7 @@ export default function CertificateDesigner({ editData, auth }) {
             </Card>
           </div>
 
+          {/* Canvas */}
           <div className="flex-1 bg-gray-100 p-8 overflow-auto">
             <div className="flex items-center justify-center min-h-full">
               <div
@@ -353,16 +340,7 @@ export default function CertificateDesigner({ editData, auth }) {
                         handleResize(el.id, ref, { x: position.x / zoom, y: position.y / zoom })
                       }
                       bounds="parent"
-                      enableResizing={{
-                        top: el.type !== 'qr' && el.type !== 'photo',
-                        right: el.type !== 'qr' && el.type !== 'photo',
-                        bottom: el.type !== 'qr' && el.type !== 'photo',
-                        left: el.type !== 'qr' && el.type !== 'photo',
-                        topRight: el.type !== 'qr' && el.type !== 'photo',
-                        bottomRight: el.type !== 'qr' && el.type !== 'photo',
-                        bottomLeft: el.type !== 'qr' && el.type !== 'photo',
-                        topLeft: el.type !== 'qr' && el.type !== 'photo',
-                      }}
+                      enableResizing={el.type !== 'qr' && el.type !== 'photo'}
                       onClick={() => setSelectedElement(el.id)}
                     >
                       <div
@@ -379,12 +357,7 @@ export default function CertificateDesigner({ editData, auth }) {
                         }}
                       >
                         {el.type === 'image' ? (
-                          <img
-                            src={el.src}
-                            alt={el.alt || el.id}
-                            className="w-full h-full object-contain"
-                            draggable={false}
-                          />
+                          <img src={el.src} alt={el.alt || el.id} className="w-full h-full object-contain" />
                         ) : el.type === 'content' ? (
                           <div
                             className="w-full h-full p-2 overflow-hidden"
@@ -411,64 +384,58 @@ export default function CertificateDesigner({ editData, auth }) {
             </div>
           </div>
 
-          {showPreview && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white rounded-lg shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-auto">
-                <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-                  <h2 className="text-lg font-semibold text-gray-900">Certificate Preview</h2>
-                  <div className="flex items-center space-x-2">
-                    <Button
-                      onClick={() => {
-                        const element = document.createElement('a');
-                        const file = new Blob([previewHtml], { type: 'text/html' });
-                        element.href = URL.createObjectURL(file);
-                        element.download = `${editData?.name || 'certificate'}-preview.html`;
-                        document.body.appendChild(element);
-                        element.click();
-                        document.body.removeChild(element);
-                      }}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                    <Button onClick={() => setShowPreview(false)} variant="outline" size="sm">
-                      Close
-                    </Button>
-                  </div>
-                </div>
-                <div className="p-6">
-                  <div className="flex justify-center items-center overflow-hidden">
-                    <div
-                      style={{
-                        width: `${canvasSize.width}mm`,
-                        height: `${canvasSize.height}mm`,
-                        maxWidth: '100%',
-                        maxHeight: '70vh',
-                        aspectRatio: `${canvasSize.width} / ${canvasSize.height}`,
-                      }}
-                    >
-                      <div
-                        className="bg-white border border-gray-300 shadow-lg"
-                        style={{
-                          width: `${canvasSize.width}mm`,
-                          height: `${canvasSize.height}mm`,
-                          transformOrigin: 'top left',
-                          transform: `scale(min(1, calc(100% / ${canvasSize.width}mm), calc(70vh / ${canvasSize.height}mm)))`,
-                        }}
-                      >
-                        <div
-                          dangerouslySetInnerHTML={{ __html: previewHtml }}
-                          className="w-full h-full"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
+          {/* Preview Modal */}
+       {showPreview && (
+  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+    <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-auto max-h-[90vh] overflow-hidden flex flex-col">
+      {/* Modal Header */}
+      <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+        <h2 className="text-lg font-semibold text-gray-900">Certificate Preview</h2>
+        <div className="flex items-center space-x-2">
+          <Button
+            onClick={() => {
+              const element = document.createElement('a');
+              const file = new Blob([previewHtml], { type: 'text/html' });
+              element.href = URL.createObjectURL(file);
+              element.download = `${editData?.name || 'certificate'}-preview.html`;
+              document.body.appendChild(element);
+              element.click();
+              document.body.removeChild(element);
+            }}
+            variant="outline"
+            size="sm"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            Download
+          </Button>
+          <Button onClick={() => setShowPreview(false)} variant="outline" size="sm">
+            Close
+          </Button>
+        </div>
+      </div>
+
+      {/* Modal Body */}
+      <div className="flex-1 flex items-center justify-center overflow-hidden p-4">
+        <div
+          className="relative bg-white border border-gray-300 shadow-md"
+          style={{
+            width: '297mm',
+            height: '210mm',
+            transform: `scale(${calculateScale(297, 210)})`,
+            transformOrigin: 'center center',
+          }}
+        >
+          <div
+            className="w-full h-full"
+            dangerouslySetInnerHTML={{ __html: previewHtml }}
+          />
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
         </div>
       </div>
     </AdminAuthenticatedLayout>
