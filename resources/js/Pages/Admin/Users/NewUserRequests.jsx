@@ -372,9 +372,9 @@ export default function NewUserRequests({ pendingUsers = [] }) {
                             </div>
                         </div>
                     ) : (
-                        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-1 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                             {filteredUsers.map((user) => (
-                                <Card key={user.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md hover:scale-[1.02] bg-white relative overflow-hidden">
+                                <Card key={user.id} className="group hover:shadow-xl transition-all duration-300 border-0 shadow-md hover:scale-[1.01] bg-white relative overflow-hidden w-full">
                                     {/* Selection Checkbox */}
                                     <div className="absolute top-4 left-4 z-10">
                                         <Checkbox
@@ -384,38 +384,38 @@ export default function NewUserRequests({ pendingUsers = [] }) {
                                         />
                                     </div>
 
-                                    <CardHeader className="pb-4 pl-12">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center space-x-4">
-                                                <div className="relative">
-                                                    <Avatar className="h-16 w-16 ring-4 ring-white shadow-lg">
+                                    <CardHeader className="pb-3 pl-12 pr-4">
+                                        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                                            <div className="flex items-center space-x-3 flex-1 min-w-0">
+                                                <div className="relative flex-shrink-0">
+                                                    <Avatar className="h-12 w-12 sm:h-14 sm:w-14 lg:h-16 lg:w-16 ring-4 ring-white shadow-lg">
                                                         <AvatarImage src={user.image} alt={user.name} />
-                                                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-lg">
+                                                        <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-semibold text-sm sm:text-base lg:text-lg">
                                                             {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                                                         </AvatarFallback>
                                                     </Avatar>
-                                                    <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
-                                                        <Clock className="h-3 w-3 text-yellow-800" />
+                                                    <div className="absolute -bottom-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                                                        <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-yellow-800" />
                                                     </div>
                                                 </div>
-                                                <div className="flex-1">
-                                                    <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                                                <div className="flex-1 min-w-0">
+                                                    <CardTitle className="text-lg sm:text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors truncate">
                                                         {user.name}
                                                     </CardTitle>
-                                                    <CardDescription className="flex items-center mt-2 text-gray-600">
-                                                        <Mail className="h-4 w-4 mr-2 text-blue-500" />
-                                                        {user.email}
+                                                    <CardDescription className="flex items-center mt-1 sm:mt-2 text-gray-600 text-sm">
+                                                        <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-2 text-blue-500 flex-shrink-0" />
+                                                        <span className="truncate">{user.email}</span>
                                                     </CardDescription>
                                                     {user.member_id && (
-                                                        <div className="flex items-center mt-1 text-sm text-gray-500">
-                                                            <CreditCard className="h-4 w-4 mr-2" />
-                                                            ID: {user.member_id}
+                                                        <div className="flex items-center mt-1 text-xs sm:text-sm text-gray-500">
+                                                            <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 mr-2 flex-shrink-0" />
+                                                            <span className="truncate">ID: {user.member_id}</span>
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="flex flex-col items-end space-y-2">
-                                                <Badge variant="outline" className="text-xs font-medium px-3 py-1 bg-blue-50 text-blue-700 border-blue-200">
+                                            <div className="flex sm:flex-col items-center sm:items-end space-x-2 sm:space-x-0 sm:space-y-2 flex-shrink-0">
+                                                <Badge variant="outline" className="text-xs font-medium px-2 sm:px-3 py-1 bg-blue-50 text-blue-700 border-blue-200 whitespace-nowrap">
                                                     {user.usertype || 'User'}
                                                 </Badge>
                                                 <Button
@@ -425,16 +425,16 @@ export default function NewUserRequests({ pendingUsers = [] }) {
                                                         setSelectedUser(user);
                                                         setShowUserDetails(true);
                                                     }}
-                                                    className="text-gray-500 hover:text-blue-600"
+                                                    className="text-gray-500 hover:text-blue-600 p-1 sm:p-2"
                                                 >
                                                     <Eye className="h-4 w-4" />
                                                 </Button>
                                             </div>
                                         </div>
                                     </CardHeader>
-                                    <CardContent className="space-y-6">
+                                    <CardContent className="space-y-4 sm:space-y-6 px-4 sm:px-6">
                                         {/* User Details Grid */}
-                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                                             {user.phone && (
                                                 <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
                                                     <div className="p-2 bg-green-100 rounded-full">
@@ -556,7 +556,7 @@ export default function NewUserRequests({ pendingUsers = [] }) {
                                         )}
 
                                         {/* Action Buttons */}
-                                        <div className="flex gap-3 pt-4">
+                                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4">
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
                                                     <Button

@@ -44,8 +44,26 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            // Check if user exists in pending_users table
+            $pendingUser = \App\Models\PendingUser::where('email', $this->email)->first();
+            if ($pendingUser) {
+                throw ValidationException::withMessages([
+                    'email' => 'Your registration is pending approval. Please wait for admin approval before logging in.',
+                ]);
+            }
+
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
+            ]);
+        }
+
+        // Check if the authenticated user is approved
+        $user = Auth::user();
+        if (!$user->is_approved) {
+            Auth::logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Your account is not approved yet. Please wait for admin approval before logging in.',
             ]);
         }
 

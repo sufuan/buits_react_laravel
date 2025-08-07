@@ -38,7 +38,7 @@ Route::get('/test-certificate-generate', function () {
 })->middleware(['auth:admin']);
 
 Route::get('/dashboard', function () {
-    return Inertia::render('Dashboard');
+    return Inertia::render('User/Dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
