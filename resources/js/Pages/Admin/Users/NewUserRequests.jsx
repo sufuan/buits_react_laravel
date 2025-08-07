@@ -216,7 +216,7 @@ export default function NewUserRequests({ pendingUsers = [] }) {
     };
 
     return (
-        <AdminAuthenticatedLayout>
+        <AdminAuthenticatedLayout pendingUsersCount={filteredUsers.length}>
             <Head title="New User Requests" />
 
             <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">

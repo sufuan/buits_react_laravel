@@ -1,7 +1,29 @@
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 import { Head } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import NewUserRequestNotification from '@/components/NewUserRequestNotification';
 
-export default function AdminDashboard() {
+export default function AdminDashboard({ pendingUsers = [] }) {
+    const [showNotificationModal, setShowNotificationModal] = useState(false);
+
+    // Show notification modal when there are pending users and admin first logs in
+    useEffect(() => {
+        if (pendingUsers.length > 0) {
+            // Check if we should show the modal (e.g., first time login or new requests)
+            const lastNotificationCheck = localStorage.getItem('lastNotificationCheck');
+            const currentTime = new Date().getTime();
+
+            // Show modal if it's been more than 1 hour since last check or first time
+            if (!lastNotificationCheck || (currentTime - parseInt(lastNotificationCheck)) > 3600000) {
+                setShowNotificationModal(true);
+                localStorage.setItem('lastNotificationCheck', currentTime.toString());
+            }
+        }
+    }, [pendingUsers]);
+
+    const handleCloseNotification = () => {
+        setShowNotificationModal(false);
+    };
     return (
         <AdminAuthenticatedLayout
             header={
@@ -9,8 +31,16 @@ export default function AdminDashboard() {
                     Admin Dashboard
                 </h2>
             }
+            pendingUsersCount={pendingUsers.length}
         >
             <Head title="Admin Dashboard" />
+
+            {/* New User Request Notification Modal */}
+            <NewUserRequestNotification
+                pendingUsers={pendingUsers}
+                showModal={showNotificationModal}
+                onClose={handleCloseNotification}
+            />
 
             <div className="py-12">
                 <div className="mx-auto max-w-7xl sm:px-6 lg:px-8">

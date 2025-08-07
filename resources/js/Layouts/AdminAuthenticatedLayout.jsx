@@ -6,7 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { usePage } from '@inertiajs/react';
 import { useEffect } from 'react';
 
-export default function AdminAuthenticatedLayout({ header, children }) {
+export default function AdminAuthenticatedLayout({ header, children, pendingUsersCount = 0 }) {
     const admin = usePage().props.auth.admin;
 
     useEffect(() => {
@@ -17,7 +17,7 @@ export default function AdminAuthenticatedLayout({ header, children }) {
 
     return (
         <SidebarProvider>
-            <AdminSidebar user={admin} />
+            <AdminSidebar user={admin} pendingUsersCount={pendingUsersCount} />
             <SidebarInset>
                 <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
                     <div className="flex items-center gap-2 px-4">

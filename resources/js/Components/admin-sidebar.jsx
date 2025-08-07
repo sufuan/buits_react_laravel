@@ -122,7 +122,19 @@ const adminNavData = {
   ],
 }
 
-export function AdminSidebar({ user, ...props }) {
+export function AdminSidebar({ user, pendingUsersCount = 0, ...props }) {
+  // Create notifications object for the sidebar - only include non-zero counts
+  const notifications = {};
+
+  // Debug: Log the pending users count
+  console.log('AdminSidebar - pendingUsersCount:', pendingUsersCount);
+
+  if (pendingUsersCount > 0) {
+    notifications["User Management"] = pendingUsersCount;
+    notifications["New User Requests"] = pendingUsersCount;
+    console.log('AdminSidebar - notifications:', notifications);
+  }
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -137,7 +149,7 @@ export function AdminSidebar({ user, ...props }) {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={adminNavData.navMain} />
+        <NavMain items={adminNavData.navMain} notifications={notifications} />
       </SidebarContent>
       <SidebarFooter>
         <AdminNavUser user={user} />

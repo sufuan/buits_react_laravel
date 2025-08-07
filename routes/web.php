@@ -63,7 +63,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
     Route::middleware('admin')->group(function () {
 
         // Admin Dashboard
-        Route::get('dashboard', fn() => Inertia::render('Admin/Dashboard'))->name('dashboard');
+        Route::get('dashboard', function () {
+            $pendingUsers = \App\Models\PendingUser::orderBy('created_at', 'desc')->get();
+            return Inertia::render('Admin/Dashboard', [
+                'pendingUsers' => $pendingUsers
+            ]);
+        })->name('dashboard');
 
         // ================= User Management =================
         Route::prefix('users')->name('users.')->group(function () {
@@ -87,6 +92,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('{user}/edit', [UserController::class, 'edit'])->name('edit');
             Route::put('{user}', [UserController::class, 'update'])->name('update');
             Route::delete('{user}', [UserController::class, 'destroy'])->name('destroy');
+        });
+
+        // ================= Notifications =================
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('check', [\App\Http\Controllers\Admin\NotificationController::class, 'check'])->name('check');
+            Route::post('mark-seen', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsSeen'])->name('mark-seen');
         });
 
         // ================= Certificate Module =================
