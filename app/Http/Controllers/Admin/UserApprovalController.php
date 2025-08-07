@@ -177,4 +177,113 @@ class UserApprovalController extends Controller
 
         return $newMemberId;
     }
+
+    /**
+     * Bulk approve multiple users
+     */
+    public function bulkApprove(Request $request)
+    {
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:pending_users,id'
+        ]);
+
+        try {
+            $approvedCount = 0;
+            $errors = [];
+
+            foreach ($request->user_ids as $id) {
+                try {
+                    $pendingUser = PendingUser::find($id);
+                    if (!$pendingUser) continue;
+
+                    // Check if user already exists
+                    $existingUser = User::where('email', $pendingUser->email)->first();
+                    if ($existingUser) {
+                        $errors[] = "User {$pendingUser->name} already exists.";
+                        continue;
+                    }
+
+                    // Generate member ID
+                    $memberId = $this->generateNewMemberId($pendingUser->department, $pendingUser->session);
+
+                    // Create user account
+                    $newUser = User::create([
+                        'name' => $pendingUser->name,
+                        'email' => $pendingUser->email,
+                        'password' => $pendingUser->password, // Already hashed
+                        'phone' => $pendingUser->phone,
+                        'department' => $pendingUser->department,
+                        'session' => $pendingUser->session,
+                        'usertype' => $pendingUser->usertype,
+                        'gender' => $pendingUser->gender,
+                        'date_of_birth' => $pendingUser->date_of_birth,
+                        'blood_group' => $pendingUser->blood_group,
+                        'class_roll' => $pendingUser->class_roll,
+                        'father_name' => $pendingUser->father_name,
+                        'mother_name' => $pendingUser->mother_name,
+                        'current_address' => $pendingUser->current_address,
+                        'permanent_address' => $pendingUser->permanent_address,
+                        'member_id' => $memberId,
+                        'transaction_id' => $pendingUser->transaction_id,
+                        'to_account' => $pendingUser->to_account,
+                        'image' => $pendingUser->image,
+                        'skills' => $pendingUser->skills,
+                        'custom-form' => $pendingUser['custom-form'],
+                        'is_approved' => true,
+                    ]);
+
+                    // Delete pending user record
+                    $pendingUser->delete();
+                    $approvedCount++;
+
+                } catch (\Exception $e) {
+                    $errors[] = "Failed to approve {$pendingUser->name}: " . $e->getMessage();
+                }
+            }
+
+            $message = "{$approvedCount} users approved successfully!";
+            if (!empty($errors)) {
+                $message .= " Errors: " . implode(', ', array_slice($errors, 0, 3));
+                if (count($errors) > 3) {
+                    $message .= " and " . (count($errors) - 3) . " more...";
+                }
+            }
+
+            return back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            Log::error('Bulk approval failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Bulk approval failed: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Bulk reject multiple users
+     */
+    public function bulkReject(Request $request)
+    {
+        $request->validate([
+            'user_ids' => 'required|array',
+            'user_ids.*' => 'exists:pending_users,id'
+        ]);
+
+        try {
+            $rejectedCount = 0;
+
+            foreach ($request->user_ids as $id) {
+                $pendingUser = PendingUser::find($id);
+                if ($pendingUser) {
+                    $pendingUser->delete();
+                    $rejectedCount++;
+                }
+            }
+
+            return back()->with('success', "{$rejectedCount} users rejected successfully!");
+
+        } catch (\Exception $e) {
+            Log::error('Bulk rejection failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Bulk rejection failed: ' . $e->getMessage()]);
+        }
+    }
 }

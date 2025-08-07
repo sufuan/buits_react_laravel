@@ -73,15 +73,20 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('export', [UserController::class, 'export'])->name('export');
             Route::get('template', [UserController::class, 'template'])->name('template');
             Route::post('import', [UserController::class, 'import'])->name('import');
-            Route::get('{user}', [UserController::class, 'show'])->name('show');
-            Route::get('{user}/edit', [UserController::class, 'edit'])->name('edit');
-            Route::put('{user}', [UserController::class, 'update'])->name('update');
-            Route::delete('{user}', [UserController::class, 'destroy'])->name('destroy');
 
+            // User Approval Routes (must come before {user} routes)
             Route::get('all', [UserApprovalController::class, 'allUsers'])->name('all');
             Route::get('pending', [UserApprovalController::class, 'index'])->name('pending');
             Route::post('{id}/approve', [UserApprovalController::class, 'approve'])->name('approve');
             Route::delete('{id}/reject', [UserApprovalController::class, 'reject'])->name('reject');
+            Route::post('bulk-approve', [UserApprovalController::class, 'bulkApprove'])->name('bulk-approve');
+            Route::post('bulk-reject', [UserApprovalController::class, 'bulkReject'])->name('bulk-reject');
+
+            // User CRUD Routes (must come after specific routes)
+            Route::get('{user}', [UserController::class, 'show'])->name('show');
+            Route::get('{user}/edit', [UserController::class, 'edit'])->name('edit');
+            Route::put('{user}', [UserController::class, 'update'])->name('update');
+            Route::delete('{user}', [UserController::class, 'destroy'])->name('destroy');
         });
 
         // ================= Certificate Module =================
