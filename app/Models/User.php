@@ -66,4 +66,10 @@ class User extends Authenticatable
             'is_approved' => 'boolean',
         ];
     }
+
+    public function committees()
+{
+    return $this->hasMany(Committee::class);
+}
+
 }

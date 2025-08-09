@@ -16,6 +16,7 @@ use App\Http\Controllers\Admin\Certificates\CertificateTemplateController;
 use App\Http\Controllers\Admin\Certificates\CertificateSettingController;
 use App\Http\Controllers\Admin\Certificates\GenerateCertificateController;
 use App\Http\Controllers\Admin\Certificates\CertificateController;
+use App\Http\Controllers\MuseumController;
 
 Route::get('/', function () {
     return Inertia::render('Welcome', [
@@ -30,6 +31,24 @@ Route::get('/', function () {
 Route::get('/certificate/verify', function () {
     return Inertia::render('Certificate/Verify');
 })->name('certificate.verify');
+
+// Public navigation routes
+Route::get('/about', function () {
+    return Inertia::render('About');
+})->name('about');
+
+Route::get('/events', function () {
+    return Inertia::render('Events');
+})->name('events');
+
+Route::get('/find-member', function () {
+    return Inertia::render('FindMember');
+})->name('find-member');
+
+
+
+Route::get('/museum', [MuseumController::class, 'index'])->name('museum.index');
+
 
 // Test route for certificate generation
 Route::get('/test-certificate-generate', function () {

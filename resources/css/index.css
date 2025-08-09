@@ -364,3 +364,19 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+
+/* reduced motion fallback */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    scroll-behavior: auto !important;
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* oil-paint filter suggestion for portraits */
+.oil-paint {
+  filter: contrast(0.95) saturate(0.9) sepia(0.12) blur(0.2px);
+  /* for heavier effect you'd use a canvas post-process */
+}

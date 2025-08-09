@@ -3,10 +3,17 @@ import gsap from "gsap";
 import { useWindowScroll } from "react-use";
 import { useEffect, useRef, useState } from "react";
 import { TiLocationArrow } from "react-icons/ti";
+import { Link } from "@inertiajs/react";
 
 import Button from "./Button";
 
-const navItems = ["Find Member ID", "Events", , "About", "Login", "Register"];
+const navItems = [
+  { name: "Find Member ID", href: "/find-member" },
+  { name: "Events", href: "/events" },
+  { name: "About", href: "/about" },
+  { name: "Login", href: "/login" },
+  { name: "Register", href: "/register" }
+];
 
 const NavBar = () => {
   // State for toggling audio and visual indicator
@@ -147,7 +154,7 @@ const NavBar = () => {
               <img src="/img/logo.png" alt="logo" className="w-10" />
               <Button
                 id="product-button"
-                title="Products"
+                title="BUITS"
                 rightIcon={<TiLocationArrow />}
                 containerClass="bg-blue-50 md:flex hidden items-center justify-center gap-1"
               />
@@ -158,13 +165,13 @@ const NavBar = () => {
               {/* Desktop Navigation */}
               <div className="hidden md:block">
                 {navItems.map((item, index) => (
-                  <a
+                  <Link
                     key={index}
-                    href={`#${item.toLowerCase()}`}
+                    href={item.href}
                     className="nav-hover-btn"
                   >
-                    {item}
-                  </a>
+                    {item.name}
+                  </Link>
                 ))}
               </div>
 
@@ -298,8 +305,8 @@ const NavBar = () => {
               <span className="text-black text-xl mr-6 font-mono font-bold">
                 0{index + 1}
               </span>
-              <a
-                href={`#${item.toLowerCase()}`}
+              <Link
+                href={item.href}
                 onClick={toggleMobileMenu}
                 className="text-black text-7xl font-black uppercase tracking-tight mobile-menu-item hover:text-gray-800 transition-colors duration-300"
                 style={{
@@ -308,8 +315,8 @@ const NavBar = () => {
                   fontWeight: "900",
                 }}
               >
-                {item}
-              </a>
+                {item.name}
+              </Link>
             </div>
           ))}
         </div>
