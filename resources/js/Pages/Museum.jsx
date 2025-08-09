@@ -6,6 +6,9 @@ import { ScrollToPlugin } from 'gsap/ScrollToPlugin';
 import { useGSAP } from '@gsap/react';
 import classNames from 'classnames';
 import NavBar from '@/Components/HomePage/Navbar';
+import RealisticDoor from '@/Components/Museum/RealisticDoor';
+import FootstepsAnimation from '@/Components/Museum/FootstepsAnimation';
+import ImmersiveRoom from '@/Components/Museum/ImmersiveRoom';
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
 
@@ -44,6 +47,9 @@ export default function PreviousMuseum() {
   const [selectedMember, setSelectedMember] = useState(null);
   const [mapOpen, setMapOpen] = useState(false);
   const [deviceTilt, setDeviceTilt] = useState({ x: 0, y: 0 });
+  const [openDoors, setOpenDoors] = useState({});
+  const [walkingStates, setWalkingStates] = useState({});
+  const [enteringRooms, setEnteringRooms] = useState({});
 
   // Refs for animations
   const heroRef = useRef(null);
@@ -109,6 +115,27 @@ export default function PreviousMuseum() {
       ScrollTrigger.getAll().forEach(s => s.kill());
     };
   }, [years, reducedMotion]);
+
+  // Door interaction handlers
+  const handleDoorEnter = (yearIndex) => {
+    // The door component requests to enter; we only mark door as opening
+    setOpenDoors(prev => ({ ...prev, [yearIndex]: true }));
+  };
+
+  const handleDoorOpenComplete = (yearIndex) => {
+    // After doors fully open, start footsteps walking
+    setWalkingStates(prev => ({ ...prev, [yearIndex]: true }));
+  };
+
+  const handleWalkComplete = (yearIndex) => {
+    // Walking finished; now show entering room content
+    setWalkingStates(prev => ({ ...prev, [yearIndex]: false }));
+    setEnteringRooms(prev => ({ ...prev, [yearIndex]: true }));
+  };
+
+  const handleRoomEnterComplete = (yearIndex) => {
+    // Room entry complete
+  };
 
   // Museum map navigation with footstep effect
   const jumpToYear = (index) => {
@@ -178,39 +205,74 @@ export default function PreviousMuseum() {
 
           <div className="relative z-10 px-4 pt-12 pb-32">
             {/* Corridor title */}
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-5xl font-serif text-amber-200 mb-4">
+            <div className="text-center mb-16">
+              <h2 className="text-4xl md:text-6xl font-serif text-amber-200 mb-6 tracking-wide">
                 The Corridor of Time
               </h2>
-              <p className="text-amber-400/80 text-lg">
-                Each door holds the memories of a legendary year
+              <p className="text-amber-400/80 text-xl max-w-2xl mx-auto leading-relaxed">
+                Walk through the legendary halls where each door opens to reveal the heroes who shaped our legacy
               </p>
+              <div className="mt-6 flex items-center justify-center gap-4 text-amber-500/60">
+                <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
+                <div className="text-sm font-serif italic">Step forward, legend awaits</div>
+                <div className="w-16 h-px bg-gradient-to-r from-transparent via-amber-500 to-transparent"></div>
+              </div>
             </div>
 
             {/* Vertical corridor with doors */}
-            <div className="space-y-16 max-w-4xl mx-auto">
+            <div className="space-y-48 max-w-4xl mx-auto">
               {years.map((y, idx) => (
                 <div
                   key={y.year}
                   ref={(el) => doorRefs.current[idx] = el}
-                  className={classNames('door-panel relative transition-all duration-700', {
+                  className={classNames('door-section relative transition-all duration-700 py-20', {
                     'opacity-100 scale-100 transform-none': idx === currentYearIndex,
                     'opacity-70 scale-95 filter grayscale-[0.3]': idx !== currentYearIndex
                   })}
                 >
-                  {/* Door ambient glow effect */}
-                  <div className="absolute inset-0 bg-gradient-to-r from-amber-500/20 via-yellow-500/30 to-amber-500/20 rounded-2xl blur-xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"></div>
+                  {/* Door Container with proper spacing */}
+                  <div className="relative min-h-[800px] flex flex-col items-center justify-center">
 
-                  <Door
-                    year={y.year}
-                    theme={y.theme || `Committee ${y.year}`}
-                    color={getDoorColor(y.year)}
-                    onEnter={() => setCurrentYearIndex(idx)}
-                    onOpen={() => {}}
-                    style={getDoorStyle(y.year)}
-                  >
-                    <CommitteeRoom data={y} />
-                  </Door>
+                    {/* Atmospheric Background for this door */}
+                    <div className="absolute inset-0 bg-gradient-radial from-amber-900/10 via-transparent to-transparent rounded-3xl"></div>
+
+                    {/* Floor area in front of door - base gradient */}
+                    <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-full h-48 bg-gradient-to-t from-amber-900/20 to-transparent rounded-full blur-sm z-0"></div>
+
+                    {/* Realistic Door - Centered and smaller */}
+                    <div className="relative z-20 flex justify-center">
+                      <RealisticDoor
+                        year={y.year}
+                        committeeName={y.theme || `Committee ${y.year}`}
+                        onEnter={() => handleDoorEnter(idx)}
+                        onOpenComplete={() => handleDoorOpenComplete(idx)}
+                        isOpen={openDoors[idx]}
+                      />
+                    </div>
+
+                    {/* Footsteps Animation - positioned in front of door on the floor */}
+                    {walkingStates[idx] && (
+                      <div className="absolute bottom-0 left-0 right-0 h-48 z-30 pointer-events-none">
+                        <FootstepsAnimation
+                          isWalking={walkingStates[idx]}
+                          onWalkComplete={() => handleWalkComplete(idx)}
+                        />
+                      </div>
+                    )}
+
+                    {/* Immersive Room */}
+                    {enteringRooms[idx] && (
+                      <ImmersiveRoom
+                        data={y}
+                        isEntering={enteringRooms[idx]}
+                        onEnterComplete={() => handleRoomEnterComplete(idx)}
+                        onExit={() => {
+                          setEnteringRooms(prev => ({ ...prev, [idx]: false }));
+                          setOpenDoors(prev => ({ ...prev, [idx]: false }));
+                        }}
+                      />
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
@@ -861,11 +923,13 @@ function Hero({ emblem }) {
    DOOR COMPONENT (wrapper)
    - Cinematic door with period-appropriate styling
    -----------------------------*/
-function Door({ year, theme, color, style, children }) {
+function Door({ year, theme, color, style, children, onOpen }) {
   const [open, setOpen] = useState(false);
   const [glowing, setGlowing] = useState(false);
+  const [isWalking, setIsWalking] = useState(false);
   const doorRef = useRef(null);
   const handleRef = useRef(null);
+  const roomRef = useRef(null);
 
   useEffect(() => {
     if (!doorRef.current) return;
@@ -923,43 +987,112 @@ function Door({ year, theme, color, style, children }) {
   }, []);
 
   const openDoor = () => {
-    setOpen(true);
+    if (open) return; // Prevent multiple clicks
+    
+    console.log(`Opening door for year ${year}`); // Debug log
+    setIsWalking(true);
+    
+    // Start walking animation first
+    setTimeout(() => {
+      setOpen(true);
+      
+      // Cinematic door opening animation
+      if (doorRef.current) {
+        const tl = gsap.timeline();
 
-    // Cinematic door opening animation
-    if (doorRef.current) {
-      const tl = gsap.timeline();
-
-      // Door swings open
-      tl.to(doorRef.current, {
-        rotationY: -75,
-        transformOrigin: "left center",
-        duration: 1.2,
-        ease: 'power2.inOut'
-      })
-      // Light spills out
-      .to('.door-light-spill', {
-        opacity: 1,
-        scale: 1.5,
-        duration: 0.8,
-        ease: 'power2.out'
-      }, "-=0.8")
-      // Room content fades in
-      .fromTo('.committee-room', {
-        opacity: 0,
-        y: 30,
-        scale: 0.95
-      }, {
-        opacity: 1,
-        y: 0,
-        scale: 1,
-        duration: 1,
-        ease: 'power2.out'
-      }, "-=0.4");
-    }
+        // Door swings open with realistic physics
+        tl.to(doorRef.current.querySelector('.door-panel'), {
+          rotationY: -75,
+          transformOrigin: "left center",
+          duration: 1.5,
+          ease: 'power2.inOut',
+          transformStyle: "preserve-3d"
+        })
+        // Light spills out dramatically
+        .to(doorRef.current.querySelector('.door-light-spill'), {
+          opacity: 0.8,
+          scale: 1.5,
+          duration: 1.2,
+          ease: 'power2.out'
+        }, "-=1.2")
+        // Room content fades in after walking
+        .fromTo(roomRef.current, {
+          opacity: 0,
+          y: 50,
+          scale: 0.9
+        }, {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 1.5,
+          ease: 'power2.out'
+        }, "-=0.5");
+      }
+      
+      // Stop walking after door opens
+      setTimeout(() => {
+        setIsWalking(false);
+        if (onOpen) onOpen();
+      }, 2000);
+    }, 500); // Small delay before starting door animation
   };
 
   return (
-    <div className="w-full group">
+    <div className="w-full group relative">
+      {/* Walking Animation Overlay - FIXED POSITIONING */}
+      {isWalking && (
+        <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center">
+          <div className="text-center">
+            <div className="text-2xl font-serif text-amber-200 mb-6">
+              Entering {year} Chamber...
+            </div>
+            
+            {/* REALISTIC WALKING FIGURE */}
+            <div className="relative w-48 h-64 mx-auto">
+              {/* Shadow */}
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 w-32 h-8 bg-black/60 rounded-full blur-sm animate-pulse"></div>
+              
+              {/* Walking Figure */}
+              <div className="relative w-24 h-48 mx-auto">
+                {/* Head */}
+                <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-gradient-to-b from-amber-300 to-amber-400 rounded-full"></div>
+                
+                {/* Body */}
+                <div className="absolute top-10 left-1/2 transform -translate-x-1/2 w-16 h-24 bg-gradient-to-b from-amber-400 to-amber-600 rounded-lg"></div>
+                
+                {/* Arms */}
+                <div className="absolute top-12 left-0 w-6 h-20 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full animate-pulse"></div>
+                <div className="absolute top-12 right-0 w-6 h-20 bg-gradient-to-b from-amber-400 to-amber-600 rounded-full animate-pulse" style={{animationDelay: '0.5s'}}></div>
+                
+                {/* Legs */}
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 -translate-x-4 w-6 h-16 bg-gradient-to-b from-amber-600 to-amber-800 rounded-lg animate-bounce"></div>
+                <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-x-4 w-6 h-16 bg-gradient-to-b from-amber-600 to-amber-800 rounded-lg animate-bounce" style={{animationDelay: '0.3s'}}></div>
+              </div>
+
+              {/* FOOTSTEPS - PROPERLY POSITIONED */}
+              <div className="absolute bottom-10 left-1/2 transform -translate-x-1/2">
+                {[0, 1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="absolute w-4 h-6 bg-amber-600/70 rounded-full animate-ping"
+                    style={{
+                      left: `${(i % 2) * 20 - 10}px`,
+                      bottom: `${i * 15}px`,
+                      animationDelay: `${i * 0.3}s`,
+                      transform: `rotate(${(i % 2) * 20 - 10}deg)`
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            <div className="text-amber-400 text-sm mt-4 animate-pulse">
+              Walking into the legendary chamber...
+            </div>
+          </div>
+        </div>
+      )}
+
       <div
         ref={doorRef}
         className="relative w-full max-w-lg mx-auto rounded-2xl overflow-hidden"
@@ -969,27 +1102,30 @@ function Door({ year, theme, color, style, children }) {
         }}
       >
         {/* Door frame with period styling */}
-        <div className={`relative h-80 rounded-2xl border-4 ${getDoorFrameStyle(year)} overflow-hidden cursor-pointer`}
+        <div className="door-panel relative h-80 rounded-2xl border-4 border-amber-700 bg-gradient-to-b from-amber-800 to-amber-900 overflow-hidden cursor-pointer shadow-2xl"
              onClick={openDoor}
              role="button"
              aria-label={`Open ${year} committee room`}>
 
-          {/* Door background with wood/material texture */}
+          {/* Door background with wood texture */}
           <div
             className="absolute inset-0"
             style={{
-              background: getDoorBackground(year, color),
-              backgroundSize: "cover",
-              backgroundPosition: "center"
+              background: `linear-gradient(45deg, #8B5A2B 0%, #A0522D 50%, #8B4513 100%)`,
+              backgroundImage: `
+                radial-gradient(circle at 25% 25%, rgba(139, 90, 43, 0.3) 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, rgba(160, 82, 45, 0.3) 1px, transparent 1px)
+              `,
+              backgroundSize: "20px 20px"
             }}
           />
 
           {/* Door panels (traditional design) */}
-          <div className="absolute inset-4 grid grid-cols-2 gap-2">
-            <div className="bg-black/10 rounded-lg border border-black/20"></div>
-            <div className="bg-black/10 rounded-lg border border-black/20"></div>
-            <div className="bg-black/10 rounded-lg border border-black/20"></div>
-            <div className="bg-black/10 rounded-lg border border-black/20"></div>
+          <div className="absolute inset-6 grid grid-cols-2 gap-3">
+            <div className="bg-gradient-to-br from-amber-800/50 to-amber-900/80 rounded-lg border-2 border-amber-700/60 shadow-inner"></div>
+            <div className="bg-gradient-to-br from-amber-800/50 to-amber-900/80 rounded-lg border-2 border-amber-700/60 shadow-inner"></div>
+            <div className="bg-gradient-to-br from-amber-800/50 to-amber-900/80 rounded-lg border-2 border-amber-700/60 shadow-inner"></div>
+            <div className="bg-gradient-to-br from-amber-800/50 to-amber-900/80 rounded-lg border-2 border-amber-700/60 shadow-inner"></div>
           </div>
 
           {/* Year plaque */}
@@ -1015,7 +1151,7 @@ function Door({ year, theme, color, style, children }) {
           </div>
 
           {/* Light spill effect (hidden initially) */}
-          <div className="door-light-spill absolute inset-0 bg-gradient-to-r from-amber-300/20 via-yellow-200/30 to-amber-300/20 opacity-0 scale-75 transition-all duration-500"></div>
+          <div className="door-light-spill absolute inset-0 bg-gradient-to-r from-amber-300/0 via-yellow-200/60 to-amber-300/0 opacity-0 scale-75 transition-all duration-500"></div>
 
           {/* Glow effect when hovering */}
           {glowing && (
@@ -1026,23 +1162,22 @@ function Door({ year, theme, color, style, children }) {
         {/* Door instruction */}
         <div className="text-center mt-4">
           <p className="text-amber-400/80 text-sm font-serif">
-            {open ? "Welcome to the chamber" : "Tap the door to enter"}
+            {isWalking ? "Entering chamber..." : open ? "Welcome to the chamber" : "Tap the door to enter"}
           </p>
         </div>
 
-        {/* Committee room content */}
-        <div className="mt-8 committee-room">
-          <div className={classNames('overflow-hidden transition-all duration-700', {
-            'max-h-0 opacity-0': !open,
-            'max-h-[2000px] opacity-100': open
-          })}>
-            {children}
-          </div>
+        {/* Committee room content - ONLY SHOW AFTER DOOR OPENS */}
+        <div ref={roomRef} className="mt-8 committee-room">
+          {open && !isWalking && (
+            <div className="transition-all duration-1000 ease-out">
+              {children}
+            </div>
+          )}
         </div>
       </div>
     </div>
   );
-}
+};
 
 /* -----------------------------
    COMMITTEE ROOM
@@ -1187,6 +1322,7 @@ function MuseumMap({ years = [], onClose, onPick, currentIndex = 0 }) {
     })
     .call(() => {
       onPick(idx);
+      onClose(); // Close the map after selection
     });
   };
 
