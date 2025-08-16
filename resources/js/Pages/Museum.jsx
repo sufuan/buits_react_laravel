@@ -56,10 +56,15 @@ export default function PreviousMuseum() {
   const emblemRef = useRef(null);
   const corridorRef = useRef(null);
   const doorRefs = useRef([]);
+  const cameraRefs = useRef([]); // container around each door section for camera push
+  const vignetteRefs = useRef([]); // overlay vignette for immersion
+  const cameraTls = useRef({});
 
   // Initialize door refs
   useEffect(() => {
     doorRefs.current = years.map(() => React.createRef());
+  cameraRefs.current = years.map(() => React.createRef());
+  vignetteRefs.current = years.map(() => React.createRef());
   }, [years]);
 
   // Device tilt parallax for hero emblem
@@ -125,12 +130,24 @@ export default function PreviousMuseum() {
   const handleDoorOpenComplete = (yearIndex) => {
     // After doors fully open, start footsteps walking
     setWalkingStates(prev => ({ ...prev, [yearIndex]: true }));
+  // Start camera push-in towards the door
+  startCameraPush(yearIndex);
   };
 
   const handleWalkComplete = (yearIndex) => {
-    // Walking finished; now show entering room content
+    // Walking finished; fade out the black overlay and reveal the room content
     setWalkingStates(prev => ({ ...prev, [yearIndex]: false }));
     setEnteringRooms(prev => ({ ...prev, [yearIndex]: true }));
+    
+    const blackOverlay = document.getElementById(`blackout-overlay-${yearIndex}`);
+    if (blackOverlay) {
+      // Fade out black overlay to reveal the room
+      gsap.to(blackOverlay, { 
+        opacity: 0, 
+        duration: 1.0, 
+        ease: 'power2.out' 
+      });
+    }
   };
 
   const handleRoomEnterComplete = (yearIndex) => {
@@ -160,6 +177,37 @@ export default function PreviousMuseum() {
           onComplete: () => setCurrentYearIndex(index)
         });
       });
+  };
+
+  // Cinematic transition to simulate entering the room
+  const startCameraPush = (index) => {
+    const sectionEl = doorRefs.current[index];
+    const blackOverlay = document.getElementById(`blackout-overlay-${index}`);
+    if (!blackOverlay) return;
+
+    // kill previous
+    if (cameraTls.current[index]) {
+      try { cameraTls.current[index].kill(); } catch {}
+    }
+
+    const tl = gsap.timeline();
+    cameraTls.current[index] = tl;
+
+    // Ensure scroll to the door section first
+    if (sectionEl) {
+      tl.to(window, {
+        scrollTo: { y: sectionEl, offsetY: window.innerHeight * 0.2 },
+        duration: 0.6,
+        ease: 'power2.inOut'
+      });
+    }
+
+    // Gradually fade to black to simulate entering the room
+    tl.to(blackOverlay, {
+      opacity: 1,
+      duration: 1.5,
+      ease: 'power2.inOut'
+    }, '-=0.3');
   };
 
   return (
@@ -229,9 +277,14 @@ export default function PreviousMuseum() {
                     'opacity-100 scale-100 transform-none': idx === currentYearIndex,
                     'opacity-70 scale-95 filter grayscale-[0.3]': idx !== currentYearIndex
                   })}
+                  style={{ perspective: '1200px' }}
                 >
                   {/* Door Container with proper spacing */}
-                  <div className="relative min-h-[800px] flex flex-col items-center justify-center">
+                  <div
+                    ref={(el) => cameraRefs.current[idx] = el}
+                    className="relative min-h-[800px] flex flex-col items-center justify-center"
+                    style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'hidden' }}
+                  >
 
                     {/* Atmospheric Background for this door */}
                     <div className="absolute inset-0 bg-gradient-radial from-amber-900/10 via-transparent to-transparent rounded-3xl"></div>
@@ -250,6 +303,13 @@ export default function PreviousMuseum() {
                       />
                     </div>
 
+                    {/* Black overlay for cinematic room entry transition */}
+                    <div
+                      id={`blackout-overlay-${idx}`}
+                      className="fixed inset-0 bg-black z-50 pointer-events-none"
+                      style={{ opacity: 0 }}
+                    />
+
                     {/* Footsteps Animation - positioned in front of door on the floor */}
                     {walkingStates[idx] && (
                       <div className="absolute bottom-0 left-0 right-0 h-48 z-30 pointer-events-none">
@@ -267,8 +327,29 @@ export default function PreviousMuseum() {
                         isEntering={enteringRooms[idx]}
                         onEnterComplete={() => handleRoomEnterComplete(idx)}
                         onExit={() => {
-                          setEnteringRooms(prev => ({ ...prev, [idx]: false }));
-                          setOpenDoors(prev => ({ ...prev, [idx]: false }));
+                          // Start exit transition - fade to black, then reset
+                          const blackOverlay = document.getElementById(`blackout-overlay-${idx}`);
+                          if (blackOverlay) {
+                            gsap.to(blackOverlay, {
+                              opacity: 1,
+                              duration: 0.8,
+                              ease: 'power2.inOut',
+                              onComplete: () => {
+                                // After fade to black, reset states and fade back to corridor
+                                setEnteringRooms(prev => ({ ...prev, [idx]: false }));
+                                setOpenDoors(prev => ({ ...prev, [idx]: false }));
+                                gsap.to(blackOverlay, {
+                                  opacity: 0,
+                                  duration: 1.0,
+                                  ease: 'power2.out'
+                                });
+                              }
+                            });
+                          } else {
+                            // Fallback if overlay not found
+                            setEnteringRooms(prev => ({ ...prev, [idx]: false }));
+                            setOpenDoors(prev => ({ ...prev, [idx]: false }));
+                          }
                         }}
                       />
                     )}

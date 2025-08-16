@@ -57,7 +57,10 @@ const ImmersiveRoom = ({ data, isEntering, onEnterComplete, onExit }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-50 w-full h-screen overflow-hidden bg-gradient-to-b from-amber-900/20 via-red-900/30 to-black">
+    <div className="fixed inset-0 z-50 w-full h-screen overflow-hidden bg-black">
+      {/* Solid background to completely hide the door/corridor */}
+      <div className="absolute inset-0 bg-gradient-to-b from-amber-900/20 via-red-900/30 to-black"></div>
+      
       {/* Room Container */}
       <div 
         ref={roomRef}
