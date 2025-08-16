@@ -7,10 +7,16 @@ use App\Models\User;
 use App\Exports\UsersExport;
 use App\Exports\UsersTemplateExport;
 use App\Imports\UsersImport;
+use App\Services\UserImportService;
+use App\DTOs\ImportPreviewDTO;
+use App\DTOs\ValidationErrorDTO;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -319,11 +325,22 @@ class UserController extends Controller
     public function import(Request $request)
     {
         try {
+            // More flexible validation - check file extension rather than strict MIME type
             $request->validate([
-                'file' => 'required|mimes:xlsx,xls,csv|max:10240' // Max 10MB
+                'file' => 'required|file|max:10240' // Max 10MB
             ]);
 
-            Log::info('Starting user import from file: ' . $request->file('file')->getClientOriginalName());
+            $file = $request->file('file');
+            
+            // Additional validation for Excel files
+            $allowedExtensions = ['xlsx', 'xls', 'csv'];
+            $fileExtension = strtolower($file->getClientOriginalExtension());
+            
+            if (!in_array($fileExtension, $allowedExtensions)) {
+                return back()->withErrors(['error' => 'Please upload a valid Excel file (.xlsx, .xls) or CSV file. Uploaded file: ' . $file->getClientOriginalName()]);
+            }
+
+            Log::info('Starting user import from file: ' . $file->getClientOriginalName() . ' (Type: ' . $file->getMimeType() . ', Extension: ' . $fileExtension . ')');
 
             $import = new UsersImport;
             
@@ -398,10 +415,301 @@ class UserController extends Controller
     }
 
     /**
+     * Show the import wizard page
+     */
+    public function showImport()
+    {
+        try {
+            $validator = new \App\Validators\UserImportValidator();
+            
+            $validationMetadata = [
+                'departments' => $validator->getValidDepartments(),
+                'blood_groups' => $validator->getValidBloodGroups(),
+                'genders' => ['male', 'female', 'other'],
+                'user_types' => ['user', 'admin', 'moderator'],
+                'session_format' => 'YYYY-YY or YYYY-YYYY',
+                'phone_format' => '01XXXXXXXXX'
+            ];
+
+            return Inertia::render('Admin/Users/Import', [
+                'validationMetadata' => $validationMetadata
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to load import page: ' . $e->getMessage());
+            
+            return back()->withErrors(['error' => 'Failed to load import page']);
+        }
+    }
+
+    /**
      * Download Excel template for import.
      */
     public function template()
     {
         return Excel::download(new UsersTemplateExport, 'users_template.xlsx');
+    }
+
+    /**
+     * Preview Excel file without importing
+     * Parse and validate Excel file, return preview data
+     */
+    public function preview(Request $request): JsonResponse
+    {
+        try {
+            // More flexible validation - check file extension rather than strict MIME type
+            $request->validate([
+                'excel_file' => 'required|file|max:10240', // Max 10MB
+            ]);
+
+            $file = $request->file('excel_file');
+            
+            // Additional validation for Excel files
+            $allowedExtensions = ['xlsx', 'xls'];
+            $fileExtension = strtolower($file->getClientOriginalExtension());
+            
+            if (!in_array($fileExtension, $allowedExtensions)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Please upload a valid Excel file (.xlsx or .xls). Uploaded file: ' . $file->getClientOriginalName()
+                ], 422);
+            }
+
+            Log::info('Starting file preview: ' . $file->getClientOriginalName() . ' (Type: ' . $file->getMimeType() . ', Extension: ' . $fileExtension . ')');
+
+            $importService = new UserImportService();
+            $previewData = $importService->parseExcelFile($file);
+
+            // Store preview data in session for later import
+            $sessionId = Str::uuid()->toString();
+            Session::put('import_preview_' . $sessionId, [
+                'data' => $previewData,
+                'expires_at' => now()->addMinutes(30)
+            ]);
+
+            Log::info('Preview generated successfully. Rows: ' . count($previewData->rows) . ', Errors: ' . count($previewData->errors));
+
+            return response()->json([
+                'success' => true,
+                'session_id' => $sessionId,
+                'data' => $previewData->toArray(),
+                'message' => $previewData->getSummaryMessage()
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            Log::error('Validation error in preview: ' . json_encode($e->errors()));
+            return response()->json([
+                'success' => false,
+                'message' => 'File validation failed. Please ensure you upload a valid Excel file.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Preview failed: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            $errorMessage = 'Failed to process file. ';
+            if (strpos($e->getMessage(), 'could not be opened') !== false || 
+                strpos($e->getMessage(), 'corrupted') !== false) {
+                $errorMessage .= 'The file appears to be corrupted or in an unsupported format. Please save your Excel file again and try uploading.';
+            } else {
+                $errorMessage .= $e->getMessage();
+            }
+            
+            return response()->json([
+                'success' => false,
+                'message' => $errorMessage
+            ], 500);
+        }
+    }
+
+    /**
+     * Validate a single row after editing
+     */
+    public function validateRow(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'row_id' => 'required',
+                'data' => 'required|array'
+            ]);
+
+            $importService = new UserImportService();
+            $validation = $importService->validateSingleRow($request->data);
+
+            return response()->json([
+                'success' => true,
+                'valid' => $validation['valid'],
+                'errors' => array_map(function($error) {
+                    return $error instanceof ValidationErrorDTO ? $error->toArray() : $error;
+                }, $validation['errors']),
+                'member_id' => $validation['member_id']
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Row validation failed: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to validate row: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Import validated data in batches
+     */
+    public function importBatch(Request $request): JsonResponse
+    {
+        try {
+            $request->validate([
+                'rows' => 'required|array',
+                'chunk_size' => 'integer|min:1|max:500',
+                'session_id' => 'nullable|string'
+            ]);
+
+            $importService = new UserImportService();
+            $chunkSize = $request->chunk_size ?? 100;
+            
+            // Validate all rows before import
+            $errors = $importService->validateRows($request->rows);
+            if (!empty($errors)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Validation errors found. Please fix them before importing.',
+                    'errors' => array_map(function($error) {
+                        return $error instanceof ValidationErrorDTO ? $error->toArray() : $error;
+                    }, $errors)
+                ], 422);
+            }
+
+            // Perform batch import
+            $result = $importService->importBatch(
+                $request->rows,
+                $chunkSize,
+                $request->session_id
+            );
+
+            // Clear session data if exists
+            if ($request->session_id) {
+                Session::forget('import_preview_' . $request->session_id);
+            }
+
+            Log::info('Batch import completed. Imported: ' . $result['imported'] . ', Failed: ' . $result['failed']);
+
+            return response()->json([
+                'success' => true,
+                'imported' => $result['imported'],
+                'failed' => $result['failed'],
+                'failed_rows' => $result['failed_rows'],
+                'progress' => [
+                    'total' => $result['total'],
+                    'processed' => $result['imported'] + $result['failed'],
+                    'percentage' => round((($result['imported'] + $result['failed']) / $result['total']) * 100, 2)
+                ],
+                'message' => "Successfully imported {$result['imported']} user(s)."
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Batch import failed: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Import failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get import session data
+     */
+    public function getImportSession(Request $request, string $sessionId): JsonResponse
+    {
+        try {
+            $sessionData = Session::get('import_preview_' . $sessionId);
+            
+            if (!$sessionData) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Import session not found or expired'
+                ], 404);
+            }
+
+            // Check if session has expired
+            if ($sessionData['expires_at']->isPast()) {
+                Session::forget('import_preview_' . $sessionId);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Import session has expired'
+                ], 410);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $sessionData['data']->toArray(),
+                'expires_at' => $sessionData['expires_at']->toIso8601String()
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get import session: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve import session'
+            ], 500);
+        }
+    }
+
+    /**
+     * Clear import session
+     */
+    public function clearImportSession(Request $request, string $sessionId): JsonResponse
+    {
+        try {
+            Session::forget('import_preview_' . $sessionId);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Import session cleared successfully'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to clear import session: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to clear import session'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get validation metadata (departments, blood groups, etc.)
+     */
+    public function getValidationMetadata(): JsonResponse
+    {
+        try {
+            $validator = new \App\Validators\UserImportValidator();
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'departments' => $validator->getValidDepartments(),
+                    'blood_groups' => $validator->getValidBloodGroups(),
+                    'genders' => ['male', 'female', 'other'],
+                    'user_types' => ['user', 'admin', 'moderator'],
+                    'session_format' => 'YYYY-YY or YYYY-YYYY',
+                    'phone_format' => '01XXXXXXXXX'
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Failed to get validation metadata: ' . $e->getMessage());
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to retrieve validation metadata'
+            ], 500);
+        }
     }
 }

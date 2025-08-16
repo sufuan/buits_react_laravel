@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
+import ExcelImportButton from '@/Components/Admin/Import/ExcelImportButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -48,6 +49,24 @@ export default function Index({ users }) {
     const [isImporting, setIsImporting] = useState(false);
     const [showResultModal, setShowResultModal] = useState(false);
     const [importResult, setImportResult] = useState(null);
+    const [validationMetadata, setValidationMetadata] = useState(null);
+
+    // Load validation metadata on component mount
+    useEffect(() => {
+        loadValidationMetadata();
+    }, []);
+
+    const loadValidationMetadata = async () => {
+        try {
+            const response = await fetch(route('admin.users.import.validation-metadata'));
+            const result = await response.json();
+            if (result.success) {
+                setValidationMetadata(result.data);
+            }
+        } catch (error) {
+            console.error('Failed to load validation metadata:', error);
+        }
+    };
     const { flash, errors } = usePage().props;
 
     // Get unique departments and sessions for filters
@@ -189,11 +208,24 @@ export default function Index({ users }) {
                                 ) : (
                                     <>
                                         <Upload className="h-4 w-4" />
-                                        Import
+                                        Quick Import
                                     </>
                                 )}
                             </Button>
                         </div>
+                        
+                        {/* New Excel Import with GUI */}
+                        {validationMetadata && (
+                            <ExcelImportButton
+                                validationMetadata={validationMetadata}
+                                onImportComplete={(result) => {
+                                    setImportResult(result);
+                                    setShowResultModal(true);
+                                    // Refresh the page to show new users
+                                    router.reload();
+                                }}
+                            />
+                        )}
                         <Link href={route('admin.users.create')}>
                             <Button className="flex items-center gap-2">
                                 <UserPlus className="h-4 w-4" />

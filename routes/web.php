@@ -98,6 +98,17 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('template', [UserController::class, 'template'])->name('template');
             Route::post('import', [UserController::class, 'import'])->name('import');
 
+            // Advanced Import Routes
+            Route::post('import/preview', [UserController::class, 'preview'])->name('import.preview');
+            Route::post('import/validate-row', [UserController::class, 'validateRow'])->name('import.validate-row');
+            Route::post('import/batch', [UserController::class, 'importBatch'])->name('import.batch');
+            Route::get('import/status', [UserController::class, 'getImportSession'])->name('import.status');
+            Route::post('import/clear-session', [UserController::class, 'clearImportSession'])->name('import.clear-session');
+            Route::get('import/validation-metadata', [UserController::class, 'getValidationMetadata'])->name('import.validation-metadata');
+
+            // Import Wizard Page
+            Route::get('import-wizard', [UserController::class, 'showImport'])->name('import-wizard');
+
             // User Approval Routes (must come before {user} routes)
             Route::get('all', [UserApprovalController::class, 'allUsers'])->name('all');
             Route::get('pending', [UserApprovalController::class, 'index'])->name('pending');
