@@ -177,18 +177,18 @@ export default function Index({ users }) {
     return (
         <AdminAuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-0">
                     <h2 className="font-semibold text-xl text-gray-800 leading-tight">
                         All Users
                     </h2>
-                    <div className="flex items-center gap-3">
-                        <Button onClick={handleDownloadTemplate} variant="outline" className="flex items-center gap-2">
-                            <FileSpreadsheet className="h-4 w-4" />
-                            Template
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                        <Button onClick={handleDownloadTemplate} variant="outline" className="flex items-center gap-2 text-xs sm:text-sm">
+                            <FileSpreadsheet className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline">Template</span>
                         </Button>
-                        <Button onClick={handleExport} variant="outline" className="flex items-center gap-2">
-                            <Download className="h-4 w-4" />
-                            Export
+                        <Button onClick={handleExport} variant="outline" className="flex items-center gap-2 text-xs sm:text-sm">
+                            <Download className="h-3 w-3 sm:h-4 sm:w-4" />
+                            <span className="hidden sm:inline">Export</span>
                         </Button>
                       
                         
@@ -205,13 +205,14 @@ export default function Index({ users }) {
                             />
                         )}
                         <Link href={route('admin.users.create')}>
-                            <Button className="flex items-center gap-2">
-                                <UserPlus className="h-4 w-4" />
-                                Add User
+                            <Button className="flex items-center gap-2 text-xs sm:text-sm">
+                                <UserPlus className="h-3 w-3 sm:h-4 sm:w-4" />
+                                <span className="hidden sm:inline">Add User</span>
+                                <span className="sm:hidden">Add</span>
                             </Button>
                         </Link>
-                        <Badge variant="secondary" className="text-sm">
-                            {filteredUsers.length} of {users.length} Users
+                        <Badge variant="secondary" className="text-xs flex-shrink-0">
+                            {filteredUsers.length}/{users.length}
                         </Badge>
                     </div>
                 </div>
@@ -265,18 +266,18 @@ export default function Index({ users }) {
                 </DialogContent>
             </Dialog>
 
-            <div className="py-12">
-                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">
+            <div className="py-4 sm:py-8 lg:py-12">
+                <div className="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8">
                     {/* Filters */}
-                    <Card className="mb-6">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Filter className="h-5 w-5" />
+                    <Card className="mb-4 sm:mb-6">
+                        <CardHeader className="pb-3 sm:pb-6">
+                            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                                <Filter className="h-4 w-4 sm:h-5 sm:w-5" />
                                 Filters
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <CardContent className="pt-0">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                                 <div className="relative">
                                     <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
                                     <Input
@@ -332,56 +333,56 @@ export default function Index({ users }) {
                             </CardContent>
                         </Card>
                     ) : (
-                        <div className="grid gap-6">
+                        <div className="grid gap-3 sm:gap-4 lg:gap-6">
                             {filteredUsers.map((user) => (
                                 <Card key={user.id} className="overflow-hidden">
-                                    <CardHeader className="pb-4">
-                                        <div className="flex items-start justify-between">
-                                            <div className="flex items-center space-x-4">
-                                                <Avatar className="h-12 w-12">
+                                    <CardHeader className="pb-3 sm:pb-4">
+                                        <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0">
+                                            <div className="flex items-center space-x-3 sm:space-x-4 w-full">
+                                                <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
                                                     <AvatarImage src={user.image} alt={user.name} />
-                                                    <AvatarFallback>
+                                                    <AvatarFallback className="text-xs sm:text-sm">
                                                         {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                                                     </AvatarFallback>
                                                 </Avatar>
-                                                <div>
-                                                    <CardTitle className="text-lg">{user.name}</CardTitle>
-                                                    <CardDescription className="flex items-center gap-2">
-                                                        <Mail className="h-4 w-4" />
-                                                        {user.email}
+                                                <div className="min-w-0 flex-1">
+                                                    <CardTitle className="text-base sm:text-lg truncate">{user.name}</CardTitle>
+                                                    <CardDescription className="flex items-center gap-2 text-xs sm:text-sm">
+                                                        <Mail className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                                        <span className="truncate">{user.email}</span>
                                                     </CardDescription>
                                                     {user.member_id && (
                                                         <div className="flex items-center gap-2 mt-1">
-                                                            <IdCard className="h-4 w-4 text-blue-500" />
-                                                            <span className="text-sm font-mono text-blue-600">
+                                                            <IdCard className="h-3 w-3 sm:h-4 sm:w-4 text-blue-500 flex-shrink-0" />
+                                                            <span className="text-xs sm:text-sm font-mono text-blue-600 truncate">
                                                                 {user.member_id}
                                                             </span>
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-2">
+                                            <div className="flex items-center gap-1 sm:gap-2 w-full sm:w-auto justify-end">
                                                 <Link href={route('admin.users.show', user.id)}>
-                                                    <Button variant="outline" size="sm">
-                                                        <Eye className="h-4 w-4" />
+                                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                                                        <Eye className="h-3 w-3 sm:h-4 sm:w-4" />
                                                     </Button>
                                                 </Link>
                                                 <Link href={route('admin.users.edit', user.id)}>
-                                                    <Button variant="outline" size="sm">
-                                                        <Edit className="h-4 w-4" />
+                                                    <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                                                        <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                                                     </Button>
                                                 </Link>
                                                 <Button 
                                                     variant="outline" 
                                                     size="sm" 
                                                     onClick={() => handleDelete(user)}
-                                                    className="text-red-600 hover:text-red-700"
+                                                    className="text-red-600 hover:text-red-700 h-8 w-8 p-0"
                                                 >
-                                                    <Trash2 className="h-4 w-4" />
+                                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                                                 </Button>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-4 mt-2">
+                                        <div className="flex flex-wrap items-center gap-2 mt-2">
                                             <Badge variant="outline" className="text-xs">
                                                 Joined {formatDate(user.created_at)}
                                             </Badge>
@@ -390,32 +391,32 @@ export default function Index({ users }) {
                                             </Badge>
                                         </div>
                                     </CardHeader>
-                                    <CardContent className="space-y-4">
-                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
+                                    <CardContent className="space-y-3 sm:space-y-4">
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4 text-xs sm:text-sm">
                                             <div className="flex items-center gap-2">
-                                                <Phone className="h-4 w-4 text-gray-500" />
-                                                <span>{user.phone}</span>
+                                                <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                                                <span className="truncate">{user.phone}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <GraduationCap className="h-4 w-4 text-gray-500" />
-                                                <span>{user.department}</span>
+                                                <GraduationCap className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                                                <span className="truncate">{user.department}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <Calendar className="h-4 w-4 text-gray-500" />
-                                                <span>Session: {user.session}</span>
+                                                <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 flex-shrink-0" />
+                                                <span className="truncate">Session: {user.session}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-gray-500">Roll:</span>
-                                                <span>{user.class_roll}</span>
+                                                <span className="text-gray-500 flex-shrink-0">Roll:</span>
+                                                <span className="truncate">{user.class_roll}</span>
                                             </div>
                                             <div className="flex items-center gap-2">
-                                                <span className="text-gray-500">Gender:</span>
-                                                <span className="capitalize">{user.gender}</span>
+                                                <span className="text-gray-500 flex-shrink-0">Gender:</span>
+                                                <span className="capitalize truncate">{user.gender}</span>
                                             </div>
                                             {user.blood_group && (
                                                 <div className="flex items-center gap-2">
-                                                    <span className="text-gray-500">Blood:</span>
-                                                    <span>{user.blood_group}</span>
+                                                    <span className="text-gray-500 flex-shrink-0">Blood:</span>
+                                                    <span className="truncate">{user.blood_group}</span>
                                                 </div>
                                             )}
                                         </div>
@@ -423,9 +424,9 @@ export default function Index({ users }) {
                                         {user.skills && (
                                             <>
                                                 <Separator />
-                                                <div className="text-sm">
+                                                <div className="text-xs sm:text-sm">
                                                     <span className="font-medium text-gray-700">Skills:</span>
-                                                    <p className="text-gray-600 mt-1">{user.skills}</p>
+                                                    <p className="text-gray-600 mt-1 break-words">{user.skills}</p>
                                                 </div>
                                             </>
                                         )}
@@ -433,22 +434,22 @@ export default function Index({ users }) {
                                         {(user.current_address || user.permanent_address) && (
                                             <>
                                                 <Separator />
-                                                <div className="space-y-2 text-sm">
+                                                <div className="space-y-2 text-xs sm:text-sm">
                                                     {user.current_address && (
                                                         <div className="flex items-start gap-2">
-                                                            <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                                                            <div>
+                                                            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                                            <div className="min-w-0 flex-1">
                                                                 <span className="font-medium">Current Address:</span>
-                                                                <p className="text-gray-600">{user.current_address}</p>
+                                                                <p className="text-gray-600 break-words">{user.current_address}</p>
                                                             </div>
                                                         </div>
                                                     )}
                                                     {user.permanent_address && user.permanent_address !== user.current_address && (
                                                         <div className="flex items-start gap-2">
-                                                            <MapPin className="h-4 w-4 text-gray-500 mt-0.5" />
-                                                            <div>
+                                                            <MapPin className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                                                            <div className="min-w-0 flex-1">
                                                                 <span className="font-medium">Permanent Address:</span>
-                                                                <p className="text-gray-600">{user.permanent_address}</p>
+                                                                <p className="text-gray-600 break-words">{user.permanent_address}</p>
                                                             </div>
                                                         </div>
                                                     )}
@@ -459,8 +460,9 @@ export default function Index({ users }) {
                                         {user.transaction_id && (
                                             <>
                                                 <Separator />
-                                                <div className="text-sm text-gray-500">
-                                                    Transaction ID: {user.transaction_id}
+                                                <div className="text-xs sm:text-sm text-gray-500">
+                                                    <span className="font-medium">Transaction ID:</span> 
+                                                    <span className="break-all ml-1">{user.transaction_id}</span>
                                                 </div>
                                             </>
                                         )}
