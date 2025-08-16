@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Head, Link, router } from '@inertiajs/react';
+import React, { useState, useEffect } from 'react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -8,6 +8,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { 
     User, 
     Mail, 
@@ -25,18 +34,37 @@ import {
     Eye,
     Download,
     Upload,
-    FileSpreadsheet
+    FileSpreadsheet,
+    Loader2,
+    CheckCircle,
+    XCircle,
+    AlertCircle
 } from 'lucide-react';
 
 export default function Index({ users }) {
     const [searchTerm, setSearchTerm] = useState('');
     const [departmentFilter, setDepartmentFilter] = useState('all');
     const [sessionFilter, setSessionFilter] = useState('all');
-    const [importFile, setImportFile] = useState(null);
+    const [isImporting, setIsImporting] = useState(false);
+    const [showResultModal, setShowResultModal] = useState(false);
+    const [importResult, setImportResult] = useState(null);
+    const { flash, errors } = usePage().props;
 
     // Get unique departments and sessions for filters
     const departments = [...new Set(users.map(user => user.department))].sort();
     const sessions = [...new Set(users.map(user => user.session))].sort();
+
+    // Show flash messages in modal
+    useEffect(() => {
+        if (flash?.success || flash?.error || errors?.error) {
+            setImportResult({
+                success: flash?.success || null,
+                error: flash?.error || errors?.error || null
+            });
+            setShowResultModal(true);
+            setIsImporting(false);
+        }
+    }, [flash, errors]);
 
     // Filter users based on search and filters
     const filteredUsers = users.filter(user => {
@@ -71,12 +99,53 @@ export default function Index({ users }) {
     const handleImport = (event) => {
         const file = event.target.files[0];
         if (file) {
+            // Validate file type
+            const validTypes = ['application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'text/csv'];
+            const fileExtension = file.name.split('.').pop().toLowerCase();
+            
+            if (!validTypes.includes(file.type) && !['xlsx', 'xls', 'csv'].includes(fileExtension)) {
+                setImportResult({
+                    success: null,
+                    error: 'Please select a valid Excel or CSV file (.xlsx, .xls, .csv)'
+                });
+                setShowResultModal(true);
+                event.target.value = '';
+                return;
+            }
+
+            // Check file size (10MB max)
+            if (file.size > 10 * 1024 * 1024) {
+                setImportResult({
+                    success: null,
+                    error: 'File size must be less than 10MB'
+                });
+                setShowResultModal(true);
+                event.target.value = '';
+                return;
+            }
+
+            setIsImporting(true);
             const formData = new FormData();
             formData.append('file', file);
             
             router.post(route('admin.users.import'), formData, {
+                preserveScroll: true,
+                preserveState: true,
                 onSuccess: () => {
                     event.target.value = '';
+                    setIsImporting(false);
+                },
+                onError: (errors) => {
+                    event.target.value = '';
+                    setIsImporting(false);
+                    setImportResult({
+                        success: null,
+                        error: errors.error || 'An error occurred during import. Please check your file and try again.'
+                    });
+                    setShowResultModal(true);
+                },
+                onFinish: () => {
+                    setIsImporting(false);
                 }
             });
         }
@@ -109,10 +178,20 @@ export default function Index({ users }) {
                                 onChange={handleImport}
                                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                                 id="import-file"
+                                disabled={isImporting}
                             />
-                            <Button variant="outline" className="flex items-center gap-2">
-                                <Upload className="h-4 w-4" />
-                                Import
+                            <Button variant="outline" className="flex items-center gap-2" disabled={isImporting}>
+                                {isImporting ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        Importing...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="h-4 w-4" />
+                                        Import
+                                    </>
+                                )}
                             </Button>
                         </div>
                         <Link href={route('admin.users.create')}>
@@ -129,6 +208,52 @@ export default function Index({ users }) {
             }
         >
             <Head title="All Users" />
+
+            {/* Import Result Modal */}
+            <Dialog open={showResultModal} onOpenChange={setShowResultModal}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            {importResult?.success ? (
+                                <>
+                                    <CheckCircle className="h-5 w-5 text-green-500" />
+                                    Import Successful
+                                </>
+                            ) : (
+                                <>
+                                    <XCircle className="h-5 w-5 text-red-500" />
+                                    Import Failed
+                                </>
+                            )}
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-4">
+                        {importResult?.success && (
+                            <Alert className="border-green-200 bg-green-50">
+                                <CheckCircle className="h-4 w-4 text-green-600" />
+                                <AlertTitle className="text-green-800">Success</AlertTitle>
+                                <AlertDescription className="text-green-700">
+                                    {importResult.success}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                        {importResult?.error && (
+                            <Alert className="border-red-200 bg-red-50">
+                                <AlertCircle className="h-4 w-4 text-red-600" />
+                                <AlertTitle className="text-red-800">Error</AlertTitle>
+                                <AlertDescription className="text-red-700">
+                                    {importResult.error}
+                                </AlertDescription>
+                            </Alert>
+                        )}
+                    </div>
+                    <DialogFooter>
+                        <Button onClick={() => setShowResultModal(false)}>
+                            Close
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
 
             <div className="py-12">
                 <div className="max-w-7xl mx-auto sm:px-6 lg:px-8">

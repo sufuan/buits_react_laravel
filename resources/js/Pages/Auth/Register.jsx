@@ -211,11 +211,11 @@ export default function Register({ success }) {
                 {/* Header with Progress */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 mb-4">
-                        <Sparkles className="h-8 w-8 text-purple-600 animate-pulse" />
+                        
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                             Join Our Community
                         </h1>
-                        <Heart className="h-8 w-8 text-pink-500 animate-bounce" />
+                
                     </div>
                     <p className="text-gray-600 text-lg">Let's get you started on this exciting journey!</p>
                 </div>

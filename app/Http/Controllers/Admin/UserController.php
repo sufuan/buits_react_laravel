@@ -320,28 +320,80 @@ class UserController extends Controller
     {
         try {
             $request->validate([
-                'file' => 'required|mimes:xlsx,xls,csv'
+                'file' => 'required|mimes:xlsx,xls,csv|max:10240' // Max 10MB
             ]);
 
-            Log::info('Starting user import...');
+            Log::info('Starting user import from file: ' . $request->file('file')->getClientOriginalName());
 
             $import = new UsersImport;
-            Excel::import($import, $request->file('file'));
-
-            Log::info('User import completed successfully');
-            return back()->with('success', 'Users imported successfully!');
-        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
-            $failures = $e->failures();
-            $errors = [];
-            foreach ($failures as $failure) {
-                $errors[] = "Row {$failure->row()}: " . implode(', ', $failure->errors());
+            
+            try {
+                Excel::import($import, $request->file('file'));
+                
+                // Get import statistics
+                $stats = $import->getImportStats();
+                
+                Log::info('User import completed. Imported: ' . $stats['imported'] . ', Skipped: ' . $stats['skipped']);
+                
+                if (!empty($stats['errors'])) {
+                    Log::warning('Import errors: ' . json_encode($stats['errors']));
+                }
+                
+                // Build success message
+                $message = "Import completed! ";
+                if ($stats['imported'] > 0) {
+                    $message .= "Successfully imported {$stats['imported']} user(s). ";
+                }
+                if ($stats['skipped'] > 0) {
+                    $message .= "Skipped {$stats['skipped']} row(s). ";
+                }
+                
+                if ($stats['imported'] === 0 && $stats['skipped'] > 0) {
+                    // All rows were skipped
+                    $errorDetails = !empty($stats['errors']) ? ' Details: ' . implode('; ', array_slice($stats['errors'], 0, 3)) : '';
+                    return back()->withErrors(['error' => 'No users were imported. All rows were skipped due to validation errors or duplicates.' . $errorDetails]);
+                }
+                
+                return back()->with('success', $message);
+                
+            } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+                $failures = $e->failures();
+                $errors = [];
+                foreach ($failures as $failure) {
+                    $row = $failure->row();
+                    $attribute = $failure->attribute();
+                    $errorMessages = $failure->errors();
+                    $errors[] = "Row {$row} - {$attribute}: " . implode(', ', $errorMessages);
+                }
+                Log::error('Import validation failed: ' . implode(' | ', $errors));
+                
+                // Provide helpful message about the error
+                $errorMessage = 'Validation failed. Please check your Excel file: ';
+                $errorMessage .= implode(' | ', array_slice($errors, 0, 3)); // Show first 3 errors
+                if (count($errors) > 3) {
+                    $errorMessage .= ' ... and ' . (count($errors) - 3) . ' more errors.';
+                }
+                
+                return back()->withErrors(['error' => $errorMessage]);
             }
-            Log::error('Import validation failed: ' . implode(' | ', $errors));
-            return back()->withErrors(['error' => 'Validation failed: ' . implode(' | ', $errors)]);
+            
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors(['error' => 'Invalid file. Please upload an Excel file (xlsx, xls) or CSV file.']);
         } catch (\Exception $e) {
             Log::error('User import failed: ' . $e->getMessage());
             Log::error('Stack trace: ' . $e->getTraceAsString());
-            return back()->withErrors(['error' => 'Import failed: ' . $e->getMessage()]);
+            
+            // Provide user-friendly error message
+            $errorMessage = 'Import failed: ';
+            if (strpos($e->getMessage(), 'Could not open') !== false) {
+                $errorMessage .= 'Unable to read the file. Please ensure it is a valid Excel file.';
+            } elseif (strpos($e->getMessage(), 'does not exist') !== false) {
+                $errorMessage .= 'Some required columns are missing in your Excel file. Please use the template.';
+            } else {
+                $errorMessage .= $e->getMessage();
+            }
+            
+            return back()->withErrors(['error' => $errorMessage]);
         }
     }
 

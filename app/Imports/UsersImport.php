@@ -13,6 +13,13 @@ use Maatwebsite\Excel\Concerns\WithValidation;
 class UsersImport implements ToModel, WithHeadingRow, WithValidation
 {
     /**
+     * Track import statistics
+     */
+    protected $importedCount = 0;
+    protected $skippedCount = 0;
+    protected $errors = [];
+
+    /**
      * Define department codes.
      */
     protected $departmentCodes = [
@@ -21,14 +28,18 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
         "mathematics" => "05",
         "physics" => "18",
         "history and civilization" => "23",
+        "history & civilization" => "23", // Support both formats
         "soil and environmental sciences" => "10",
+        "soil & environmental sciences" => "10", // Support both formats
         "economics" => "01",
         "geology and mining" => "17",
+        "geology & mining" => "17", // Support both formats
         "management studies" => "03",
         "statistics" => "24",
         "chemistry" => "12",
         "coastal studies and disaster management" => "19",
         "accounting and information systems" => "07",
+        "accounting & information systems" => "07", // Support both formats
         "computer science and engineering" => "13",
         "sociology" => "06",
         "botany" => "11",
@@ -49,46 +60,110 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
      */
     public function model(array $row)
     {
-        Log::info('Processing row: ' . json_encode($row));
+        try {
+            Log::info('Processing row: ' . json_encode($row));
 
-        // Skip empty rows
-        if (empty($row['name']) || empty($row['email'])) {
-            Log::info('Skipping empty row');
-            return null;
+            // Clean and validate row data
+            $row = array_map('trim', $row);
+
+            // Skip completely empty rows
+            if (empty(array_filter($row))) {
+                Log::info('Skipping completely empty row');
+                $this->skippedCount++;
+                return null;
+            }
+
+            // Check required fields
+            if (empty($row['name']) || empty($row['email'])) {
+                Log::warning('Skipping row with missing name or email');
+                $this->errors[] = 'Row missing name or email: ' . json_encode($row);
+                $this->skippedCount++;
+                return null;
+            }
+
+            // Check if email already exists
+            if (User::where('email', $row['email'])->exists()) {
+                Log::warning('Skipping duplicate email: ' . $row['email']);
+                $this->errors[] = 'Duplicate email: ' . $row['email'];
+                $this->skippedCount++;
+                return null;
+            }
+
+            // Validate required fields
+            if (empty($row['department']) || empty($row['session']) || empty($row['gender'])) {
+                Log::error('Missing required fields for user: ' . $row['email']);
+                Log::error('Department: ' . ($row['department'] ?? 'MISSING'));
+                Log::error('Session: ' . ($row['session'] ?? 'MISSING'));
+                Log::error('Gender: ' . ($row['gender'] ?? 'MISSING'));
+                $this->errors[] = 'Missing required fields for: ' . $row['email'];
+                $this->skippedCount++;
+                return null;
+            }
+
+            // Normalize department name for lookup
+            $normalizedDepartment = $this->normalizeDepartmentName($row['department']);
+            $departmentCode = $this->departmentCodes[$normalizedDepartment] ?? null;
+            
+            if ($departmentCode === null) {
+                Log::warning('Unknown department: ' . $row['department'] . ' (normalized: ' . $normalizedDepartment . ')');
+                Log::info('Available departments: ' . json_encode(array_keys($this->departmentCodes)));
+                // Use default code but continue
+                $departmentCode = '00';
+            }
+
+            // Extract session year - handle different formats
+            $sessionParts = explode('-', $row['session']);
+            $sessionYear = substr(end($sessionParts), -2); // Get last 2 digits of last part
+            
+            $memberId = $this->generateNewMemberId($departmentCode, $sessionYear);
+
+            // Normalize gender value
+            $gender = strtolower(trim($row['gender']));
+            if (!in_array($gender, ['male', 'female', 'other'])) {
+                Log::warning('Invalid gender value: ' . $row['gender'] . ', defaulting to "other"');
+                $gender = 'other';
+            }
+
+            $userData = [
+                'name' => $row['name'],
+                'email' => $row['email'],
+                'password' => Hash::make($row['password'] ?? 'password123'),
+                'phone' => $row['phone'] ?? '',
+                'department' => $row['department'], // Keep original department name
+                'session' => $row['session'],
+                'usertype' => $row['usertype'] ?? 'user',
+                'gender' => $gender,
+                'class_roll' => $row['class_roll'] ?? null,
+                'father_name' => $row['father_name'] ?? null,
+                'mother_name' => $row['mother_name'] ?? null,
+                'current_address' => $row['current_address'] ?? null,
+                'permanent_address' => $row['permanent_address'] ?? null,
+                'blood_group' => $row['blood_group'] ?? null,
+                'date_of_birth' => !empty($row['date_of_birth']) ? $this->parseDate($row['date_of_birth']) : null,
+                'transaction_id' => $row['transaction_id'] ?? null,
+                'to_account' => $row['to_account'] ?? null,
+                'skills' => $row['skills'] ?? null,
+                'member_id' => $memberId,
+                'is_approved' => true, // Imported users are automatically approved
+            ];
+
+            Log::info('Creating user with data: ' . json_encode($userData));
+            
+            $user = new User($userData);
+            
+            Log::info('User created successfully: ' . $row['email'] . ' with member_id: ' . $memberId);
+            $this->importedCount++;
+            
+            return $user;
+            
+        } catch (\Exception $e) {
+            Log::error('Error processing row: ' . $e->getMessage());
+            Log::error('Row data: ' . json_encode($row));
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            $this->errors[] = 'Error processing ' . ($row['email'] ?? 'unknown') . ': ' . $e->getMessage();
+            $this->skippedCount++;
+            return null; // Skip this row but continue with others
         }
-
-        // Check if email already exists
-        if (User::where('email', $row['email'])->exists()) {
-            Log::info('Skipping duplicate email: ' . $row['email']);
-            return null; // Skip duplicate emails
-        }
-
-        $departmentCode = $this->departmentCodes[strtolower($row['department'])] ?? '00';
-        $sessionYear = substr($row['session'], -2); // Get last 2 digits of session
-        $memberId = $this->generateNewMemberId($departmentCode, $sessionYear);
-
-        return new User([
-            'name' => $row['name'],
-            'email' => $row['email'],
-            'password' => Hash::make($row['password'] ?? 'password'),
-            'phone' => $row['phone'] ?? '',
-            'department' => $row['department'],
-            'session' => $row['session'],
-            'usertype' => $row['usertype'] ?? 'user',
-            'gender' => $row['gender'],
-            'class_roll' => $row['class_roll'] ?? '',
-            'father_name' => $row['father_name'] ?? '',
-            'mother_name' => $row['mother_name'] ?? '',
-            'current_address' => $row['current_address'] ?? '',
-            'permanent_address' => $row['permanent_address'] ?? '',
-            'blood_group' => $row['blood_group'] ?? '',
-            'date_of_birth' => !empty($row['date_of_birth']) ? $this->parseDate($row['date_of_birth']) : null,
-            'transaction_id' => $row['transaction_id'] ?? '',
-            'to_account' => $row['to_account'] ?? '',
-            'skills' => $row['skills'] ?? '',
-            'member_id' => $memberId,
-            'is_approved' => true, // Imported users are automatically approved
-        ]);
     }
 
     /**
@@ -97,11 +172,38 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255',
-            'email' => 'required|email',
-            'department' => 'required|string|max:255',
-            'session' => 'required|string',
-            'gender' => 'required|string|in:male,female,other',
+            '*.name' => 'required|string|max:255',
+            '*.email' => 'required|email|max:255',
+            '*.department' => 'required|string|max:255',
+            '*.session' => 'required|string|max:255',
+            '*.gender' => 'required|string',
+        ];
+    }
+
+    /**
+     * Custom validation messages
+     */
+    public function customValidationMessages()
+    {
+        return [
+            '*.name.required' => 'The name field is required for row :row',
+            '*.email.required' => 'The email field is required for row :row',
+            '*.email.email' => 'The email must be a valid email address for row :row',
+            '*.department.required' => 'The department field is required for row :row',
+            '*.session.required' => 'The session field is required for row :row',
+            '*.gender.required' => 'The gender field is required for row :row',
+        ];
+    }
+
+    /**
+     * Get import statistics
+     */
+    public function getImportStats()
+    {
+        return [
+            'imported' => $this->importedCount,
+            'skipped' => $this->skippedCount,
+            'errors' => $this->errors
         ];
     }
 
@@ -110,8 +212,12 @@ class UsersImport implements ToModel, WithHeadingRow, WithValidation
      */
     private function normalizeDepartmentName($department)
     {
-        // Replace "&" with "and", convert to lowercase, and trim spaces
-        return strtolower(str_replace('&', 'and', trim($department)));
+        // Trim spaces and convert to lowercase
+        $normalized = strtolower(trim($department));
+        
+        // Try both with original "&" and replaced with "and"
+        // This allows matching both formats
+        return $normalized;
     }
 
     /**
