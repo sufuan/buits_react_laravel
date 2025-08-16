@@ -1,413 +1,268 @@
-import React, { useEffect, useRef } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import React, { useEffect } from "react";
+import { Head } from '@inertiajs/react';
+import '../../css/hero.css';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import NavBar from '@/Components/HomePage/Navbar';
 
-// Register GSAP plugins
+// Register ScrollTrigger plugin
 gsap.registerPlugin(ScrollTrigger);
 
-export default function About() {
-  const heroRef = useRef(null);
-  const titleRef = useRef(null);
-  const subtitleRef = useRef(null);
-  const cardRefs = useRef([]);
-  const statsRefs = useRef([]);
-  const timelineRef = useRef(null);
-  const teamRefs = useRef([]);
-  const floating3DRef = useRef(null);
-
+export default function GTA() {
   useEffect(() => {
-    // Hero section animations
-    const tl = gsap.timeline();
-    
-    // Animate hero title with 3D effect
-    tl.fromTo(titleRef.current, 
-      { 
-        y: 100, 
-        opacity: 0, 
-        rotationX: -90,
-        transformPerspective: 1000 
-      },
-      { 
-        y: 0, 
-        opacity: 1, 
-        rotationX: 0,
-        duration: 1.5, 
-        ease: "power3.out" 
-      }
-    )
-    .fromTo(subtitleRef.current,
-      { 
-        y: 50, 
+    // Initialize GSAP animations
+    const initAnimations = () => {
+      // First step
+      gsap.from(".hero-main-container", {
+        scale: 1.45,
+        duration: 2.8,
+        ease: "power3.out",
+      });
+
+      gsap.to(".overlay", {
         opacity: 0,
-        scale: 0.8 
-      },
-      { 
-        y: 0, 
-        opacity: 1,
+        duration: 2.8,
+        ease: "power3.out",
+        onComplete: () => {
+          document.body.style.overflow = "visible";
+          document.body.style.overflowX = "hidden";
+        },
+      });
+
+      // Scroll Indicator
+      const scrollIndicator = document.querySelector(".scroll-indicator");
+      if (scrollIndicator) {
+        const bounceTimeline = gsap.timeline({
+          repeat: -1,
+          yoyo: true,
+        });
+
+        bounceTimeline.to(scrollIndicator, {
+          y: 20,
+          opacity: 0.6,
+          duration: 0.8,
+          ease: "power1.inOut",
+        });
+      }
+
+      // Create a timeline for better control
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: ".container",
+          scrub: 2,
+          pin: true,
+          start: "top top",
+          end: "+=2000",
+          ease: "none",
+        },
+      });
+
+      // Need to ensure that the scale is like this otherwise some flicks happens
+      tl.set(".hero-main-container", {
+        scale: 1.25,
+      });
+
+      tl.to(".hero-main-container", {
         scale: 1,
         duration: 1,
-        ease: "power2.out" 
-      }, "-=0.8"
-    );
-
-    // Floating 3D elements animation
-    gsap.to(floating3DRef.current?.children || [], {
-      y: "random(-20, 20)",
-      x: "random(-10, 10)",
-      rotation: "random(-15, 15)",
-      duration: "random(2, 4)",
-      repeat: -1,
-      yoyo: true,
-      ease: "sine.inOut",
-      stagger: 0.2
-    });
-
-    // Cards scroll animation
-    cardRefs.current.forEach((card, index) => {
-      if (card) {
-        gsap.fromTo(card,
-          {
-            y: 100,
-            opacity: 0,
-            rotationY: -45,
-            transformPerspective: 1000
-          },
-          {
-            y: 0,
-            opacity: 1,
-            rotationY: 0,
-            duration: 1,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: card,
-              start: "top 80%",
-              end: "bottom 20%",
-              toggleActions: "play none none reverse"
-            }
-          }
-        );
-      }
-    });
-
-    // Team members scroll animation
-    teamRefs.current.forEach((member, index) => {
-      if (member) {
-        gsap.fromTo(member,
-          {
-            y: 100,
-            opacity: 0,
-            rotationY: -45,
-            transformPerspective: 1000
-          },
-          {
-            y: 0,
-            opacity: 1,
-            rotationY: 0,
-            duration: 1,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: member,
-              start: "top 80%",
-              end: "bottom 20%",
-              toggleActions: "play none none reverse"
-            }
-          }
-        );
-      }
-    });
-
-    // Stats counter animation
-    statsRefs.current.forEach((stat, index) => {
-      if (stat) {
-        const countElement = stat.querySelector('.count');
-        const finalValue = parseInt(countElement.textContent);
-        
-        gsap.fromTo(countElement,
-          { textContent: 0 },
-          {
-            textContent: finalValue,
-            duration: 2,
-            ease: "power2.out",
-            snap: { textContent: 1 },
-            scrollTrigger: {
-              trigger: stat,
-              start: "top 80%",
-              toggleActions: "play none none none"
-            }
-          }
-        );
-      }
-    });
-
-    // Timeline scroll animation
-    if (timelineRef.current) {
-      const timelineItems = timelineRef.current.querySelectorAll('.timeline-item');
-      
-      timelineItems.forEach((item, index) => {
-        gsap.fromTo(item,
-          {
-            x: index % 2 === 0 ? -100 : 100,
-            opacity: 0,
-            scale: 0.8
-          },
-          {
-            x: 0,
-            opacity: 1,
-            scale: 1,
-            duration: 1,
-            ease: "power2.out",
-            scrollTrigger: {
-              trigger: item,
-              start: "top 85%",
-              toggleActions: "play none none reverse"
-            }
-          }
-        );
       });
-    }
 
-    // Parallax effect for background elements
-    gsap.to(".parallax-bg", {
-      yPercent: -50,
-      ease: "none",
-      scrollTrigger: {
-        trigger: ".parallax-section",
-        start: "top bottom",
-        end: "bottom top",
-        scrub: true
-      }
-    });
+      tl.to(
+        ".hero-main-logo",
+        {
+          opacity: 0,
+          duration: 0.5,
+        },
+        "<" // starts at the same time of previous animation
+      );
 
-    // Cleanup
+      tl.to(
+        ".hero-main-image",
+        {
+          opacity: 0,
+          duration: 0.9,
+        },
+        "<+=0.5"
+      );
+
+      tl.to(
+        ".hero-main-container",
+        {
+          backgroundSize: "28vh",
+          duration: 1.5,
+        },
+        "<+=0.2"
+      );
+
+      tl.fromTo(
+        ".hero-text",
+        {
+          backgroundImage: `radial-gradient(
+                circle at 50% 200vh,
+                rgba(255, 214, 135, 0) 0,
+                rgba(157, 47, 106, 0.5) 90vh,
+                rgba(157, 47, 106, 0.8) 120vh,
+                rgba(32, 31, 66, 0) 150vh
+              )`,
+        },
+        {
+          backgroundImage: `radial-gradient(circle at 50% 3.9575vh, rgb(255, 213, 133) 0vh,
+           rgb(247, 77, 82) 50.011vh,
+            rgb(145, 42, 105) 90.0183vh,
+             rgba(32, 31, 66, 0) 140.599vh)`,
+          duration: 3,
+        },
+        "<1.2" // starts 1.2 seconds before the previous animation
+      );
+
+      // logo purple
+      tl.fromTo(
+        ".hero-text-logo",
+        {
+          opacity: 0,
+          maskImage: `radial-gradient(circle at 50% 145.835%, rgb(0, 0, 0) 36.11%, rgba(0, 0, 0, 0) 68.055%)`,
+        },
+        {
+          opacity: 1,
+          maskImage: `radial-gradient(
+          circle at 50% 105.594%,
+          rgb(0, 0, 0) 62.9372%,
+          rgba(0, 0, 0, 0) 81.4686%
+        )`,
+          duration: 3,
+        },
+        "<0.2"
+      );
+
+      tl.set(".hero-main-container", { opacity: 0 });
+
+      tl.to(".hero-1-container", { scale: 0.85, duration: 3 }, "<-=3");
+
+      tl.set(
+        ".hero-1-container",
+        {
+          maskImage: `radial-gradient(circle at 50% 16.1137vh, rgb(0, 0, 0) 96.1949vh, rgba(0, 0, 0, 0) 112.065vh)`,
+        },
+        "<+=2.1"
+      );
+
+      tl.to(
+        ".hero-1-container",
+        {
+          maskImage: `radial-gradient(circle at 50% -40vh, rgb(0, 0, 0) 0vh, rgba(0, 0, 0, 0) 80vh)`,
+          duration: 2,
+        },
+        "<+=0.2" // Start 0.2 seconds after the mask is set
+      );
+
+      tl.to(
+        ".hero-text-logo",
+        {
+          opacity: 0,
+          duration: 2,
+        },
+        "<1.5"
+      );
+
+      tl.set(".hero-1-container", { opacity: 0 });
+      tl.set(".hero-2-container", { visibility: "visible" });
+
+      tl.to(".hero-2-container", { opacity: 1, duration: 3 }, "<+=0.2");
+
+      tl.fromTo(
+        ".hero-2-container",
+        {
+          backgroundImage: `radial-gradient(
+                circle at 50% 200vh,
+                rgba(255, 214, 135, 0) 0,
+                rgba(157, 47, 106, 0.5) 90vh,
+                rgba(157, 47, 106, 0.8) 120vh,
+                rgba(32, 31, 66, 0) 150vh
+              )`,
+        },
+        {
+          backgroundImage: `radial-gradient(circle at 50% 3.9575vh, rgb(255, 213, 133) 0vh,
+           rgb(247, 77, 82) 50.011vh,
+            rgb(145, 42, 105) 90.0183vh,
+             rgba(32, 31, 66, 0) 140.599vh)`,
+          duration: 3,
+        },
+        "<1.2" // starts 1.2 seconds before the previous animation
+      );
+    };
+
+    // Initialize animations after component mounts
+    initAnimations();
+
+    // Cleanup function to kill all GSAP animations on unmount
     return () => {
+      gsap.killTweensOf("*");
       ScrollTrigger.getAll().forEach(trigger => trigger.kill());
     };
   }, []);
 
   return (
     <>
-      <Head title="About - University IT Society" />
-      <NavBar />
-      
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden">
-        {/* Floating 3D Background Elements */}
-        <div ref={floating3DRef} className="fixed inset-0 pointer-events-none z-0">
-          <div className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full opacity-20 blur-xl"></div>
-          <div className="absolute top-40 right-20 w-32 h-32 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full opacity-15 blur-2xl"></div>
-          <div className="absolute bottom-40 left-1/4 w-24 h-24 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full opacity-25 blur-xl"></div>
-          <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-gradient-to-r from-green-500 to-cyan-500 rounded-full opacity-20 blur-lg"></div>
+      <Head title="GTA VI Website" />
+      <div className="container">
+          <div className="overlay"></div>
+          <div className="hero-1-container">
+            <div className="hero-main-container">
+              <img
+                className="hero-main-logo"
+                draggable="false"
+                src="/img/gta_logo_cut.webp"
+                alt="gta logo"
+              />
+              <img
+                className="hero-main-image"
+                draggable="false"
+                src="/img/gta_hero.webp"
+                alt="gta hero"
+              />
+            </div>
+            <div className="hero-text-logo-container">
+              <div
+                className="hero-text-logo"
+                style={{ backgroundImage: "url('/img/gta_logo_purple.webp')" }}
+              ></div>
+              <div>
+                <h3 className="hero-text">
+                  Coming <br /> May 26 <br /> 2026
+                </h3>
+              </div>
+            </div>
+          </div>
+
+          <div className="hero-2-container">
+            <h3>Vice City, USA.</h3>
+            <p>
+              Jason and Lucia have always known the deck is stacked against them.
+              But when an easy score goes wrong, they find themselves on the
+              darkest side of the sunniest place in America, in the middle of a
+              criminal conspiracy stretching across the state of Leonida — forced
+              to rely on each other more than ever if they want to make it out alive.
+            </p>
+          </div>
+
+          {/* Scroll Indicator */}
+          <div className="scroll-indicator">
+            <svg
+              width="34"
+              height="14"
+              viewBox="0 0 34 14"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+              aria-hidden="true"
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M33.5609 1.54346C34.0381 2.5875 33.6881 3.87821 32.7791 4.42633L17.0387 13.9181L1.48663 4.42115C0.580153 3.86761 0.235986 2.57483 0.717909 1.53365C1.19983 0.492464 2.32535 0.097152 3.23182 0.650692L17.0497 9.08858L31.051 0.64551C31.96 0.0973872 33.0837 0.499411 33.5609 1.54346Z"
+                fill="currentColor"
+              />
+            </svg>
+          </div>
         </div>
-
-        {/* Hero Section */}
-        <section ref={heroRef} className="relative min-h-screen flex items-center justify-center px-6 pt-20">
-          <div className="text-center z-10">
-            <h1
-              ref={titleRef}
-              className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-cyan-400 mb-6 leading-tight"
-              style={{
-                fontFamily: 'Inter, sans-serif',
-                textShadow: '0 0 30px rgba(59, 130, 246, 0.3)'
-              }}
-            >
-              ABOUT US
-            </h1>
-            <p
-              ref={subtitleRef}
-              className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed"
-            >
-              Empowering the next generation of tech innovators at our university through
-              cutting-edge technology, collaborative learning, and groundbreaking projects.
-            </p>
-          </div>
-          
-          {/* Animated geometric shapes */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-            <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-purple-400 rounded-full animate-ping"></div>
-            <div className="absolute bottom-1/4 left-1/3 w-1.5 h-1.5 bg-cyan-400 rounded-full animate-bounce"></div>
-          </div>
-        </section>
-
-        {/* Stats Section */}
-        <section className="py-20 px-6 relative z-10 bg-black/20">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-              {[
-                { value: 500, label: "Active Members", suffix: "+" },
-                { value: 50, label: "Projects", suffix: "+" },
-                { value: 25, label: "Industry Partners", suffix: "+" },
-                { value: 100, label: "Success Rate", suffix: "%" }
-              ].map((stat, index) => (
-                <div
-                  key={index}
-                  ref={el => statsRefs.current[index] = el}
-                  className="text-center group"
-                >
-                  <div className="relative inline-block">
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-lg opacity-30 group-hover:opacity-50 transition-opacity duration-500"></div>
-                    <div className="relative w-32 h-32 md:w-40 md:h-40 rounded-full border-2 border-white/20 flex items-center justify-center bg-white/5 backdrop-blur-sm">
-                      <span className="count text-4xl md:text-5xl font-bold text-white">{stat.value}</span>
-                      <span className="text-2xl md:text-3xl font-bold text-blue-400">{stat.suffix}</span>
-                    </div>
-                  </div>
-                  <p className="mt-6 text-xl text-gray-300 font-medium">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Mission & Vision Cards */}
-        <section className="py-20 px-6 relative z-10">
-          <div className="max-w-7xl mx-auto">
-            <div className="grid md:grid-cols-2 gap-12">
-              {/* Mission Card */}
-              <div
-                ref={el => cardRefs.current[0] = el}
-                className="group relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur-xl opacity-25 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-white/40 transition-all duration-500 transform hover:scale-105">
-                  <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center mb-6">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-3xl font-bold text-white mb-4">Our Mission</h3>
-                  <p className="text-gray-300 text-lg leading-relaxed">
-                    To foster innovation, creativity, and technical excellence among students while building
-                    a strong community of future technology leaders who will shape the digital world.
-                  </p>
-                </div>
-              </div>
-
-              {/* Vision Card */}
-              <div
-                ref={el => cardRefs.current[1] = el}
-                className="group relative"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-xl opacity-25 group-hover:opacity-40 transition-opacity duration-500"></div>
-                <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20 hover:border-white/40 transition-all duration-500 transform hover:scale-105">
-                  <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center mb-6">
-                    <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-3xl font-bold text-white mb-4">Our Vision</h3>
-                  <p className="text-gray-300 text-lg leading-relaxed">
-                    To be the premier technology society that bridges the gap between academic learning
-                    and industry demands, creating globally competitive IT professionals.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* History Timeline */}
-        <section ref={timelineRef} className="py-20 px-6 relative z-10 bg-black/20">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold text-center text-white mb-16">
-              Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Journey</span>
-            </h2>
-            
-            <div className="relative">
-              {/* Timeline line */}
-              <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-gradient-to-b from-blue-500 to-purple-500"></div>
-              
-              {/* Timeline items */}
-              {[
-                { year: "2020", title: "Foundation", description: "University IT Society was founded with 20 passionate students." },
-                { year: "2021", title: "First Hackathon", description: "Organized our first university-wide hackathon with 100+ participants." },
-                { year: "2022", title: "Industry Partnerships", description: "Established partnerships with 10+ leading tech companies." },
-                { year: "2023", title: "National Recognition", description: "Won the National Student Tech Innovation Award." },
-                { year: "2024", title: "Global Expansion", description: "Launched international exchange programs with universities in 5 countries." }
-              ].map((item, index) => (
-                <div
-                  key={index}
-                  className={`timeline-item mb-12 flex flex-col md:flex-row ${index % 2 === 0 ? 'md:flex-row-reverse' : ''} items-center`}
-                >
-                  <div className="md:w-1/2 mb-4 md:mb-0">
-                    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 mx-4">
-                      <h3 className="text-2xl font-bold text-white mb-2">{item.title}</h3>
-                      <p className="text-gray-300">{item.description}</p>
-                    </div>
-                  </div>
-                  <div className="md:w-1/2 flex justify-center md:justify-start">
-                    <div className="relative">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-xl border-4 border-slate-900">
-                        {item.year}
-                      </div>
-                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-white rounded-full"></div>
-                    </div>
-                  </div>
-                  <div className="md:w-1/2"></div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Team Section */}
-        <section className="py-20 px-6 relative z-10">
-          <div className="max-w-7xl mx-auto">
-            <h2 className="text-4xl md:text-5xl font-bold text-center text-white mb-16">
-              Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">Leadership</span>
-            </h2>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-              {[
-                { name: "Alex Johnson", role: "President", image: "/placeholders/user-placeholder.svg" },
-                { name: "Sarah Williams", role: "Vice President", image: "/placeholders/user-placeholder.svg" },
-                { name: "Michael Chen", role: "Technical Lead", image: "/placeholders/user-placeholder.svg" },
-                { name: "Emma Davis", role: "Community Manager", image: "/placeholders/user-placeholder.svg" }
-              ].map((member, index) => (
-                <div
-                  key={index}
-                  ref={el => teamRefs.current[index] = el}
-                  className="group relative"
-                >
-                  <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur-xl opacity-25 group-hover:opacity-40 transition-opacity duration-500"></div>
-                  <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-white/40 transition-all duration-500 transform hover:scale-105">
-                    <div className="relative w-full h-64 mb-6 rounded-xl overflow-hidden">
-                      <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-500/20"></div>
-                      <img
-                        src={member.image}
-                        alt={member.name}
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-2">{member.name}</h3>
-                    <p className="text-blue-400 font-medium">{member.role}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* CTA Section */}
-        <section className="py-20 px-6 relative z-10 bg-gradient-to-r from-blue-900/30 to-purple-900/30">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
-              Ready to Join Our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Community</span>?
-            </h2>
-            <p className="text-xl text-gray-300 mb-10 max-w-2xl mx-auto">
-              Become part of the most innovative technology society at our university and shape the future of tech.
-            </p>
-            <Link
-              href="/register"
-              className="relative group bg-gradient-to-r from-blue-500 to-purple-500 text-white font-bold py-4 px-8 rounded-full text-lg transition-all duration-500 transform hover:scale-105 hover:shadow-2xl inline-block"
-            >
-              <span className="relative z-10">Join Now</span>
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-            </Link>
-          </div>
-        </section>
-      </div>
     </>
   );
 }

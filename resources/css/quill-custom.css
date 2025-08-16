@@ -1,0 +1,45 @@
+/* Custom styles for React Quill in the sidebar */
+.sidebar-quill .ql-toolbar {
+  border-top: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.sidebar-quill .ql-container {
+  border-bottom: 1px solid #ccc;
+  border-left: 1px solid #ccc;
+  border-right: 1px solid #ccc;
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  font-size: 12px;
+  height: 150px;
+}
+
+.sidebar-quill .ql-editor {
+  min-height: 120px;
+  font-size: 12px;
+  padding: 8px;
+}
+
+.sidebar-quill .ql-toolbar .ql-formats {
+  margin-right: 8px;
+}
+
+.sidebar-quill .ql-toolbar button {
+  width: 24px;
+  height: 24px;
+  padding: 2px;
+}
+
+.sidebar-quill .ql-toolbar .ql-picker {
+  font-size: 11px;
+}
+
+.sidebar-quill .ql-toolbar .ql-picker-label {
+  padding: 2px 4px;
+  font-size: 11px;
+}
