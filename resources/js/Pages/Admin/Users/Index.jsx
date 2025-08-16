@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Head, Link, router, usePage } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
-import ExcelImportButton from '@/Components/Admin/Import/ExcelImportButton';
+import ExcelImportButton from '@/Components/Admin/ExcelImport/ExcelImportButton';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
