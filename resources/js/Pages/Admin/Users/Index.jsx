@@ -34,7 +34,7 @@ import {
     Trash2,
     Eye,
     Download,
-    Upload,
+
     FileSpreadsheet,
     Loader2,
     CheckCircle,
@@ -190,29 +190,7 @@ export default function Index({ users }) {
                             <Download className="h-4 w-4" />
                             Export
                         </Button>
-                        <div className="relative">
-                            <input
-                                type="file"
-                                accept=".xlsx,.xls,.csv"
-                                onChange={handleImport}
-                                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                                id="import-file"
-                                disabled={isImporting}
-                            />
-                            <Button variant="outline" className="flex items-center gap-2" disabled={isImporting}>
-                                {isImporting ? (
-                                    <>
-                                        <Loader2 className="h-4 w-4 animate-spin" />
-                                        Importing...
-                                    </>
-                                ) : (
-                                    <>
-                                        <Upload className="h-4 w-4" />
-                                        Quick Import
-                                    </>
-                                )}
-                            </Button>
-                        </div>
+                      
                         
                         {/* New Excel Import with GUI */}
                         {validationMetadata && (
