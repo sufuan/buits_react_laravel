@@ -1,5 +1,6 @@
 import React, { useLayoutEffect, useRef } from "react";
 import { Head } from '@inertiajs/react';
+import NavBar from '../Components/HomePage/Navbar';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import '../../css/about_page_style.css';
@@ -129,6 +130,7 @@ export default function GTA() {
   return (
     <>
       <Head title="GTA VI Website" />
+      <NavBar />
       <div ref={scope} className="container">
         <div className="overlay"></div>
 
