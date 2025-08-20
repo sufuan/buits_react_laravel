@@ -2,7 +2,6 @@ import '../css/index.css';
 import '../css/admin.css';
 import './bootstrap';
 
-
 import React from 'react';
 import { createInertiaApp } from '@inertiajs/react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';

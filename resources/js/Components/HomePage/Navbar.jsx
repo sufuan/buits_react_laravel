@@ -198,43 +198,48 @@ const NavBar = () => {
                   />
                 ))}
               </button>
-
-              {/* Mobile Audio Button */}
-              <button
-                onClick={toggleAudioIndicator}
-                className={clsx(
-                  "md:hidden flex items-center space-x-0.5 fixed top-6 right-16",
-                  { hidden: isMobileMenuOpen }
-                )}
-              >
-                {[1, 2, 3, 4].map((bar) => (
-                  <div
-                    key={bar}
-                    className={clsx("indicator-line", {
-                      active: isIndicatorActive,
-                    })}
-                    style={{
-                      animationDelay: `${bar * 0.1}s`,
-                    }}
-                  />
-                ))}
-              </button>
             </div>
           </nav>
         </header>
       </div>
+
+      {/* Mobile Audio Button - positioned outside navbar container */}
+      <button
+        onClick={toggleAudioIndicator}
+        className={clsx(
+          "md:hidden flex items-center space-x-0.5 fixed top-8 right-16 z-[99999]",
+          { hidden: isMobileMenuOpen }
+        )}
+      >
+        <audio
+          ref={audioElementRef}
+          className="hidden"
+          src="/audio/loop.mp3"
+          loop
+        />
+        {[1, 2, 3, 4].map((bar) => (
+          <div
+            key={bar}
+            className={clsx("indicator-line", {
+              active: isIndicatorActive,
+            })}
+            style={{
+              animationDelay: `${bar * 0.1}s`,
+            }}
+          />
+        ))}
+      </button>
 
       {/* Hamburger Menu Button */}
       <button
         key={`hamburger-${isMobileMenuOpen}`}
         onClick={toggleMobileMenu}
         className={clsx(
-          "md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1.5 pointer-events-auto fixed top-6 right-6",
+          "md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1.5 pointer-events-auto fixed top-6 right-6 z-[99998]",
           { "hamburger-open": isMobileMenuOpen }
         )}
         style={{
           backgroundColor: "transparent",
-          zIndex: 100001,
         }}
       >
         <div
@@ -246,7 +251,6 @@ const NavBar = () => {
             transform: isMobileMenuOpen
               ? "rotate(45deg) translateY(8px)"
               : "rotate(0deg) translateY(0px)",
-            zIndex: 100002,
           }}
         ></div>
         <div
@@ -256,7 +260,6 @@ const NavBar = () => {
           })}
           style={{
             opacity: isMobileMenuOpen ? 0 : 1,
-            zIndex: 100002,
           }}
         ></div>
         <div
@@ -268,7 +271,6 @@ const NavBar = () => {
             transform: isMobileMenuOpen
               ? "rotate(-45deg) translateY(-8px)"
               : "rotate(0deg) translateY(0px)",
-            zIndex: 100002,
           }}
         ></div>
       </button>

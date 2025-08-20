@@ -13,6 +13,10 @@ export default {
 
   theme: {
     extend: {
+      screens: {
+        'xs': '20rem',  // 320px
+        '3xl': '120rem', // 1920px
+      },
       fontFamily: {
         sans: ['Figtree', ...defaultTheme.fontFamily.sans],
         zentry: ['zentry', 'sans-serif'],

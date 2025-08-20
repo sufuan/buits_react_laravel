@@ -7,6 +7,9 @@ import Features from '../components/HomePage/Features'
 import FloatingImage from '../components/HomePage/Story'
 import Contact from '../components/HomePage/Contact'
 import Footer from '../components/HomePage/Footer'
+import HolographicTimeline from '@/Components/HomePage/HolographicTimeline'
+import Jason from '@/Components/HomePage/Jason'
+import FirstVideo from '@/Components/HomePage/FirstVideo'
 
 function App() {
   return (
@@ -16,6 +19,9 @@ function App() {
         <Hero />
         <About />
         <Features />
+        <FirstVideo/>
+        <Jason/>
+        <HolographicTimeline />
         <FloatingImage />
         <Contact />
         <Footer />
