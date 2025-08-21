@@ -35,7 +35,8 @@
   html, body {
     margin: 0;
     padding: 0;
-    width: 100dvw;
+    /* Use 100% to avoid mobile viewport-width bugs that include scrollbars */
+    width: 100%;
     overflow-x: hidden;
     font-family: "General Sans", sans-serif;
     background-color: #dfdff0;
@@ -212,8 +213,8 @@
     left: 0;
     right: 0;
     bottom: 0;
-    width: 100vw;
-    height: 100vh;
+  width: 100%;
+  height: 100vh;
     margin: 0;
     padding: 0;
     z-index: 9998;

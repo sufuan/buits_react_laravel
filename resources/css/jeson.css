@@ -26,7 +26,8 @@
 }
 
 body {
-  width: 100dvw;
+  /* Use 100% instead of 100dvw to avoid mobile viewport quirks */
+  width: 100%;
   overflow-x: hidden;
   font-family: "Round", sans-serif;
   background-color: black;
