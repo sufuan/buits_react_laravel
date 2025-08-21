@@ -4,6 +4,7 @@ import { useWindowScroll } from "react-use";
 import { useEffect, useRef, useState } from "react";
 import { TiLocationArrow } from "react-icons/ti";
 import { Link } from "@inertiajs/react";
+import { useAudio } from "../../Contexts/AudioContext";
 
 import Button from "./Button";
 
@@ -16,15 +17,13 @@ const navItems = [
 ];
 
 const NavBar = () => {
-  // State for toggling audio and visual indicator
-  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
-  const [isIndicatorActive, setIsIndicatorActive] = useState(false);
+  // Get audio controls from context
+  const { isIndicatorActive, toggleAudio } = useAudio();
 
   // State for mobile menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // Refs for audio, navigation container, and menu items
-  const audioElementRef = useRef(null);
+  // Refs for navigation container and menu items
   const navContainerRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const menuItemsRef = useRef([]);
@@ -32,12 +31,6 @@ const NavBar = () => {
   const { y: currentScrollY } = useWindowScroll();
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
-
-  // Toggle audio and visual indicator
-  const toggleAudioIndicator = () => {
-    setIsAudioPlaying((prev) => !prev);
-    setIsIndicatorActive((prev) => !prev);
-  };
 
   // Toggle mobile menu with animations
   const toggleMobileMenu = (e) => {
@@ -83,13 +76,7 @@ const NavBar = () => {
   };
 
   // Manage audio playback
-  useEffect(() => {
-    if (isAudioPlaying && audioElementRef.current) {
-      audioElementRef.current.play();
-    } else if (audioElementRef.current) {
-      audioElementRef.current.pause();
-    }
-  }, [isAudioPlaying]);
+  // Remove the useEffect for audio since it's now handled by context
 
   // Handle navbar visibility on scroll
   useEffect(() => {
@@ -177,15 +164,9 @@ const NavBar = () => {
 
               {/* Audio Button - Desktop only */}
               <button
-                onClick={toggleAudioIndicator}
+                onClick={toggleAudio}
                 className="ml-10 hidden md:flex items-center space-x-0.5"
               >
-                <audio
-                  ref={audioElementRef}
-                  className="hidden"
-                  src="/audio/loop.mp3"
-                  loop
-                />
                 {[1, 2, 3, 4].map((bar) => (
                   <div
                     key={bar}
@@ -205,18 +186,12 @@ const NavBar = () => {
 
       {/* Mobile Audio Button - positioned outside navbar container */}
       <button
-        onClick={toggleAudioIndicator}
+        onClick={toggleAudio}
         className={clsx(
           "md:hidden flex items-center space-x-0.5 fixed top-8 right-16 z-[99999]",
           { hidden: isMobileMenuOpen }
         )}
       >
-        <audio
-          ref={audioElementRef}
-          className="hidden"
-          src="/audio/loop.mp3"
-          loop
-        />
         {[1, 2, 3, 4].map((bar) => (
           <div
             key={bar}
@@ -326,7 +301,7 @@ const NavBar = () => {
         {/* Mobile Audio Button in Overlay */}
         <div className="absolute bottom-20">
           <button
-            onClick={toggleAudioIndicator}
+            onClick={toggleAudio}
             className={clsx("flex items-center space-x-4 overlay-audio")}
           >
             {[1, 2, 3, 4].map((bar) => (
