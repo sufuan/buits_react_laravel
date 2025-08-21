@@ -11,6 +11,7 @@ import Button from "./Button";
 const navItems = [
   { name: "Find Member ID", href: "/find-member" },
   { name: "Events", href: "/events" },
+  { name: "Previous Committee", href: "/previous-committee" },
   { name: "About", href: "/about" },
   { name: "Login", href: "/login" },
   { name: "Register", href: "/register" }

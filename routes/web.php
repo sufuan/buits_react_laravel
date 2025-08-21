@@ -41,6 +41,13 @@ Route::get('/events', function () {
     return Inertia::render('Events');
 })->name('events');
 
+Route::get('/previous-committee', [App\Http\Controllers\PreviousCommitteeController::class, 'index'])->name('previous-committee');
+Route::get('/previous-committee/{committee}', [App\Http\Controllers\PreviousCommitteeController::class, 'show'])->name('previous-committee.show');
+
+// API routes for committee data
+Route::get('/api/committees', [App\Http\Controllers\PreviousCommitteeController::class, 'getCommitteeData'])->name('api.committees');
+Route::get('/api/committees/{committee}', [App\Http\Controllers\PreviousCommitteeController::class, 'getCommitteeData'])->name('api.committee');
+
 Route::get('/find-member', function () {
     return Inertia::render('FindMember');
 })->name('find-member');

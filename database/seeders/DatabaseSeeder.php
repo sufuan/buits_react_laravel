@@ -20,7 +20,8 @@ class DatabaseSeeder extends Seeder
         // ✅ Call AdminSeeder here
         $this->call([
             AdminSeeder::class,
-             CommitteeSeeder::class,
+            CommitteeSeeder::class,
+            PreviousCommitteeMemberSeeder::class,
         ]);
     }
 }
