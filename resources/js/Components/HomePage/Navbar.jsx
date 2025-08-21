@@ -205,56 +205,44 @@ const NavBar = () => {
         ))}
       </button>
 
-      {/* Hamburger Menu Button */}
+      {/* Hamburger / Close Toggle Button */}
       <button
         key={`hamburger-${isMobileMenuOpen}`}
         onClick={toggleMobileMenu}
         className={clsx(
-          "md:hidden flex flex-col justify-center items-center w-8 h-8 space-y-1.5 pointer-events-auto fixed top-6 right-6 z-[99998]",
-          { "hamburger-open": isMobileMenuOpen }
+          "md:hidden flex flex-col justify-center items-center w-8 h-8 pointer-events-auto fixed top-6 right-6 z-[100001]",
+          { "hamburger-open": isMobileMenuOpen, "space-y-0": isMobileMenuOpen, "space-y-1.5": !isMobileMenuOpen, "rounded-full p-1": isMobileMenuOpen }
         )}
         style={{
-          backgroundColor: "transparent",
+          backgroundColor: isMobileMenuOpen ? "#CCFF00" : "transparent",
         }}
       >
-        <div
-          className={clsx("w-6 h-0.5 transition-all duration-300", {
-            "bg-black": isMobileMenuOpen,
-            "bg-white": !isMobileMenuOpen,
-          })}
-          style={{
-            transform: isMobileMenuOpen
-              ? "rotate(45deg) translateY(8px)"
-              : "rotate(0deg) translateY(0px)",
-          }}
-        ></div>
-        <div
-          className={clsx("w-6 h-0.5 transition-all duration-300", {
-            "bg-black": isMobileMenuOpen,
-            "bg-white": !isMobileMenuOpen,
-          })}
-          style={{
-            opacity: isMobileMenuOpen ? 0 : 1,
-          }}
-        ></div>
-        <div
-          className={clsx("w-6 h-0.5 transition-all duration-300", {
-            "bg-black": isMobileMenuOpen,
-            "bg-white": !isMobileMenuOpen,
-          })}
-          style={{
-            transform: isMobileMenuOpen
-              ? "rotate(-45deg) translateY(-8px)"
-              : "rotate(0deg) translateY(0px)",
-          }}
-        ></div>
+        {/* Render only the hamburger (3 lines) when closed, and only the X (2 rotated lines) when open */}
+        {isMobileMenuOpen ? (
+          <>
+            <div
+              className="w-6 h-0.5 bg-black transition-all duration-300"
+              style={{ transform: "rotate(45deg)" }}
+            />
+            <div
+              className="w-6 h-0.5 bg-black transition-all duration-300"
+              style={{ transform: "rotate(-45deg)" }}
+            />
+          </>
+        ) : (
+          <>
+            <div className="w-6 h-0.5 bg-white transition-all duration-300" />
+            <div className="w-6 h-0.5 bg-white transition-all duration-300" />
+            <div className="w-6 h-0.5 bg-white transition-all duration-300" />
+          </>
+        )}
       </button>
 
       {/* Mobile Menu Overlay */}
       <div
         ref={mobileMenuRef}
         className={clsx(
-          "fixed z-[9998] flex flex-col items-center justify-center md:hidden mobile-menu-overlay",
+          "fixed z-[100000] flex flex-col items-center justify-center md:hidden mobile-menu-overlay",
           { hidden: !isMobileMenuOpen }
         )}
         style={{
@@ -298,25 +286,7 @@ const NavBar = () => {
           ))}
         </div>
 
-        {/* Mobile Audio Button in Overlay */}
-        <div className="absolute bottom-20">
-          <button
-            onClick={toggleAudio}
-            className={clsx("flex items-center space-x-4 overlay-audio")}
-          >
-            {[1, 2, 3, 4].map((bar) => (
-              <div
-                key={bar}
-                className={clsx("indicator-line", {
-                  active: isIndicatorActive,
-                })}
-                style={{
-                  animationDelay: `${bar * 0.1}s`,
-                }}
-              />
-            ))}
-          </button>
-        </div>
+  {/* Mobile Audio Button removed from overlay to avoid duplicate controls under the close icon */}
       </div>
     </>
   );
