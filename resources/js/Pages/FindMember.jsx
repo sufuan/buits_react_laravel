@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Head } from '@inertiajs/react';
 import gsap from 'gsap';
 import NavBar from '@/Components/HomePage/Navbar';
+import '../../css/frontend.css';
 
 export default function FindMember() {
   const [searchQuery, setSearchQuery] = useState('');

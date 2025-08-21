@@ -3,6 +3,7 @@ import { Head } from '@inertiajs/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import NavBar from '@/Components/HomePage/Navbar';
+import '../../css/frontend.css';
 
 gsap.registerPlugin(ScrollTrigger);
 

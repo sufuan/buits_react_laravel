@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 @font-face {
   font-family: "Long";
   src: url("/fonts/long.woff");
@@ -26,8 +30,7 @@
 }
 
 body {
-  /* Use 100% instead of 100dvw to avoid mobile viewport quirks */
-  width: 100%;
+  width: 100dvw;
   overflow-x: hidden;
   font-family: "Round", sans-serif;
   background-color: black;
@@ -229,6 +232,42 @@ main {
   .final-message {
     @apply absolute w-full h-dvh overflow-hidden z-50 opacity-100;
   }
+}
+
+.black-gradient-bg {
+  background: linear-gradient(
+    223.17deg,
+    rgb(28, 24, 41) 0%,
+    rgb(27, 24, 40) 8.61%,
+    rgb(25, 23, 36) 17.21%,
+    rgb(22, 21, 32) 25.82%,
+    rgb(20, 19, 28) 34.42%,
+    rgb(18, 18, 24) 43.03%,
+    rgb(17, 17, 23) 51.63%
+  );
+}
+
+.entrance-message {
+  mask-image: radial-gradient(circle at 50% 100vh, black 0%, transparent 0%);
+  mask-repeat: no-repeat;
+  mask-size: 100% 100%;
+}
+
+.mask-wrapper {
+  mask-image: url("/images/big-hero-text.svg");
+  mask-repeat: no-repeat;
+}
+
+.animated-gradient-bg {
+  background: linear-gradient(135deg, #1e2a52 0%, #6e4b91 100%);
+}
+
+.jason-content {
+  background: radial-gradient(ellipse, #111117 20%, transparent 70%);
+}
+
+.lucia-life-content {
+  background: radial-gradient(ellipse, #111117 20%, transparent 70%);
 }
 
 .black-gradient-bg {

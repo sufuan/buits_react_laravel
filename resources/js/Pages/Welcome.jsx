@@ -1,4 +1,5 @@
 /* eslint-disable */
+import '../../css/frontend.css';
 import { useState } from 'react'
 import Hero from '../Components/HomePage/Hero'
 import About from '../Components/HomePage/About'

@@ -8,6 +8,7 @@ import classNames from 'classnames';
 import NavBar from '@/Components/HomePage/Navbar';
 import RealisticDoor from '@/Components/Museum/RealisticDoor';
 import FootstepsAnimation from '@/Components/Museum/FootstepsAnimation';
+import '../../css/frontend.css';
 import ImmersiveRoom from '@/Components/Museum/ImmersiveRoom';
 
 gsap.registerPlugin(ScrollTrigger, ScrollToPlugin);
