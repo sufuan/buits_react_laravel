@@ -93,7 +93,7 @@ class VolunteerApplicationController extends Controller
     public function update(Request $request, VolunteerApplication $application)
     {
         $validated = $request->validate([
-            'status' => 'required|in:pending,approved,rejected',
+            'status' => 'required|in:approved,rejected',
             'admin_notes' => 'nullable|string|max:1000'
         ]);
 
@@ -108,7 +108,7 @@ class VolunteerApplicationController extends Controller
             $application->user->update(['usertype' => 'volunteer']);
         }
 
-        return redirect()->back()->with('success', 'Application status updated successfully!');
+        return redirect()->route('admin.applications.volunteer.index')->with('success', 'Application status updated successfully!');
     }
 
     /**

@@ -1,32 +1,53 @@
 import React, { useState } from 'react';
-import { Head, Link, useForm } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 
 export default function VolunteerApplicationManagement({ applications }) {
-    const { put, processing } = useForm();
+    const [processing, setProcessing] = useState(false);
     const [selectedApplications, setSelectedApplications] = useState([]);
     const [filter, setFilter] = useState('all');
     const [showBulkActions, setShowBulkActions] = useState(false);
 
     const handleStatusChange = (id, status, comment = '') => {
-        put(route('admin.volunteer-applications.update', id), {
+        router.patch(route('admin.applications.volunteer.update', id), {
             status,
-            admin_comment: comment,
+            admin_notes: comment,
+        }, {
+            preserveScroll: true, // Keeps scroll position after update
+            onStart: () => setProcessing(true),
+            onFinish: () => setProcessing(false),
+            onSuccess: () => {
+                console.log('Application status updated successfully');
+            },
+            onError: (errors) => {
+                console.error('Error updating application:', errors);
+            }
         });
     };
 
     const handleBulkStatusChange = (status) => {
         if (selectedApplications.length === 0) return;
         
-        const comment = prompt(`${status === 'approved' ? 'Approval' : 'Rejection'} reason (optional):`);
-        if (comment === null) return;
-
-        selectedApplications.forEach(id => {
-            handleStatusChange(id, status, comment);
-        });
-        
-        setSelectedApplications([]);
-        setShowBulkActions(false);
+        if (status === 'approved') {
+            if (confirm(`Approve ${selectedApplications.length} volunteer applications? This will change their role to volunteer.`)) {
+                selectedApplications.forEach(id => {
+                    handleStatusChange(id, status, '');
+                });
+                setSelectedApplications([]);
+                setShowBulkActions(false);
+            }
+        } else if (status === 'rejected') {
+            const comment = prompt('Rejection reason (required for all):');
+            if (comment && comment.trim()) {
+                selectedApplications.forEach(id => {
+                    handleStatusChange(id, status, comment.trim());
+                });
+                setSelectedApplications([]);
+                setShowBulkActions(false);
+            } else if (comment !== null) {
+                alert('Rejection reason is required');
+            }
+        }
     };
 
     const handleSelectAll = (e) => {
@@ -226,7 +247,7 @@ export default function VolunteerApplicationManagement({ applications }) {
                                                                 <button
                                                                     onClick={() => {
                                                                         if (confirm('Approve this volunteer application? This will change the user\'s role to volunteer.')) {
-                                                                            handleStatusChange(application.id, 'approved');
+                                                                            handleStatusChange(application.id, 'approved', '');
                                                                         }
                                                                     }}
                                                                     disabled={processing}
@@ -236,9 +257,11 @@ export default function VolunteerApplicationManagement({ applications }) {
                                                                 </button>
                                                                 <button
                                                                     onClick={() => {
-                                                                        const comment = prompt('Rejection reason (optional):');
-                                                                        if (comment !== null) {
-                                                                            handleStatusChange(application.id, 'rejected', comment);
+                                                                        const comment = prompt('Rejection reason (required):');
+                                                                        if (comment && comment.trim()) {
+                                                                            handleStatusChange(application.id, 'rejected', comment.trim());
+                                                                        } else if (comment !== null) {
+                                                                            alert('Rejection reason is required');
                                                                         }
                                                                     }}
                                                                     disabled={processing}

@@ -41,8 +41,8 @@ class ExecutiveApplicationController extends Controller
             return redirect()->back()->with('error', 'Only volunteers can apply for executive positions.');
         }
 
-        // Get available designations
-        $designations = Designation::active()->orderBy('sort_order')->get();
+                // Get available designations
+        $designations = Designation::orderBy('sort_order')->get();
 
         return Inertia::render('Dashboard/ExecutiveApplication/Create', [
             'user' => $user,

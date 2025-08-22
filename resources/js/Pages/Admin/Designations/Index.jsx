@@ -11,7 +11,7 @@ export default function Index({ designations }) {
                         Designations Management
                     </h2>
                     <Link
-                        href={route('admin.designations.create')}
+                        href={route('admin.admin.designations.create')}
                         className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                     >
                         Add New Designation
@@ -69,13 +69,13 @@ export default function Index({ designations }) {
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
                                                     <Link
-                                                        href={route('admin.designations.edit', designation.id)}
+                                                        href={route('admin.admin.designations.edit', designation.id)}
                                                         className="text-blue-600 hover:text-blue-900"
                                                     >
                                                         Edit
                                                     </Link>
                                                     <Link
-                                                        href={route('admin.designations.show', designation.id)}
+                                                        href={route('admin.admin.designations.show', designation.id)}
                                                         className="text-green-600 hover:text-green-900"
                                                     >
                                                         View
@@ -91,7 +91,7 @@ export default function Index({ designations }) {
                                 <div className="text-center py-8">
                                     <p className="text-gray-500">No designations found.</p>
                                     <Link
-                                        href={route('admin.designations.create')}
+                                        href={route('admin.admin.designations.create')}
                                         className="mt-2 inline-block px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
                                     >
                                         Create First Designation
