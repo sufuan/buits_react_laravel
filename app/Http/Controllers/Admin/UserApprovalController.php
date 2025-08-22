@@ -85,6 +85,7 @@ class UserApprovalController extends Controller
                 'skills' => $pendingUser->skills,
                 'custom-form' => $pendingUser['custom-form'],
                 'is_approved' => true,
+                'usertype' => 'member', // Set default usertype to member when approved
             ]);
 
             // TODO: Send approval emails
@@ -231,6 +232,7 @@ class UserApprovalController extends Controller
                         'skills' => $pendingUser->skills,
                         'custom-form' => $pendingUser['custom-form'],
                         'is_approved' => true,
+                        'usertype' => 'member', // Set default usertype to member when approved
                     ]);
 
                     // Delete pending user record

@@ -25,6 +25,7 @@ class User extends Authenticatable
         'department',
         'session',
         'usertype',
+        'designation_id',
         'gender',
         'date_of_birth',
         'blood_group',
@@ -68,8 +69,23 @@ class User extends Authenticatable
     }
 
     public function committees()
-{
-    return $this->hasMany(Committee::class);
-}
+    {
+        return $this->hasMany(Committee::class);
+    }
+
+    public function designation()
+    {
+        return $this->belongsTo(Designation::class);
+    }
+
+    public function volunteerApplication()
+    {
+        return $this->hasOne(VolunteerApplication::class);
+    }
+
+    public function executiveApplications()
+    {
+        return $this->hasMany(ExecutiveApplication::class);
+    }
 
 }

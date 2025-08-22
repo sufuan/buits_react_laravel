@@ -344,6 +344,7 @@ class UserImportService
             'skills' => $row['skills'] ?? null,
             'member_id' => $row['member_id'] ?? $this->generateMemberId($row['department'], $row['session']),
             'is_approved' => true,
+            'usertype' => 'member', // Set default usertype to member for imported users
         ];
     }
 

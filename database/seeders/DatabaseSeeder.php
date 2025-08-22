@@ -11,13 +11,19 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Seed the test user
+        // Seed designations first
+        $this->call([
+            DesignationSeeder::class,
+        ]);
+
+        // Seed the test user with proper usertype
         \App\Models\User::factory()->create([
             'name' => 'Test User',
             'email' => 'test@example.com',
+            'usertype' => 'member', // Explicitly set usertype
         ]);
 
-        // ✅ Call AdminSeeder here
+        // Call other seeders
         $this->call([
             AdminSeeder::class,
             CommitteeSeeder::class,
