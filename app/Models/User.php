@@ -88,4 +88,9 @@ class User extends Authenticatable
         return $this->hasMany(ExecutiveApplication::class);
     }
 
+    public function roleChangeLogs()
+    {
+        return $this->hasMany(RoleChangeLog::class);
+    }
+
 }

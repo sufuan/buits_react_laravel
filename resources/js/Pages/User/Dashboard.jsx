@@ -1,5 +1,5 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { UserDashboardSidebar } from "@/components/user-dashboard-sidebar"
+import { UserSidebar } from "@/components/user-sidebar"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -67,7 +67,7 @@ export default function Dashboard({ auth }) {
       <Head title="Dashboard" />
 
       <SidebarProvider>
-        <UserDashboardSidebar user={user} onLogout={handleLogout} />
+        <UserSidebar user={user} onLogout={handleLogout} />
         <SidebarInset>
           {/* Header with User Info and Logout */}
           <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 border-b bg-white">
@@ -173,6 +173,85 @@ export default function Dashboard({ auth }) {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Application Status */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Award className="h-5 w-5" />
+                  Application Status
+                </CardTitle>
+                <CardDescription>
+                  Your current membership status and available applications
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {/* Current Status */}
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-shrink-0">
+                        <User className="h-5 w-5 text-gray-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">Current Status</p>
+                        <p className="text-xs text-gray-500">Your current membership level</p>
+                      </div>
+                    </div>
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                      user?.usertype === 'member' ? 'bg-green-100 text-green-800' :
+                      user?.usertype === 'volunteer' ? 'bg-blue-100 text-blue-800' :
+                      user?.usertype === 'executive' ? 'bg-purple-100 text-purple-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {user?.usertype ? user.usertype.charAt(0).toUpperCase() + user.usertype.slice(1) : 'Unknown'}
+                    </span>
+                  </div>
+
+                  {/* Application Actions */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Volunteer Application */}
+                    {user?.usertype === 'member' && (
+                      <Button asChild className="h-auto p-4 flex flex-col items-center gap-2 bg-blue-600 hover:bg-blue-700">
+                        <Link href={route('volunteer-application.create')}>
+                          <Users className="h-6 w-6" />
+                          <span className="text-sm">Apply for Volunteer</span>
+                        </Link>
+                      </Button>
+                    )}
+
+                    {/* Executive Application */}
+                    {user?.usertype === 'volunteer' && (
+                      <Button asChild className="h-auto p-4 flex flex-col items-center gap-2 bg-purple-600 hover:bg-purple-700">
+                        <Link href={route('executive-application.create')}>
+                          <Award className="h-6 w-6" />
+                          <span className="text-sm">Apply for Executive</span>
+                        </Link>
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Progress Indicator */}
+                  <div className="mt-4">
+                    <div className="flex items-center justify-between text-xs text-gray-500 mb-2">
+                      <span>Member</span>
+                      <span>Volunteer</span>
+                      <span>Executive</span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div 
+                        className={`h-2 rounded-full transition-all duration-300 ${
+                          user?.usertype === 'member' ? 'bg-green-500 w-1/3' :
+                          user?.usertype === 'volunteer' ? 'bg-blue-500 w-2/3' :
+                          user?.usertype === 'executive' ? 'bg-purple-500 w-full' :
+                          'bg-gray-300 w-0'
+                        }`}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Profile Information */}
             <div className="grid gap-6 md:grid-cols-2">

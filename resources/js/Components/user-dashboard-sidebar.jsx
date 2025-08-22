@@ -5,6 +5,9 @@ import {
   User,
   LogOut,
   Settings,
+  Users,
+  Award,
+  Activity,
 } from "lucide-react"
 
 import {
@@ -37,12 +40,37 @@ export function UserDashboardSidebar({ user, onLogout, ...props }) {
       isActive: route().current('dashboard'),
     },
     {
-      title: "Profile",
+      title: "Profiles",
       url: route('profile.edit'),
       icon: User,
       isActive: route().current('profile.*'),
     },
+    {
+      title: "Application Status",
+      url: route('application-status'),
+      icon: Activity,
+      isActive: route().current('application-status'),
+    },
   ]
+
+  // Add conditional menu items based on user type
+  if (user?.usertype === 'member') {
+    menuItems.push({
+      title: "Apply for Volunteer",
+      url: route('volunteer-application.create'),
+      icon: Users,
+      isActive: route().current('volunteer-application.*'),
+    });
+  }
+
+  if (user?.usertype === 'volunteer') {
+    menuItems.push({
+      title: "Apply for Executive",
+      url: route('executive-application.create'),
+      icon: Award,
+      isActive: route().current('executive-application.*'),
+    });
+  }
 
   return (
     <Sidebar collapsible="icon" {...props}>

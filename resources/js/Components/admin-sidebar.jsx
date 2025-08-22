@@ -16,6 +16,9 @@ import {
   LayoutTemplate, // New Icon
   FileSignature, // New Icon
   History, // New Icon
+  UserCog, // Role Management Icon
+  ClipboardList, // Applications Icon
+  Crown, // Executive Icon
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -89,6 +92,36 @@ const adminNavData = {
         {
           title: "Approve Volunteer Request",
           url: "/admin/volunteers/approve",
+        },
+      ],
+    },
+    {
+      title: "Application Management",
+      url: "#",
+      icon: ClipboardList,
+      items: [
+        {
+          title: "Volunteer Applications",
+          url: "/admin/applications/volunteer",
+        },
+        {
+          title: "Executive Applications",
+          url: "/admin/applications/executive",
+        },
+      ],
+    },
+    {
+      title: "Role Management",
+      url: "#",
+      icon: UserCog,
+      items: [
+        {
+          title: "User Role Management",
+          url: "/admin/user-role-management",
+        },
+        {
+          title: "Designations",
+          url: "/admin/designations",
         },
       ],
     },

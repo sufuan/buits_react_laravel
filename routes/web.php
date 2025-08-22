@@ -2,6 +2,7 @@
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 use App\Http\Controllers\ProfileController;
 
@@ -43,6 +44,7 @@ Route::get('/events', function () {
 
 Route::get('/previous-committee', [App\Http\Controllers\PreviousCommitteeController::class, 'index'])->name('previous-committee');
 Route::get('/previous-committee/{committee}', [App\Http\Controllers\PreviousCommitteeController::class, 'show'])->name('previous-committee.show');
+Route::get('/previous-committee/data/{committee}', [App\Http\Controllers\PreviousCommitteeController::class, 'getCommitteeData'])->name('previous-committee.data');
 
 // API routes for committee data
 Route::get('/api/committees', [App\Http\Controllers\PreviousCommitteeController::class, 'getCommitteeData'])->name('api.committees');
@@ -71,6 +73,14 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Volunteer Application Routes
+    Route::get('/volunteer-application/create', [App\Http\Controllers\VolunteerApplicationController::class, 'create'])->name('volunteer-application.create');
+    Route::post('/volunteer-application', [App\Http\Controllers\VolunteerApplicationController::class, 'store'])->name('volunteer-application.store');
+    
+    // Executive Application Routes
+    Route::get('/executive-application/create', [App\Http\Controllers\ExecutiveApplicationController::class, 'create'])->name('executive-application.create');
+    Route::post('/executive-application', [App\Http\Controllers\ExecutiveApplicationController::class, 'store'])->name('executive-application.store');
 });
 
 
@@ -130,6 +140,37 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::put('{user}', [UserController::class, 'update'])->name('update');
             Route::delete('{user}', [UserController::class, 'destroy'])->name('destroy');
         });
+
+        // ================= Application Management =================
+        Route::prefix('applications')->name('applications.')->group(function () {
+            // Volunteer Applications
+            Route::prefix('volunteer')->name('volunteer.')->group(function () {
+                Route::get('/', [App\Http\Controllers\VolunteerApplicationController::class, 'index'])->name('index');
+                Route::get('{application}', [App\Http\Controllers\VolunteerApplicationController::class, 'show'])->name('show');
+                Route::patch('{application}', [App\Http\Controllers\VolunteerApplicationController::class, 'update'])->name('update');
+                Route::delete('{application}', [App\Http\Controllers\VolunteerApplicationController::class, 'destroy'])->name('destroy');
+            });
+            
+            // Executive Applications
+            Route::prefix('executive')->name('executive.')->group(function () {
+                Route::get('/', [App\Http\Controllers\ExecutiveApplicationController::class, 'index'])->name('index');
+                Route::get('{application}', [App\Http\Controllers\ExecutiveApplicationController::class, 'show'])->name('show');
+                Route::patch('{application}', [App\Http\Controllers\ExecutiveApplicationController::class, 'update'])->name('update');
+                Route::delete('{application}', [App\Http\Controllers\ExecutiveApplicationController::class, 'destroy'])->name('destroy');
+            });
+        });
+
+        // ================= User Role Management =================
+        Route::prefix('user-role-management')->name('user-role-management.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\UserRoleManagementController::class, 'index'])->name('index');
+            Route::put('{user}/update-role', [App\Http\Controllers\Admin\UserRoleManagementController::class, 'updateRole'])->name('update-role');
+            Route::get('{user}/history', [App\Http\Controllers\Admin\UserRoleManagementController::class, 'showHistory'])->name('history');
+        });
+
+        // ================= Designations Management =================
+        Route::resource('designations', App\Http\Controllers\Admin\DesignationController::class, [
+            'as' => 'admin'
+        ]);
 
         // ================= Notifications =================
         Route::prefix('notifications')->name('notifications.')->group(function () {
