@@ -136,13 +136,12 @@ class ExecutiveApplicationController extends Controller
                 // Log the role change
                 RoleChangeLog::create([
                     'user_id' => $user->id,
-                    'previous_usertype' => $previousUsertype,
+                    'old_usertype' => $previousUsertype,
                     'new_usertype' => 'executive',
-                    'previous_designation_id' => $previousDesignationId,
+                    'old_designation_id' => $previousDesignationId,
                     'new_designation_id' => $newDesignationId,
-                    'changed_by_admin_id' => Auth::guard('admin')->id(),
+                    'admin_id' => Auth::guard('admin')->id(),
                     'reason' => 'Executive application approved: ' . ($request->admin_comment ?? 'No comment provided'),
-                    'change_type' => 'application_approval',
                 ]);
             }
         });

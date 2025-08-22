@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { Head, router } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 
 export default function ExecutiveApplicationManagement({ applications, designations }) {
-    const { patch, processing } = useForm();
+    const [processing, setProcessing] = useState(false);
     const [selectedApplications, setSelectedApplications] = useState([]);
     const [filter, setFilter] = useState('all');
     const [showDesignationModal, setShowDesignationModal] = useState(false);
@@ -11,10 +11,14 @@ export default function ExecutiveApplicationManagement({ applications, designati
     const [selectedDesignation, setSelectedDesignation] = useState('');
 
     const handleStatusChange = (id, status, comment = '', designationId = null) => {
-        patch(route('admin.applications.executive.update', id), {
+        router.patch(route('admin.applications.executive.update', id), {
             status,
             admin_comment: comment,
             designation_id: designationId,
+        }, {
+            preserveScroll: true,
+            onStart: () => setProcessing(true),
+            onFinish: () => setProcessing(false),
         });
     };
 

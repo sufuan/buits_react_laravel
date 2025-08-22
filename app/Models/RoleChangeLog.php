@@ -11,13 +11,12 @@ class RoleChangeLog extends Model
 
     protected $fillable = [
         'user_id',
-        'changed_by_admin_id',
-        'previous_usertype',
+        'admin_id',
+        'old_usertype',
         'new_usertype',
-        'previous_designation_id',
+        'old_designation_id',
         'new_designation_id',
         'reason',
-        'change_type',
         'metadata'
     ];
 
@@ -32,12 +31,12 @@ class RoleChangeLog extends Model
 
     public function admin()
     {
-        return $this->belongsTo(Admin::class, 'changed_by_admin_id');
+        return $this->belongsTo(Admin::class, 'admin_id');
     }
 
     public function previousDesignation()
     {
-        return $this->belongsTo(Designation::class, 'previous_designation_id');
+        return $this->belongsTo(Designation::class, 'old_designation_id');
     }
 
     public function newDesignation()
