@@ -14,7 +14,10 @@ class DesignationController extends Controller
      */
     public function index()
     {
-        $designations = Designation::orderBy('level')->orderBy('name')->get();
+        $designations = Designation::with(['parent', 'children'])
+            ->orderBy('level')
+            ->orderBy('sort_order')
+            ->get();
 
         return Inertia::render('Admin/Designations/Index', [
             'designations' => $designations
@@ -26,7 +29,11 @@ class DesignationController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Designations/Create');
+        $designations = Designation::orderBy('level')->orderBy('sort_order')->get();
+
+        return Inertia::render('Admin/Designations/Create', [
+            'designations' => $designations
+        ]);
     }
 
     /**
@@ -35,15 +42,22 @@ class DesignationController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'level' => 'required|string|max:255',
-            'sort_order' => 'nullable|integer',
+            'name' => 'required|string|max:255|unique:designations',
+            'level' => 'required|integer|min:1|max:3',
+            'parent_id' => 'nullable|exists:designations,id',
             'is_active' => 'boolean',
         ]);
 
-        Designation::create($request->all());
+        $data = $request->all();
+        $data['is_active'] = $request->boolean('is_active', true);
+        
+        // Auto-calculate sort_order based on existing designations at the same level
+        $maxSortOrder = Designation::where('level', $data['level'])->max('sort_order') ?? 0;
+        $data['sort_order'] = $maxSortOrder + 1;
 
-        return redirect()->route('admin.designations.index')
+        Designation::create($data);
+
+        return redirect()->route('admin.admin.designations.index')
                         ->with('success', 'Designation created successfully.');
     }
 
@@ -52,8 +66,15 @@ class DesignationController extends Controller
      */
     public function show(Designation $designation)
     {
+        $designation->load(['parent', 'children']);
+        
+        // Get users assigned to this designation
+        $assignedUsers = \App\Models\User::where('designation_id', $designation->id)->get();
+
         return Inertia::render('Admin/Designations/Show', [
-            'designation' => $designation
+            'designation' => $designation,
+            'children' => $designation->children,
+            'assignedUsers' => $assignedUsers
         ]);
     }
 
@@ -62,8 +83,14 @@ class DesignationController extends Controller
      */
     public function edit(Designation $designation)
     {
+        $designations = Designation::where('id', '!=', $designation->id)
+            ->orderBy('level')
+            ->orderBy('sort_order')
+            ->get();
+
         return Inertia::render('Admin/Designations/Edit', [
-            'designation' => $designation
+            'designation' => $designation,
+            'designations' => $designations
         ]);
     }
 
@@ -73,15 +100,26 @@ class DesignationController extends Controller
     public function update(Request $request, Designation $designation)
     {
         $request->validate([
-            'name' => 'required|string|max:255',
-            'level' => 'required|string|max:255',
-            'sort_order' => 'nullable|integer',
+            'name' => 'required|string|max:255|unique:designations,name,' . $designation->id,
+            'level' => 'required|integer|min:1|max:3',
+            'parent_id' => 'nullable|exists:designations,id',
             'is_active' => 'boolean',
         ]);
 
-        $designation->update($request->all());
+        $data = $request->all();
+        $data['is_active'] = $request->boolean('is_active', true);
+        
+        // Keep existing sort_order if level doesn't change, or auto-calculate if level changes
+        if ($designation->level != $data['level']) {
+            $maxSortOrder = Designation::where('level', $data['level'])->max('sort_order') ?? 0;
+            $data['sort_order'] = $maxSortOrder + 1;
+        } else {
+            $data['sort_order'] = $designation->sort_order; // Keep existing
+        }
 
-        return redirect()->route('admin.designations.index')
+        $designation->update($data);
+
+        return redirect()->route('admin.admin.designations.index')
                         ->with('success', 'Designation updated successfully.');
     }
 
@@ -90,9 +128,21 @@ class DesignationController extends Controller
      */
     public function destroy(Designation $designation)
     {
+        // Check if designation has assigned users
+        $assignedUsers = \App\Models\User::where('designation_id', $designation->id)->count();
+        
+        if ($assignedUsers > 0) {
+            return back()->with('error', 'Cannot delete designation. It is currently assigned to ' . $assignedUsers . ' user(s).');
+        }
+
+        // Check if designation has children
+        if ($designation->children()->count() > 0) {
+            return back()->with('error', 'Cannot delete designation. It has sub-positions that depend on it.');
+        }
+
         $designation->delete();
 
-        return redirect()->route('admin.designations.index')
+        return redirect()->route('admin.admin.designations.index')
                         ->with('success', 'Designation deleted successfully.');
     }
 }

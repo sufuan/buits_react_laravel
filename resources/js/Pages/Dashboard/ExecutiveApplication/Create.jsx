@@ -76,9 +76,8 @@ export default function Create({ user, designations }) {
                                             <option value="">Select a position...</option>
                                             {designations.map((designation) => (
                                                 <option key={designation.id} value={designation.id}>
-                                                    {designation.title}
+                                                    {designation.name}
                                                     {designation.level && ` (Level ${designation.level})`}
-                                                    {designation.is_primary && ' - Primary Position'}
                                                 </option>
                                             ))}
                                         </select>

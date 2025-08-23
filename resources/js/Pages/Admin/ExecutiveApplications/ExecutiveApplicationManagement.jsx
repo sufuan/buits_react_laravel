@@ -309,7 +309,6 @@ export default function ExecutiveApplicationManagement({ applications, designati
                                                 {designations.map((designation) => (
                                                     <option key={designation.id} value={designation.id}>
                                                         {designation.name} (Level {designation.level})
-                                                        {designation.is_primary && ' - Primary Position'}
                                                     </option>
                                                 ))}
                                             </select>

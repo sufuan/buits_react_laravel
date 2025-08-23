@@ -13,110 +13,192 @@ class DesignationSeeder extends Seeder
      */
     public function run(): void
     {
-        // President (Top Level)
+        // Disable foreign key checks temporarily
+        \DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        
+        // Clear existing designations
+        Designation::truncate();
+        
+        // Re-enable foreign key checks
+        \DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        // Level 1: Executive Leadership (President + Vice Presidents)
         $president = Designation::create([
             'name' => 'President',
-            'level' => 'president',
+            'level' => 1,
             'parent_id' => null,
             'sort_order' => 1,
             'is_active' => true
         ]);
 
-        // Vice Presidents (Second Level)
         $vpAdmin = Designation::create([
             'name' => 'Vice President (Admin)',
-            'level' => 'vice_president',
-            'parent_id' => $president->id,
-            'sort_order' => 1,
+            'level' => 1,
+            'parent_id' => null,
+            'sort_order' => 2,
+            'is_active' => true
+        ]);
+
+        $vpTechnical = Designation::create([
+            'name' => 'Vice President (Technical)',
+            'level' => 1,
+            'parent_id' => null,
+            'sort_order' => 3,
             'is_active' => true
         ]);
 
         $vpFinance = Designation::create([
             'name' => 'Vice President (Finance)',
-            'level' => 'vice_president',
-            'parent_id' => $president->id,
-            'sort_order' => 2,
+            'level' => 1,
+            'parent_id' => null,
+            'sort_order' => 4,
             'is_active' => true
         ]);
 
-        // General Secretary
+        // Level 2: Administrative Leadership (General Secretaries)
         $generalSecretary = Designation::create([
             'name' => 'General Secretary',
-            'level' => 'secretary',
+            'level' => 2,
             'parent_id' => $vpAdmin->id,
             'sort_order' => 1,
             'is_active' => true
         ]);
 
-        // Assistant Secretaries
-        Designation::create([
-            'name' => 'Assistant Secretary (Admin)',
-            'level' => 'assistant_secretary',
-            'parent_id' => $generalSecretary->id,
+        $additionalGeneralSecretary = Designation::create([
+            'name' => 'Additional General Secretary',
+            'level' => 2,
+            'parent_id' => $vpAdmin->id,
+            'sort_order' => 2,
+            'is_active' => true
+        ]);
+
+        $jointGeneralSecretary = Designation::create([
+            'name' => 'Joint General Secretary',
+            'level' => 2,
+            'parent_id' => $vpAdmin->id,
+            'sort_order' => 3,
+            'is_active' => true
+        ]);
+
+        // Level 3: Department Secretaries with their Joint Secretaries
+        
+        // Finance Department
+        $financeSecretary = Designation::create([
+            'name' => 'Finance Secretary',
+            'level' => 3,
+            'parent_id' => $vpFinance->id,
             'sort_order' => 1,
             'is_active' => true
         ]);
 
         Designation::create([
-            'name' => 'Assistant Secretary (Finance)',
-            'level' => 'assistant_secretary',
+            'name' => 'Joint Finance Secretary',
+            'level' => 3,
             'parent_id' => $vpFinance->id,
             'sort_order' => 2,
             'is_active' => true
         ]);
 
-        // Treasurer
-        $treasurer = Designation::create([
-            'name' => 'Treasurer',
-            'level' => 'treasurer',
-            'parent_id' => $vpFinance->id,
-            'sort_order' => 1,
-            'is_active' => true
-        ]);
-
-        // Assistant Treasurer
-        Designation::create([
-            'name' => 'Assistant Treasurer',
-            'level' => 'assistant_treasurer',
-            'parent_id' => $treasurer->id,
-            'sort_order' => 1,
-            'is_active' => true
-        ]);
-
-        // Organizing Secretaries
-        Designation::create([
-            'name' => 'Organizing Secretary (Events)',
-            'level' => 'organizing_secretary',
+        // Human Resource Department
+        $hrSecretary = Designation::create([
+            'name' => 'Human Resource Secretary',
+            'level' => 3,
             'parent_id' => $generalSecretary->id,
             'sort_order' => 1,
             'is_active' => true
         ]);
 
         Designation::create([
-            'name' => 'Organizing Secretary (Publications)',
-            'level' => 'organizing_secretary',
+            'name' => 'Joint Human Resource Secretary',
+            'level' => 3,
             'parent_id' => $generalSecretary->id,
             'sort_order' => 2,
             'is_active' => true
         ]);
 
-        Designation::create([
-            'name' => 'Organizing Secretary (Sports)',
-            'level' => 'organizing_secretary',
+        // Event Organization Department
+        $eventSecretary = Designation::create([
+            'name' => 'Event Organizer Secretary',
+            'level' => 3,
             'parent_id' => $generalSecretary->id,
             'sort_order' => 3,
             'is_active' => true
         ]);
 
-        // Executive Members
-        for ($i = 1; $i <= 5; $i++) {
-            Designation::create([
-                'name' => "Executive Member {$i}",
-                'level' => 'executive_member',
-                'parent_id' => $generalSecretary->id,
-                'sort_order' => $i,
-                'is_active' => true
-            ]);
-        }
+        Designation::create([
+            'name' => 'Joint Event Organizer Secretary',
+            'level' => 3,
+            'parent_id' => $generalSecretary->id,
+            'sort_order' => 4,
+            'is_active' => true
+        ]);
+
+        // Office Maintenance Department
+        $officeSecretary = Designation::create([
+            'name' => 'Office Maintenance Secretary',
+            'level' => 3,
+            'parent_id' => $generalSecretary->id,
+            'sort_order' => 5,
+            'is_active' => true
+        ]);
+
+        Designation::create([
+            'name' => 'Joint Office Maintenance Secretary',
+            'level' => 3,
+            'parent_id' => $generalSecretary->id,
+            'sort_order' => 6,
+            'is_active' => true
+        ]);
+
+        // Public Relations Department
+        $prSecretary = Designation::create([
+            'name' => 'Public Relations Secretary',
+            'level' => 3,
+            'parent_id' => $generalSecretary->id,
+            'sort_order' => 7,
+            'is_active' => true
+        ]);
+
+        Designation::create([
+            'name' => 'Joint Public Relations Secretary',
+            'level' => 3,
+            'parent_id' => $generalSecretary->id,
+            'sort_order' => 8,
+            'is_active' => true
+        ]);
+
+        // Graphics & Designing Department
+        $graphicsSecretary = Designation::create([
+            'name' => 'Graphics & Designing Secretary',
+            'level' => 3,
+            'parent_id' => $vpTechnical->id,
+            'sort_order' => 1,
+            'is_active' => true
+        ]);
+
+        Designation::create([
+            'name' => 'Joint Graphics & Designing Secretary',
+            'level' => 3,
+            'parent_id' => $vpTechnical->id,
+            'sort_order' => 2,
+            'is_active' => true
+        ]);
+
+        // Research & Development Department
+        $rdSecretary = Designation::create([
+            'name' => 'Research & Development Secretary',
+            'level' => 3,
+            'parent_id' => $vpTechnical->id,
+            'sort_order' => 3,
+            'is_active' => true
+        ]);
+
+        Designation::create([
+            'name' => 'Joint Research & Development Secretary',
+            'level' => 3,
+            'parent_id' => $vpTechnical->id,
+            'sort_order' => 4,
+            'is_active' => true
+        ]);
     }
 }
