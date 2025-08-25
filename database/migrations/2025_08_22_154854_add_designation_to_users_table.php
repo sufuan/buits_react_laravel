@@ -12,10 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Modify existing usertype column to enum
-            $table->enum('usertype', ['member', 'volunteer', 'executive'])->default('member')->change();
-            $table->unsignedBigInteger('designation_id')->nullable()->after('usertype');
-            $table->foreign('designation_id')->references('id')->on('designations')->onDelete('set null');
+            // Modify existing usertype column to enum (if present)
+            try {
+                $table->enum('usertype', ['member', 'volunteer', 'executive'])->default('member')->change();
+            } catch (\Throwable $e) {
+                // ignore if change isn't supported in this environment
+            }
+
+            if (! Schema::hasColumn('users', 'designation_id')) {
+                $table->unsignedBigInteger('designation_id')->nullable()->after('usertype');
+                $table->foreign('designation_id')->references('id')->on('designations')->onDelete('set null');
+            }
         });
     }
 
@@ -24,11 +31,32 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['designation_id']);
-            $table->dropColumn(['designation_id']);
-            // Revert usertype back to string
-            $table->string('usertype')->default('user')->change();
-        });
+        // Best-effort rollback: try to remove FK/column but ignore if FK name differs or is missing
+        try {
+            Schema::table('users', function (Blueprint $table) {
+                if (Schema::hasColumn('users', 'designation_id')) {
+                    try {
+                        $table->dropForeign(['designation_id']);
+                    } catch (\Throwable $e) {
+                        // ignore if FK name doesn't match or doesn't exist
+                    }
+
+                    try {
+                        $table->dropColumn('designation_id');
+                    } catch (\Throwable $e) {
+                        // ignore if already dropped or other issue
+                    }
+                }
+
+                // Revert usertype back to string where possible
+                try {
+                    $table->string('usertype')->default('user')->change();
+                } catch (\Throwable $e) {
+                    // ignore change errors during rollback
+                }
+            });
+        } catch (\Throwable $e) {
+            // ignore any errors during best-effort rollback
+        }
     }
 };
