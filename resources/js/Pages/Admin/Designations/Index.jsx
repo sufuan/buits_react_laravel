@@ -6,10 +6,31 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Eye, Trash2, Building2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { 
+    Plus, 
+    Edit, 
+    Eye, 
+    Trash2, 
+    Building2, 
+    Users, 
+    Search,
+    Filter,
+    Crown,
+    UserCog,
+    Award,
+    Mail,
+    Phone,
+    Building
+} from 'lucide-react';
 
-export default function Index({ designations }) {
+export default function Index({ designations, executiveMembers = [] }) {
     const [deletingId, setDeletingId] = useState(null);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [roleFilter, setRoleFilter] = useState('all');
+    const [departmentFilter, setDepartmentFilter] = useState('all');
 
     const handleDelete = (designation) => {
         router.delete(route('admin.admin.designations.destroy', designation.id), {
@@ -44,6 +65,22 @@ export default function Index({ designations }) {
             default: return 'Unknown';
         }
     };
+
+    // Filter members for directory
+    const filteredMembers = executiveMembers.filter(member => {
+        const matchesSearch = member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            (member.designation && member.designation.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        
+        const matchesRole = roleFilter === 'all' || member.usertype === roleFilter;
+        const matchesDepartment = departmentFilter === 'all' || member.department === departmentFilter;
+        
+        return matchesSearch && matchesRole && matchesDepartment;
+    });
+
+    // Get unique departments and roles
+    const departments = [...new Set(executiveMembers.map(m => m.department).filter(Boolean))];
+    const roles = [...new Set(executiveMembers.map(m => m.usertype).filter(Boolean))];
 
     const renderDesignationRow = (designation, indent = 0) => (
         <TableRow key={designation.id} className={indent > 0 ? 'bg-muted/30' : ''}>
@@ -196,52 +233,140 @@ export default function Index({ designations }) {
                     </CardContent>
                 </Card>
 
-                {/* Designations Table */}
-                <Card>
-                    <CardHeader>
-                        <CardTitle>All Designations</CardTitle>
-                        <CardDescription>
-                            Manage and organize executive positions within the IT Society
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        {designations.length > 0 ? (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Designation Name</TableHead>
-                                        <TableHead>Category</TableHead>
-                                        <TableHead>Status</TableHead>
-                                        <TableHead>Actions</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {/* Level 1: President */}
-                                    {groupedDesignations[1]?.map(designation => renderDesignationRow(designation, 0))}
+                {/* Member Directory */}
+                <div className="space-y-6">
+                        {/* Search and Filter Controls */}
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Search & Filter Members</CardTitle>
+                                <CardDescription>Find members by name, email, designation, or department</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                    <div className="md:col-span-2">
+                                        <div className="relative">
+                                            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                                            <Input
+                                                placeholder="Search by name, email, or designation..."
+                                                value={searchTerm}
+                                                onChange={(e) => setSearchTerm(e.target.value)}
+                                                className="pl-10"
+                                            />
+                                        </div>
+                                    </div>
                                     
-                                    {/* Level 2: Vice Presidents */}
-                                    {groupedDesignations[2]?.map(designation => renderDesignationRow(designation, 1))}
+                                    <Select value={roleFilter} onValueChange={setRoleFilter}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Filter by Role" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Roles</SelectItem>
+                                            {roles.map(role => (
+                                                <SelectItem key={role} value={role}>{role}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
                                     
-                                    {/* Level 3: Secretaries */}
-                                    {groupedDesignations[3]?.map(designation => renderDesignationRow(designation, 2))}
-                                </TableBody>
-                            </Table>
-                        ) : (
-                            <div className="text-center py-8">
-                                <Building2 className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                                <h3 className="text-lg font-semibold">No designations found</h3>
-                                <p className="text-muted-foreground mb-4">Get started by creating your first designation</p>
-                                <Button asChild>
-                                    <Link href={route('admin.admin.designations.create')}>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Create First Designation
-                                    </Link>
-                                </Button>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
+                                    <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Filter by Department" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Departments</SelectItem>
+                                            {departments.map(dept => (
+                                                <SelectItem key={dept} value={dept}>{dept}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Member Directory */}
+                        <Card>
+                            <CardHeader>
+                                <div className="flex items-center justify-between">
+                                    <div>
+                                        <CardTitle>Member Directory</CardTitle>
+                                        <CardDescription>
+                                            {filteredMembers.length} of {executiveMembers.length} members
+                                        </CardDescription>
+                                    </div>
+                                    <Badge variant="outline" className="text-sm">
+                                        {filteredMembers.length} Results
+                                    </Badge>
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="divide-y">
+                                    {filteredMembers.length > 0 ? (
+                                        filteredMembers.map(member => (
+                                            <div key={member.id} className="py-4 hover:bg-gray-50 transition-colors rounded-lg px-2">
+                                                <div className="flex items-center space-x-4">
+                                                    <Avatar className="h-12 w-12">
+                                                        <AvatarImage src={member.image} alt={member.name} />
+                                                        <AvatarFallback className="bg-blue-100 text-blue-700">
+                                                            {member.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1">
+                                                            <h4 className="text-sm font-semibold text-gray-900 truncate">
+                                                                {member.name}
+                                                            </h4>
+                                                            <Badge variant="default" className="text-xs">
+                                                                {member.usertype}
+                                                            </Badge>
+                                                        </div>
+                                                        
+                                                        <div className="space-y-1">
+                                                            <p className="text-sm text-gray-600 flex items-center gap-1">
+                                                                <Mail className="h-3 w-3" />
+                                                                {member.email}
+                                                            </p>
+                                                            
+                                                            {member.designation && (
+                                                                <p className="text-sm text-gray-600 flex items-center gap-1">
+                                                                    <Award className="h-3 w-3" />
+                                                                    {member.designation.name}
+                                                                    <Badge variant={getLevelBadgeVariant(member.designation.level)} className="text-xs ml-2">
+                                                                        Level {member.designation.level}
+                                                                    </Badge>
+                                                                </p>
+                                                            )}
+                                                            
+                                                            {member.department && (
+                                                                <p className="text-sm text-gray-600 flex items-center gap-1">
+                                                                    <Building className="h-3 w-3" />
+                                                                    {member.department}
+                                                                </p>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div className="flex items-center gap-2">
+                                                        <Button variant="outline" size="sm" asChild>
+                                                            <Link href={route('admin.admin.users.show', member.id)}>
+                                                                <Eye className="h-3 w-3 mr-1" />
+                                                                View
+                                                            </Link>
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="py-8 text-center text-gray-500">
+                                            <Users className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                                            <p className="text-lg mb-2">No members found</p>
+                                            <p className="text-sm">Try adjusting your search or filter criteria</p>
+                                        </div>
+                                    )}
+                                </div>
+                            </CardContent>
+                        </Card>
+                </div>
         </AdminAuthenticatedLayout>
     );
 }
