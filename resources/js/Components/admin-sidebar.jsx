@@ -155,18 +155,42 @@ const adminNavData = {
   ],
 }
 
-export function AdminSidebar({ user, pendingUsersCount = 0, ...props }) {
+export function AdminSidebar({ 
+  user, 
+  pendingUsersCount = 0, 
+  pendingVolunteerApplications = 0,
+  pendingExecutiveApplications = 0,
+  ...props 
+}) {
   // Create notifications object for the sidebar - only include non-zero counts
   const notifications = {};
 
-  // Debug: Log the pending users count
+  // Debug: Log the notification counts
   console.log('AdminSidebar - pendingUsersCount:', pendingUsersCount);
+  console.log('AdminSidebar - pendingVolunteerApplications:', pendingVolunteerApplications);
+  console.log('AdminSidebar - pendingExecutiveApplications:', pendingExecutiveApplications);
 
+  // User Management notifications
   if (pendingUsersCount > 0) {
     notifications["User Management"] = pendingUsersCount;
     notifications["New User Requests"] = pendingUsersCount;
-    console.log('AdminSidebar - notifications:', notifications);
   }
+
+  // Application Management notifications
+  const totalApplications = pendingVolunteerApplications + pendingExecutiveApplications;
+  if (totalApplications > 0) {
+    notifications["Application Management"] = totalApplications;
+  }
+  
+  if (pendingVolunteerApplications > 0) {
+    notifications["Volunteer Applications"] = pendingVolunteerApplications;
+  }
+  
+  if (pendingExecutiveApplications > 0) {
+    notifications["Executive Applications"] = pendingExecutiveApplications;
+  }
+
+  console.log('AdminSidebar - notifications:', notifications);
 
   return (
     <Sidebar collapsible="icon" {...props}>

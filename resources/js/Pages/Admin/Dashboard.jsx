@@ -3,12 +3,16 @@ import { Head } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import NewUserRequestNotification from '@/components/NewUserRequestNotification';
 
-export default function AdminDashboard({ pendingUsers = [] }) {
+export default function AdminDashboard({ 
+    pendingUsersCount = 0, 
+    pendingVolunteerApplications = 0, 
+    pendingExecutiveApplications = 0 
+}) {
     const [showNotificationModal, setShowNotificationModal] = useState(false);
 
     // Show notification modal when there are pending users and admin first logs in
     useEffect(() => {
-        if (pendingUsers.length > 0) {
+        if (pendingUsersCount > 0) {
             // Check if notification has been seen before
             const hasSeenNotification = localStorage.getItem('hasSeenPendingUsersNotification');
             
@@ -17,7 +21,7 @@ export default function AdminDashboard({ pendingUsers = [] }) {
                 setShowNotificationModal(true);
             }
         }
-    }, [pendingUsers]);
+    }, [pendingUsersCount]);
 
     const handleCloseNotification = () => {
         setShowNotificationModal(false);
@@ -31,13 +35,15 @@ export default function AdminDashboard({ pendingUsers = [] }) {
                     Admin Dashboard
                 </h2>
             }
-            pendingUsersCount={pendingUsers.length}
+            pendingUsersCount={pendingUsersCount}
+            pendingVolunteerApplications={pendingVolunteerApplications}
+            pendingExecutiveApplications={pendingExecutiveApplications}
         >
             <Head title="Admin Dashboard" />
 
             {/* New User Request Notification Modal */}
             <NewUserRequestNotification
-                pendingUsers={pendingUsers}
+                pendingUsersCount={pendingUsersCount}
                 showModal={showNotificationModal}
                 onClose={handleCloseNotification}
             />

@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Models\ExecutiveApplication;
 use App\Models\Designation;
+use App\Models\PendingUser;
 use App\Models\RoleChangeLog;
+use App\Models\VolunteerApplication;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,9 +25,16 @@ class ExecutiveApplicationController extends Controller
 
         $designations = Designation::orderBy('level')->orderBy('name')->get();
 
+        $pendingUsersCount = PendingUser::count();
+        $pendingVolunteerApplications = VolunteerApplication::where('status', 'pending')->count();
+        $pendingExecutiveApplications = ExecutiveApplication::where('status', 'pending')->count();
+
         return Inertia::render('Admin/ExecutiveApplications/ExecutiveApplicationManagement', [
             'applications' => $applications,
-            'designations' => $designations
+            'designations' => $designations,
+            'pendingUsersCount' => $pendingUsersCount,
+            'pendingVolunteerApplications' => $pendingVolunteerApplications,
+            'pendingExecutiveApplications' => $pendingExecutiveApplications,
         ]);
     }
 

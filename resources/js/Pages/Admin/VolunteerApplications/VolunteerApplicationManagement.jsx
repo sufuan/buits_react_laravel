@@ -2,7 +2,12 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 
-export default function VolunteerApplicationManagement({ applications }) {
+export default function VolunteerApplicationManagement({ 
+    applications, 
+    pendingUsersCount = 0,
+    pendingVolunteerApplications = 0,
+    pendingExecutiveApplications = 0 
+}) {
     const [processing, setProcessing] = useState(false);
     const [selectedApplications, setSelectedApplications] = useState([]);
     const [filter, setFilter] = useState('all');
@@ -91,6 +96,9 @@ export default function VolunteerApplicationManagement({ applications }) {
                     Volunteer Application Management
                 </h2>
             }
+            pendingUsersCount={pendingUsersCount}
+            pendingVolunteerApplications={pendingVolunteerApplications}
+            pendingExecutiveApplications={pendingExecutiveApplications}
         >
             <Head title="Volunteer Applications" />
 

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ExecutiveApplication;
+use App\Models\PendingUser;
 use Illuminate\Http\Request;
 use App\Models\VolunteerApplication;
 use Inertia\Inertia;
@@ -18,8 +20,15 @@ class VolunteerApplicationController extends Controller
             ->orderBy('created_at', 'desc')
             ->get();
 
+        $pendingUsersCount = PendingUser::count();
+        $pendingVolunteerApplications = VolunteerApplication::where('status', 'pending')->count();
+        $pendingExecutiveApplications = ExecutiveApplication::where('status', 'pending')->count();
+
         return Inertia::render('Admin/VolunteerApplications/VolunteerApplicationManagement', [
-            'applications' => $applications
+            'applications' => $applications,
+            'pendingUsersCount' => $pendingUsersCount,
+            'pendingVolunteerApplications' => $pendingVolunteerApplications,
+            'pendingExecutiveApplications' => $pendingExecutiveApplications,
         ]);
     }
 

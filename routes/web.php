@@ -87,6 +87,10 @@ Route::middleware('auth')->group(function () {
 
 require __DIR__ . '/auth.php';
 
+use App\Models\ExecutiveApplication;
+use App\Models\PendingUser;
+use App\Models\VolunteerApplication;
+
 Route::prefix('admin')->name('admin.')->group(function () {
 
     // Admin Guest Routes (e.g. Login)
@@ -98,11 +102,11 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Admin Authenticated Routes
     Route::middleware('admin')->group(function () {
 
-        // Admin Dashboard
-        Route::get('dashboard', function () {
-            $pendingUsers = \App\Models\PendingUser::orderBy('created_at', 'desc')->get();
+        Route::get('/dashboard', function () {
             return Inertia::render('Admin/Dashboard', [
-                'pendingUsers' => $pendingUsers
+                'pendingUsersCount' => PendingUser::count(),
+                'pendingVolunteerApplications' => VolunteerApplication::where('status', 'pending')->count(),
+                'pendingExecutiveApplications' => ExecutiveApplication::where('status', 'pending')->count(),
             ]);
         })->name('dashboard');
 

@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ExecutiveApplication;
 use App\Models\PendingUser;
+use App\Models\VolunteerApplication;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -15,27 +17,33 @@ class NotificationController extends Controller
     public function check(Request $request): JsonResponse
     {
         try {
-            // Get current pending users count
+            // Get current pending counts
             $pendingUsersCount = PendingUser::count();
-            
-            // Get the last known count from session or request
-            $lastKnownCount = $request->session()->get('last_pending_users_count', 0);
-            
+            $pendingVolunteerApplications = VolunteerApplication::where('status', 'pending')->count();
+            $pendingExecutiveApplications = ExecutiveApplication::where('status', 'pending')->count();
+
+            // Combine all pending counts for a total
+            $totalPending = $pendingUsersCount + $pendingVolunteerApplications + $pendingExecutiveApplications;
+
+            // Get the last known total count from session
+            $lastKnownTotalCount = $request->session()->get('last_total_pending_count', 0);
+
             // Check if there are new notifications
-            $hasNewNotifications = $pendingUsersCount > $lastKnownCount;
-            
-            // Update the session with current count
-            $request->session()->put('last_pending_users_count', $pendingUsersCount);
-            
+            $hasNewNotifications = $totalPending > $lastKnownTotalCount;
+
+            // Update the session with the current total count
+            $request->session()->put('last_total_pending_count', $totalPending);
+
             return response()->json([
                 'hasNewNotifications' => $hasNewNotifications,
-                'pendingUsersCount' => $pendingUsersCount,
-                'newCount' => $pendingUsersCount - $lastKnownCount,
+                'newCount' => $totalPending - $lastKnownTotalCount,
                 'notifications' => [
                     'pendingUsers' => $pendingUsersCount,
+                    'pendingVolunteerApplications' => $pendingVolunteerApplications,
+                    'pendingExecutiveApplications' => $pendingExecutiveApplications,
                 ],
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to check notifications',
@@ -43,20 +51,24 @@ class NotificationController extends Controller
             ], 500);
         }
     }
-    
+
     /**
      * Mark notifications as seen
      */
     public function markAsSeen(Request $request): JsonResponse
     {
         try {
-            $request->session()->put('last_pending_users_count', PendingUser::count());
-            
+            $totalPending = PendingUser::count() +
+                            VolunteerApplication::where('status', 'pending')->count() +
+                            ExecutiveApplication::where('status', 'pending')->count();
+                            
+            $request->session()->put('last_total_pending_count', $totalPending);
+
             return response()->json([
                 'success' => true,
                 'message' => 'Notifications marked as seen',
             ]);
-            
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to mark notifications as seen',
