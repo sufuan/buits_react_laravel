@@ -46,6 +46,17 @@ class CertificateTypeController extends Controller
     }
 
     /**
+     * Show the form for creating a new certificate type.
+     */
+    public function create()
+    {
+        return Inertia::render('Admin/Certificates/Types/Create', [
+            'shortCodes' => $this->shortCodes(),
+            'staffShortCodes' => $this->shortCodesStaff(),
+        ]);
+    }
+
+    /**
      * Create or update a certificate type.
      */
     public function storeOrUpdate(Request $request)
