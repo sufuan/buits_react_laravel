@@ -45,6 +45,36 @@ class UserImportValidator
     protected $validBloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
 
     /**
+     * Validate multiple rows and check for duplicates
+     */
+    public function validateRows(array $rows): array
+    {
+        $allErrors = [];
+        $emails = [];
+        
+        // First, collect all emails for duplicate checking
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 1; // Assuming 1-based row numbering
+            if (!empty($row['email'])) {
+                $emails[$rowNumber] = strtolower(trim($row['email']));
+            }
+        }
+        
+        // Check for duplicates within the dataset
+        $duplicateErrors = $this->checkDuplicates($emails);
+        $allErrors = array_merge($allErrors, $duplicateErrors);
+        
+        // Validate each row individually
+        foreach ($rows as $index => $row) {
+            $rowNumber = $index + 1; // Assuming 1-based row numbering
+            $rowErrors = $this->validateRow($row, $rowNumber);
+            $allErrors = array_merge($allErrors, $rowErrors);
+        }
+        
+        return $allErrors;
+    }
+
+    /**
      * Validate a single row
      */
     public function validateRow(array $row, int $rowNumber): array
@@ -163,8 +193,8 @@ class UserImportValidator
             );
         }
 
-        // Check if email already exists in database
-        if (User::where('email', $email)->exists()) {
+        // Check if email already exists in database (case-insensitive)
+        if (User::whereRaw('LOWER(email) = ?', [strtolower(trim($email))])->exists()) {
             $errors[] = new ValidationErrorDTO(
                 $rowNumber,
                 'email',
@@ -342,15 +372,28 @@ class UserImportValidator
     {
         $errors = [];
         
-        // Remove spaces and dashes
-        $cleanPhone = preg_replace('/[\s\-]/', '', $phone);
+        // Remove spaces, dashes, and parentheses
+        $cleanPhone = preg_replace('/[\s\-\(\)]/', '', $phone);
         
-        // Check if it's a valid Bangladeshi phone number
-        if (!preg_match('/^(\+?880|0)?1[3-9]\d{8}$/', $cleanPhone)) {
+        // Remove country code if present
+        if (str_starts_with($cleanPhone, '+880')) {
+            $cleanPhone = substr($cleanPhone, 4);
+        } elseif (str_starts_with($cleanPhone, '880')) {
+            $cleanPhone = substr($cleanPhone, 3);
+        }
+        
+        // Remove leading zero if present
+        if (str_starts_with($cleanPhone, '0')) {
+            $cleanPhone = substr($cleanPhone, 1);
+        }
+        
+        // Now check if it's a valid 10-digit Bangladeshi mobile number
+        // Valid patterns: 13XXXXXXXX, 14XXXXXXXX, 15XXXXXXXX, 16XXXXXXXX, 17XXXXXXXX, 18XXXXXXXX, 19XXXXXXXX
+        if (!preg_match('/^1[3-9]\d{8}$/', $cleanPhone)) {
             $errors[] = new ValidationErrorDTO(
                 $rowNumber,
                 'phone',
-                'Invalid phone number format. Use format: 01XXXXXXXXX',
+                'Invalid phone number format. Use format: 01XXXXXXXXX (11 digits starting with 013-019)',
                 'error'
             );
         }

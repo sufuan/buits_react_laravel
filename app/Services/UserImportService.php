@@ -356,20 +356,29 @@ class UserImportService
         $errors = [];
         $emails = [];
         
+        Log::info('Checking internal duplicates for ' . count($rows) . ' rows');
+        
         foreach ($rows as $row) {
             if (!empty($row['email'])) {
-                if (isset($emails[$row['email']])) {
-                    $errors[] = new ValidationErrorDTO(
+                // Normalize email for comparison (case-insensitive and trimmed)
+                $normalizedEmail = strtolower(trim($row['email']));
+                
+                if (isset($emails[$normalizedEmail])) {
+                    $error = new ValidationErrorDTO(
                         $row['row_number'] ?? $row['row_id'] ?? 0,
                         'email',
-                        'Duplicate email within the import file (first occurrence at row ' . $emails[$row['email']] . ')',
+                        'Duplicate email within the import file (first occurrence at row ' . $emails[$normalizedEmail] . ')',
                         'error'
                     );
+                    $errors[] = $error;
+                    Log::info('Found duplicate email: ' . $normalizedEmail . ' at row ' . ($row['row_number'] ?? $row['row_id'] ?? 0));
                 } else {
-                    $emails[$row['email']] = $row['row_number'] ?? $row['row_id'] ?? 0;
+                    $emails[$normalizedEmail] = $row['row_number'] ?? $row['row_id'] ?? 0;
                 }
             }
         }
+        
+        Log::info('Internal duplicate check completed. Found ' . count($errors) . ' duplicate email errors.');
         
         return $errors;
     }
