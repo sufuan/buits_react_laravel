@@ -6,75 +6,74 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Designation;
 use App\Models\RoleChangeLog;
+use App\Exports\UserRoleManagementExport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Validation\Rule;
 
 class UserRoleManagementController extends Controller
 {
-    /**
-     * Display a listing of users with role management capabilities.
+        /**
+     * Display the user role management page.
      */
     public function index(Request $request)
     {
-        $query = User::with(['designation', 'roleChangeLogs.admin']);
+        $query = User::with('designation')
+            ->where('usertype', 'executive'); // Only show executive users
         
-        // Apply search filters
+        // Apply search filter
         if ($request->search) {
             $query->where(function($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
                   ->orWhere('email', 'like', '%' . $request->search . '%')
-                  ->orWhere('student_id', 'like', '%' . $request->search . '%');
+                  ->orWhere('member_id', 'like', '%' . $request->search . '%');
             });
         }
         
-        // Filter by user type
+        // Apply usertype filter (only executives, but allow filtering by specific executive roles)
         if ($request->usertype && $request->usertype !== 'all') {
             $query->where('usertype', $request->usertype);
         }
         
-        // Filter by department
-        if ($request->department && $request->department !== 'all') {
-            $query->where('department', $request->department);
-        }
-        
-        // Filter by designation
+        // Apply designation filter
         if ($request->designation_id && $request->designation_id !== 'all') {
             $query->where('designation_id', $request->designation_id);
         }
         
-        $users = $query->paginate(20)->withQueryString();
+        $users = $query->paginate(15)->withQueryString();
         
-        $designations = Designation::orderBy('level')->orderBy('name')->get();
+        $designations = Designation::orderBy('name')->get();
         
         $filters = [
             'search' => $request->search,
             'usertype' => $request->usertype,
-            'department' => $request->department,
             'designation_id' => $request->designation_id,
         ];
         
-        $departments = User::select('department')
-            ->distinct()
-            ->whereNotNull('department')
-            ->where('department', '!=', '')
-            ->orderBy('department')
-            ->pluck('department');
-        
         $userTypes = User::select('usertype')
             ->distinct()
+            ->where('usertype', 'executive')
             ->whereNotNull('usertype')
             ->where('usertype', '!=', '')
             ->orderBy('usertype')
-            ->pluck('usertype');
+            ->pluck('usertype');;
+
+        // Get statistics for executives only
+        $statistics = [
+            'total_executives' => User::where('usertype', 'executive')->count(),
+            'with_designations' => User::where('usertype', 'executive')->whereNotNull('designation_id')->count(),
+            'without_designations' => User::where('usertype', 'executive')->whereNull('designation_id')->count(),
+            'recent_changes' => RoleChangeLog::where('created_at', '>=', now()->subDays(30))->count(),
+        ];
         
         return Inertia::render('Admin/UserRoleManagement/UserRoleManagement', [
             'users' => $users,
             'designations' => $designations,
             'filters' => $filters,
-            'departments' => $departments,
             'userTypes' => $userTypes,
+            'statistics' => $statistics,
         ]);
     }
 
@@ -102,11 +101,12 @@ class UserRoleManagementController extends Controller
         // Log the role change
         RoleChangeLog::create([
             'user_id' => $user->id,
-            'admin_id' => Auth::id(),
-            'previous_designation_id' => $user->designation_id,
+            'admin_id' => Auth::guard('admin')->id(),
+            'old_usertype' => $user->usertype,
+            'new_usertype' => 'executive', // Since we're only managing executive designations
+            'old_designation_id' => $user->designation_id,
             'new_designation_id' => $request->designation_id,
             'reason' => $request->reason,
-            'changed_at' => now(),
         ]);
         
         // Update the user's designation
@@ -152,7 +152,7 @@ class UserRoleManagementController extends Controller
             $query->where(function($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
                   ->orWhere('email', 'like', '%' . $request->search . '%')
-                  ->orWhere('student_id', 'like', '%' . $request->search . '%');
+                  ->orWhere('member_id', 'like', '%' . $request->search . '%');
             });
         }
         
@@ -186,7 +186,7 @@ class UserRoleManagementController extends Controller
             // Log the role change
             RoleChangeLog::create([
                 'user_id' => $user->id,
-                'admin_id' => Auth::id(),
+                'admin_id' => Auth::guard('admin')->id(),
                 'previous_designation_id' => $user->designation_id,
                 'new_designation_id' => $request->designation_id,
                 'reason' => $request->reason,
@@ -230,13 +230,34 @@ class UserRoleManagementController extends Controller
     }
 
     /**
-     * Export role change history to Excel.
+     * Export users to Excel.
      */
-    public function exportRoleChanges(Request $request)
+    public function exportExcel(Request $request)
     {
-        // You can implement Excel export here if needed
-        // This would require maatwebsite/excel package
+        $filters = [
+            'search' => $request->search,
+            'usertype' => $request->usertype,
+            'designation_id' => $request->designation_id,
+        ];
+
+        $filename = 'user-roles-' . now()->format('Y-m-d-H-i-s') . '.xlsx';
         
-        return back()->with('info', 'Export functionality will be implemented soon.');
+        return Excel::download(new UserRoleManagementExport($filters), $filename);
+    }
+
+    /**
+     * Export users to CSV.
+     */
+    public function exportCsv(Request $request)
+    {
+        $filters = [
+            'search' => $request->search,
+            'usertype' => $request->usertype,
+            'designation_id' => $request->designation_id,
+        ];
+
+        $filename = 'user-roles-' . now()->format('Y-m-d-H-i-s') . '.csv';
+        
+        return Excel::download(new UserRoleManagementExport($filters), $filename, \Maatwebsite\Excel\Excel::CSV);
     }
 }

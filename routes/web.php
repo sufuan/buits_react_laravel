@@ -165,6 +165,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [App\Http\Controllers\Admin\UserRoleManagementController::class, 'index'])->name('index');
             Route::put('{user}/update-role', [App\Http\Controllers\Admin\UserRoleManagementController::class, 'updateRole'])->name('update-role');
             Route::get('{user}/history', [App\Http\Controllers\Admin\UserRoleManagementController::class, 'showHistory'])->name('history');
+            Route::get('export/excel', [App\Http\Controllers\Admin\UserRoleManagementController::class, 'exportExcel'])->name('export.excel');
+            Route::get('export/csv', [App\Http\Controllers\Admin\UserRoleManagementController::class, 'exportCsv'])->name('export.csv');
         });
 
         // ================= Designations Management =================

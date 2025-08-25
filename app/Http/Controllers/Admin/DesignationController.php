@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Designation;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -14,13 +15,10 @@ class DesignationController extends Controller
      */
     public function index()
     {
-        $designations = Designation::with(['parent', 'children'])
-            ->orderBy('level')
-            ->orderBy('sort_order')
-            ->get();
-
+        $designations = Designation::withCount('users')->get();
+        
         return Inertia::render('Admin/Designations/Index', [
-            'designations' => $designations
+            'designations' => $designations,
         ]);
     }
 
