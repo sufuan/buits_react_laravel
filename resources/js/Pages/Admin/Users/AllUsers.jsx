@@ -22,7 +22,9 @@ import {
     UserPlus,
     Download,
     Upload,
-    FileSpreadsheet
+    FileSpreadsheet,
+    Edit,
+    Eye
 } from 'lucide-react';
 
 export default function AllUsers({ users }) {
@@ -216,6 +218,18 @@ export default function AllUsers({ users }) {
                                                 </div>
                                             </div>
                                             <div className="text-right">
+                                                <div className="flex items-center gap-2 mb-2">
+                                                    <Link href={route('admin.users.show', user.id)}>
+                                                        <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                                                            <Eye className="h-4 w-4" />
+                                                        </Button>
+                                                    </Link>
+                                                    <Link href={route('admin.users.edit', user.id)}>
+                                                        <Button variant="outline" size="sm" className="h-8 w-8 p-0">
+                                                            <Edit className="h-4 w-4" />
+                                                        </Button>
+                                                    </Link>
+                                                </div>
                                                 <Badge variant="outline" className="text-xs mb-2">
                                                     Joined {formatDate(user.created_at)}
                                                 </Badge>

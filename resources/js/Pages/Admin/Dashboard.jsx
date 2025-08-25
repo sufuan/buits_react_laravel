@@ -9,20 +9,20 @@ export default function AdminDashboard({ pendingUsers = [] }) {
     // Show notification modal when there are pending users and admin first logs in
     useEffect(() => {
         if (pendingUsers.length > 0) {
-            // Check if we should show the modal (e.g., first time login or new requests)
-            const lastNotificationCheck = localStorage.getItem('lastNotificationCheck');
-            const currentTime = new Date().getTime();
-
-            // Show modal if it's been more than 1 hour since last check or first time
-            if (!lastNotificationCheck || (currentTime - parseInt(lastNotificationCheck)) > 3600000) {
+            // Check if notification has been seen before
+            const hasSeenNotification = localStorage.getItem('hasSeenPendingUsersNotification');
+            
+            // Show modal only if never seen before
+            if (!hasSeenNotification) {
                 setShowNotificationModal(true);
-                localStorage.setItem('lastNotificationCheck', currentTime.toString());
             }
         }
     }, [pendingUsers]);
 
     const handleCloseNotification = () => {
         setShowNotificationModal(false);
+        // Mark notification as seen - will never show again
+        localStorage.setItem('hasSeenPendingUsersNotification', 'true');
     };
     return (
         <AdminAuthenticatedLayout

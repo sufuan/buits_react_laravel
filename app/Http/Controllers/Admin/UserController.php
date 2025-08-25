@@ -40,7 +40,9 @@ class UserController extends Controller
      */
     public function create()
     {
-        return Inertia::render('Admin/Users/Create');
+        return Inertia::render('Admin/Users/Create', [
+            'departments' => $this->getDepartments()
+        ]);
     }
 
     /**
@@ -126,7 +128,8 @@ class UserController extends Controller
     public function edit(User $user)
     {
         return Inertia::render('Admin/Users/Edit', [
-            'user' => $user
+            'user' => $user,
+            'departments' => $this->getDepartments()
         ]);
     }
 
@@ -197,25 +200,6 @@ class UserController extends Controller
         } catch (\Exception $e) {
             Log::error('User update failed: ' . $e->getMessage());
             return back()->withErrors(['error' => 'An error occurred while updating the user: ' . $e->getMessage()])->withInput();
-        }
-    }
-
-    /**
-     * Remove the specified user from storage.
-     */
-    public function destroy(User $user)
-    {
-        try {
-            $userName = $user->name;
-            $user->delete();
-
-            Log::info('User deleted successfully by admin: ' . $userName);
-
-            return back()->with('success', 'User deleted successfully!');
-
-        } catch (\Exception $e) {
-            Log::error('User deletion failed: ' . $e->getMessage());
-            return back()->withErrors(['error' => 'An error occurred while deleting the user: ' . $e->getMessage()]);
         }
     }
 

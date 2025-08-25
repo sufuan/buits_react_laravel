@@ -31,7 +31,6 @@ import {
     IdCard,
     UserPlus,
     Edit,
-    Trash2,
     Eye,
     Download,
 
@@ -103,12 +102,6 @@ export default function Index({ users }) {
             month: 'short',
             day: 'numeric'
         });
-    };
-
-    const handleDelete = (user) => {
-        if (confirm(`Are you sure you want to delete ${user.name}?`)) {
-            router.delete(route('admin.users.destroy', user.id));
-        }
     };
 
     const handleExport = () => {
@@ -372,14 +365,6 @@ export default function Index({ users }) {
                                                         <Edit className="h-3 w-3 sm:h-4 sm:w-4" />
                                                     </Button>
                                                 </Link>
-                                                <Button 
-                                                    variant="outline" 
-                                                    size="sm" 
-                                                    onClick={() => handleDelete(user)}
-                                                    className="text-red-600 hover:text-red-700 h-8 w-8 p-0"
-                                                >
-                                                    <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
-                                                </Button>
                                             </div>
                                         </div>
                                         <div className="flex flex-wrap items-center gap-2 mt-2">
