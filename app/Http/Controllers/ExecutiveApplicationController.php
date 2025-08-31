@@ -140,6 +140,7 @@ class ExecutiveApplicationController extends Controller
                 $user->update([
                     'usertype' => 'executive',
                     'designation_id' => $newDesignationId,
+                    'committee_status' => 'active',
                 ]);
 
                 // Log the role change

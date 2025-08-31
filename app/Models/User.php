@@ -26,6 +26,7 @@ class User extends Authenticatable
         'session',
         'usertype',
         'designation_id',
+        'committee_status',
         'gender',
         'date_of_birth',
         'blood_group',
@@ -76,6 +77,21 @@ class User extends Authenticatable
     public function designation()
     {
         return $this->belongsTo(Designation::class);
+    }
+
+    public function committeeAssignments()
+    {
+        return $this->hasMany(CommitteeAssignment::class);
+    }
+
+    public function currentCommitteeAssignment()
+    {
+        return $this->hasOne(CommitteeAssignment::class)->where('status', 'current');
+    }
+
+    public function previousCommitteeAssignments()
+    {
+        return $this->hasMany(CommitteeAssignment::class)->where('status', 'previous');
     }
 
     public function volunteerApplication()

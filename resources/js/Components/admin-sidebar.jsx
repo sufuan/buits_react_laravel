@@ -126,6 +126,21 @@ const adminNavData = {
       ],
     },
     {
+      title: "Committee Management",
+      url: "#",
+      icon: Crown,
+      items: [
+        {
+          title: "Current Committee",
+          url: "/admin/committee/current",
+        },
+        {
+          title: "Previous Committees",
+          url: "/admin/committee/previous",
+        },
+      ],
+    },
+    {
       title: "Certificate",
       url: "#",
       icon: Award,

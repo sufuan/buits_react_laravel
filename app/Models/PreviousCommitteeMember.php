@@ -10,40 +10,91 @@ class PreviousCommitteeMember extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name',
-        'designation',
-        'photo',
-        'committee_number',
-        'member_order'
+    'user_id',
+    'name',
+    'email',
+    'designation',
+    'designation_title',
+    'designation_id_snapshot',
+    'photo',
+    'committee_number',
+    'member_order',
+    'tenure_start',
+    'tenure_end',
+    ];
+
+    protected $casts = [
+        'tenure_start' => 'datetime',
+        'tenure_end' => 'datetime',
     ];
 
     /**
-     * Get members by committee number
+     * Scope to order by member order
      */
-    public static function getByCommittee($committeeNumber)
+    public function scopeOrdered($query)
     {
-        return self::where('committee_number', $committeeNumber)
-                   ->orderBy('member_order')
-                   ->get();
+        return $query->orderBy('member_order', 'asc');
     }
 
     /**
-     * Get all committees with their members
+     * Scope to filter by committee number
+     */
+    public function scopeByCommittee($query, $committeeNumber)
+    {
+        return $query->where('committee_number', $committeeNumber);
+    }
+
+    /**
+     * Get all committee numbers
+     */
+    public static function getAllCommitteeNumbers()
+    {
+        return static::distinct()
+            ->orderBy('committee_number', 'desc')
+            ->pluck('committee_number');
+    }
+
+    /**
+     * Get all committees grouped by committee number
      */
     public static function getAllCommittees()
     {
-        $committees = [];
-        for ($i = 1; $i <= 6; $i++) {
-            $committees[$i] = self::getByCommittee($i);
-        }
+        $committees = static::orderBy('committee_number', 'desc')
+            ->orderBy('member_order', 'asc')
+            ->get()
+            ->groupBy('committee_number');
+
         return $committees;
     }
 
     /**
-     * Scope to filter by committee
+     * Get committee data for display
      */
-    public function scopeCommittee($query, $committeeNumber)
+    public static function getCommitteeData($committeeNumber = null)
     {
-        return $query->where('committee_number', $committeeNumber);
+        $query = static::ordered();
+        
+        if ($committeeNumber) {
+            $query->byCommittee($committeeNumber);
+        }
+
+        return $query->get()->groupBy('committee_number')->map(function ($members, $number) {
+            return [
+                'committee_number' => $number,
+                'member_count' => $members->count(),
+                'members' => $members->map(function ($member) {
+                    return [
+                        'id' => $member->id,
+                        'name' => $member->name,
+                        'designation' => $member->designation,
+                        'photo' => $member->photo,
+                        'member_order' => $member->member_order,
+                        'email' => $member->email,
+                        'tenure_start' => $member->tenure_start,
+                        'tenure_end' => $member->tenure_end,
+                    ];
+                })
+            ];
+        })->values();
     }
 }

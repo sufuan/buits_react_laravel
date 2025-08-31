@@ -44,6 +44,17 @@ class Designation extends Model
         return $this->hasMany(ExecutiveApplication::class);
     }
 
+    // Committee assignments for this designation
+    public function committeeAssignments()
+    {
+        return $this->hasMany(CommitteeAssignment::class);
+    }
+
+    public function currentCommitteeAssignments()
+    {
+        return $this->hasMany(CommitteeAssignment::class)->where('status', 'current');
+    }
+
     // Scopes
     public function scopeActive($query)
     {

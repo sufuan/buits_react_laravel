@@ -46,6 +46,9 @@ Route::get('/previous-committee', [App\Http\Controllers\PreviousCommitteeControl
 Route::get('/previous-committee/{committee}', [App\Http\Controllers\PreviousCommitteeController::class, 'show'])->name('previous-committee.show');
 Route::get('/previous-committee/data/{committee}', [App\Http\Controllers\PreviousCommitteeController::class, 'getCommitteeData'])->name('previous-committee.data');
 
+// Public committee pages
+Route::get('/committees', [App\Http\Controllers\PublicCommitteeController::class, 'index'])->name('committees');
+
 // API routes for committee data
 Route::get('/api/committees', [App\Http\Controllers\PreviousCommitteeController::class, 'getCommitteeData'])->name('api.committees');
 Route::get('/api/committees/{committee}', [App\Http\Controllers\PreviousCommitteeController::class, 'getCommitteeData'])->name('api.committee');
@@ -176,6 +179,26 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::resource('designations', App\Http\Controllers\Admin\DesignationController::class, [
             'as' => 'admin'
         ]);
+
+        // ================= Committee Management =================
+        // Phase 4 – Routes (Exact Specification)
+        
+        // Current Committee
+        Route::get('/committee/current', [App\Http\Controllers\Admin\CommitteeController::class, 'currentCommittee'])->name('committee.current');
+        Route::post('/committee/current/add', [App\Http\Controllers\Admin\CommitteeController::class, 'addMember'])->name('committee.add');
+        Route::post('/committee/end-tenure', [App\Http\Controllers\Admin\CommitteeController::class, 'endTenure'])->name('committee.end-tenure');
+
+        // Previous Committees
+        Route::get('/committee/previous', [App\Http\Controllers\Admin\CommitteeController::class, 'previous']);
+        Route::get('/committee/previous/{number}', [App\Http\Controllers\Admin\CommitteeController::class, 'previousByCommittee']);
+
+        // Additional Helper Routes (for enhanced functionality)
+        Route::prefix('committee')->name('committee.')->group(function () {
+            Route::delete('current/remove-member/{assignment}', [App\Http\Controllers\Admin\CommitteeController::class, 'removeMember'])->name('current.remove-member');
+            Route::patch('current/update-order', [App\Http\Controllers\Admin\CommitteeController::class, 'updateMemberOrder'])->name('current.update-order');
+            Route::post('approve-executive', [App\Http\Controllers\Admin\CommitteeController::class, 'approveExecutiveApplication'])->name('approve-executive');
+            Route::get('stats', [App\Http\Controllers\Admin\CommitteeController::class, 'getCommitteeStats'])->name('stats');
+        });
 
         // ================= Notifications =================
         Route::prefix('notifications')->name('notifications.')->group(function () {

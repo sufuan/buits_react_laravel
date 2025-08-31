@@ -10,6 +10,7 @@ use App\Exports\UserRoleManagementExport;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Validation\Rule;
 
@@ -109,10 +110,16 @@ class UserRoleManagementController extends Controller
             'reason' => $request->reason,
         ]);
         
-        // Update the user's designation
+        // Update the user's designation, usertype and committee status
         $user->update([
-            'designation_id' => $request->designation_id
+            'designation_id' => $request->designation_id,
+            'usertype' => 'executive',
+            'committee_status' => 'active' // Automatically make them active committee member
         ]);
+        
+        // Note: No need to call autoAddExecutiveToCommittee anymore since
+        // setting committee_status to 'active' automatically makes them appear
+        // in the current committee through the auto-assignment system
         
         $message = "Role updated successfully for {$user->name}";
         if ($previousDesignation) {
@@ -120,7 +127,8 @@ class UserRoleManagementController extends Controller
         } else {
             $message .= " to {$newDesignation->name}";
         }
-        
+        $message .= ". User has been automatically added to the current committee as an active member.";
+
         return back()->with('success', $message);
     }
 
