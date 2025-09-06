@@ -1,0 +1,203 @@
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Gradient -->
+  <defs>
+    <!-- Main Background Gradient -->
+    <radialGradient id="bgGradient" cx="50%" cy="50%" r="100%">
+      <stop offset="0%" style="stop-color:#0F0F23;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#1A1A2E;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#16213E;stop-opacity:1" />
+    </radialGradient>
+    
+    <!-- Circuit Board Pattern -->
+    <pattern id="circuitPattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
+      <rect width="100" height="100" fill="none"/>
+      <path d="M20 20 L80 20 L80 80 L20 80 Z" stroke="#00D4FF" stroke-width="0.5" fill="none" opacity="0.3"/>
+      <circle cx="20" cy="20" r="2" fill="#00D4FF" opacity="0.5"/>
+      <circle cx="80" cy="80" r="2" fill="#FF6B6B" opacity="0.5"/>
+      <path d="M50 0 L50 100" stroke="#00D4FF" stroke-width="0.3" opacity="0.2"/>
+      <path d="M0 50 L100 50" stroke="#00D4FF" stroke-width="0.3" opacity="0.2"/>
+    </pattern>
+    
+    <!-- Glowing Text Gradient -->
+    <linearGradient id="textGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FF6B6B;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#4ECDC4;stop-opacity:1" />
+    </linearGradient>
+    
+    <!-- Neon Glow Filter -->
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    
+    <!-- Digital Wave Gradient -->
+    <linearGradient id="waveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#00D4FF;stop-opacity:0.8" />
+      <stop offset="50%" style="stop-color:#4ECDC4;stop-opacity:0.6" />
+      <stop offset="100%" style="stop-color:#FF6B6B;stop-opacity:0.4" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Main Background -->
+  <rect width="1920" height="1080" fill="url(#bgGradient)"/>
+  
+  <!-- Circuit Pattern Overlay -->
+  <rect width="1920" height="1080" fill="url(#circuitPattern)" opacity="0.1"/>
+  
+  <!-- Floating Tech Elements -->
+  <!-- Large Central Hexagon -->
+  <g transform="translate(960,540)">
+    <polygon points="-80,-46 -40,-92 40,-92 80,-46 40,46 -40,46" 
+             fill="none" 
+             stroke="url(#textGradient)" 
+             stroke-width="3" 
+             opacity="0.8"
+             filter="url(#glow)">
+      <animateTransform attributeName="transform" type="rotate" values="0;360" dur="20s" repeatCount="indefinite"/>
+    </polygon>
+    
+    <!-- Inner Tech Core -->
+    <circle r="30" fill="none" stroke="#00D4FF" stroke-width="2" opacity="0.9">
+      <animate attributeName="r" values="25;35;25" dur="3s" repeatCount="indefinite"/>
+    </circle>
+    
+    <!-- Data Streams -->
+    <g opacity="0.7">
+      <line x1="-60" y1="0" x2="60" y2="0" stroke="#4ECDC4" stroke-width="1">
+        <animate attributeName="stroke-dasharray" values="0,120;60,60;120,0;60,60;0,120" dur="4s" repeatCount="indefinite"/>
+      </line>
+      <line x1="0" y1="-60" x2="0" y2="60" stroke="#FF6B6B" stroke-width="1">
+        <animate attributeName="stroke-dasharray" values="0,120;60,60;120,0;60,60;0,120" dur="4s" begin="2s" repeatCount="indefinite"/>
+      </line>
+    </g>
+  </g>
+  
+  <!-- Floating Particles -->
+  <g opacity="0.6">
+    <!-- Tech Nodes -->
+    <circle cx="300" cy="200" r="4" fill="#00D4FF">
+      <animate attributeName="cy" values="200;180;200" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="6s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1600" cy="300" r="3" fill="#FF6B6B">
+      <animate attributeName="cx" values="1600;1580;1600" dur="8s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.4;1;0.4" dur="8s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="200" cy="800" r="5" fill="#4ECDC4">
+      <animate attributeName="cy" values="800;820;800" dur="7s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="7s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="1700" cy="700" r="3" fill="#00D4FF">
+      <animate attributeName="cx" values="1700;1720;1700" dur="9s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.3;1;0.3" dur="9s" repeatCount="indefinite"/>
+    </circle>
+  </g>
+  
+  <!-- Digital Wave Background -->
+  <path d="M0 600 Q480 550 960 600 T1920 600 L1920 1080 L0 1080 Z" 
+        fill="url(#waveGradient)" 
+        opacity="0.1">
+    <animate attributeName="d" 
+             values="M0 600 Q480 550 960 600 T1920 600 L1920 1080 L0 1080 Z;
+                     M0 600 Q480 650 960 600 T1920 600 L1920 1080 L0 1080 Z;
+                     M0 600 Q480 550 960 600 T1920 600 L1920 1080 L0 1080 Z" 
+             dur="8s" 
+             repeatCount="indefinite"/>
+  </path>
+  
+  <!-- Main Title -->
+  <text x="960" y="250" 
+        font-family="'Courier New', monospace" 
+        font-size="72" 
+        font-weight="bold" 
+        text-anchor="middle" 
+        fill="url(#textGradient)"
+        filter="url(#glow)">
+    BARISHAL UNIVERSITY
+  </text>
+  
+  <!-- Subtitle -->
+  <text x="960" y="320" 
+        font-family="'Courier New', monospace" 
+        font-size="48" 
+        font-weight="normal" 
+        text-anchor="middle" 
+        fill="#FFFFFF" 
+        opacity="0.9">
+    IT SOCIETY
+  </text>
+  
+  <!-- Motto with Animated Typing Effect -->
+  <g transform="translate(960,400)">
+    <text x="0" y="0" 
+          font-family="'Courier New', monospace" 
+          font-size="32" 
+          text-anchor="middle" 
+          fill="#4ECDC4" 
+          opacity="0.8">
+      <animate attributeName="opacity" values="0;1;1;0;1" dur="4s" repeatCount="indefinite"/>
+      &lt; TECH • RECK • MAKE /&gt;
+    </text>
+  </g>
+  
+  <!-- Bottom Tech Elements -->
+  <g transform="translate(960,850)" opacity="0.4">
+    <!-- Binary Code Stream -->
+    <text x="-400" y="0" font-family="monospace" font-size="14" fill="#00D4FF" opacity="0.6">
+      01101001 01110100 01110011 01101111 01100011 01101001 01100101 01110100 01111001
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="5s" repeatCount="indefinite"/>
+    </text>
+    
+    <!-- Connection Lines -->
+    <line x1="-300" y1="30" x2="300" y2="30" stroke="#FF6B6B" stroke-width="1" opacity="0.5">
+      <animate attributeName="stroke-dasharray" values="0,600;300,300;600,0;300,300;0,600" dur="6s" repeatCount="indefinite"/>
+    </line>
+  </g>
+  
+  <!-- Corner Tech Accents -->
+  <!-- Top Left -->
+  <g transform="translate(100,100)" opacity="0.5">
+    <rect width="60" height="3" fill="#00D4FF"/>
+    <rect x="0" y="10" width="40" height="3" fill="#4ECDC4"/>
+    <rect x="0" y="20" width="80" height="3" fill="#FF6B6B"/>
+    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="4s" repeatCount="indefinite"/>
+  </g>
+  
+  <!-- Top Right -->
+  <g transform="translate(1720,100)" opacity="0.5">
+    <rect width="60" height="3" fill="#FF6B6B"/>
+    <rect x="20" y="10" width="40" height="3" fill="#4ECDC4"/>
+    <rect x="0" y="20" width="80" height="3" fill="#00D4FF"/>
+    <animate attributeName="opacity" values="0.7;0.3;0.7" dur="4s" repeatCount="indefinite"/>
+  </g>
+  
+  <!-- Bottom Left -->
+  <g transform="translate(100,950)" opacity="0.5">
+    <rect width="80" height="3" fill="#4ECDC4"/>
+    <rect x="0" y="10" width="60" height="3" fill="#00D4FF"/>
+    <rect x="20" y="20" width="40" height="3" fill="#FF6B6B"/>
+    <animate attributeName="opacity" values="0.3;0.7;0.3" dur="5s" repeatCount="indefinite"/>
+  </g>
+  
+  <!-- Bottom Right -->
+  <g transform="translate(1720,950)" opacity="0.5">
+    <rect width="80" height="3" fill="#FF6B6B"/>
+    <rect x="20" y="10" width="60" height="3" fill="#4ECDC4"/>
+    <rect x="0" y="20" width="40" height="3" fill="#00D4FF"/>
+    <animate attributeName="opacity" values="0.7;0.3;0.7" dur="5s" repeatCount="indefinite"/>
+  </g>
+  
+  <!-- Animated Grid Overlay -->
+  <defs>
+    <pattern id="gridPattern" width="50" height="50" patternUnits="userSpaceOnUse">
+      <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#00D4FF" stroke-width="0.5" opacity="0.1"/>
+    </pattern>
+  </defs>
+  <rect width="1920" height="1080" fill="url(#gridPattern)">
+    <animate attributeName="opacity" values="0.05;0.15;0.05" dur="10s" repeatCount="indefinite"/>
+  </rect>
+</svg>

@@ -137,21 +137,21 @@ export default function GTA() {
 
         <div className="hero-1-container">
           <div className="hero-main-container">
-            <img className="hero-main-logo" draggable="false" src="/img/gta_logo_cut.webp" alt="gta logo" />
-            <img className="hero-main-image" draggable="false" src="/img/gta_hero.webp" alt="gta hero" />
+            {/* <img className="hero-main-logo" draggable="false" src="/img/gta_logo_cut.webp" alt="gta logo" /> */}
+            <img className="hero-main-image" draggable="false" src="/img/ultra_hero.svg" alt="gta hero" />
           </div>
 
           <div className="hero-text-logo-container">
             <div className="hero-text-logo" style={{ backgroundImage: "url('/img/gta_logo_purple.webp')" }} />
             <div>
-              <h3 className="hero-text">Coming <br /> May 26 <br /> 2026</h3>
+              <h3 className="hero-text">Tech  <br /> Reck <br /> Make</h3>
             </div>
           </div>
         </div>
 
         <div className="hero-2-container">
-          <h3>Vice City, USA.</h3>
-          <p>Jason and Lucia have always known the deck is stacked against them...</p>
+          <h3>Barishal university IT Society.</h3>
+          <p>Join the revolution of technology and innovation. We are a vibrant community of developers, designers, and tech enthusiasts dedicated to fostering creativity, collaboration, and cutting-edge solutions. From coding bootcamps to hackathons, workshops to tech talks - we're building the future of technology together. Connect with like-minded innovators, enhance your skills, and be part of the digital transformation that's shaping tomorrow.</p>
         </div>
 
         <div className="scroll-indicator" aria-hidden="true">
