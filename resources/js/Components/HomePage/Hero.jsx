@@ -130,7 +130,7 @@ export default function GTA() {
 
   return (
     <>
-      <Head title="GTA VI Website" />
+      <Head title="Barishal University IT Society" />
       <NavBar />
       <div ref={scope} className="container">
         <div className="overlay"></div>
