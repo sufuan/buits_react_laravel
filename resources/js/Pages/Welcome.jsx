@@ -22,9 +22,9 @@ function App() {
         <Hero />
         {/* <About /> */}
         <Features />
-        <FirstVideo/>
-        <Jason/>
-  <BrandSlider />
+        <FirstVideo />
+        <Jason />
+        <BrandSlider />
         <HolographicTimeline />
         <FloatingImage />
         <Contact />

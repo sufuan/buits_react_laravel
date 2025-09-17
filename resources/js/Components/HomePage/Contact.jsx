@@ -1,6 +1,7 @@
 /*eslint-disable */
 import AnimatedTitle from "./AnimatedTitle";
 import Button from "./Button";
+import { Link } from "@inertiajs/react";
 
 const ImageClipBox = ({ src, clipClass }) => (
   <div className={clipClass}>
@@ -36,15 +37,17 @@ const Contact = () => {
 
         <div className="flex flex-col items-center text-center">
           <p className="mb-10 font-general text-[10px] uppercase">
-            Join Sentry
+          BUITS 
           </p>
 
           <AnimatedTitle
-            title="let&#39;s b<b>u</b>ild the <br /> new era of <br /> g<b>a</b>ming t<b>o</b>gether."
+            title="Ready to <b>T</b>ransform <br /> Your Future with <br /> <b>T</b>echnology?"
             className="special-font !md:text-[6.2rem] w-full font-zentry !text-5xl !font-black !leading-[.9]"
           />
 
-          <Button title="contact us" containerClass="mt-10 cursor-pointer" />
+          <Link href="/register">
+            <Button title="Join Now" containerClass="mt-10 cursor-pointer" />
+          </Link>
         </div>
       </div>
     </div>
