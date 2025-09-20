@@ -39,8 +39,8 @@ export default function Register({ success }) {
         mother_name: '',
         current_address: '',
         permanent_address: '',
-        transaction_id: '',
-        to_account: '01939378080',
+        amount: '500', // Registration fee
+        payment_method: 'piprapay',
     });
 
     const totalSteps = 5;
@@ -128,7 +128,12 @@ export default function Register({ success }) {
             case 4:
                 return data.current_address;
             case 5:
-                return data.transaction_id;
+                if (data.payment_method === 'manual') {
+                    return data.transaction_id && data.to_account;
+                } else if (data.payment_method === 'piprapay') {
+                    return true; // PipraPay doesn't need additional validation
+                }
+                return data.payment_method;
             default:
                 return true;
         }
@@ -178,9 +183,18 @@ export default function Register({ success }) {
     const submit = (e) => {
         e.preventDefault();
 
-        post(route('register'), {
-            onFinish: () => reset('password', 'password_confirmation'),
-        });
+
+
+        // If payment method is PipraPay, redirect to payment gateway
+        if (data.payment_method === 'piprapay') {
+            post(route('piprapay.create'), {
+                onFinish: () => reset('password', 'password_confirmation'),
+            });
+        } else {
+            post(route('register'), {
+                onFinish: () => reset('password', 'password_confirmation'),
+            });
+        }
     };
 
     return (
@@ -293,6 +307,18 @@ export default function Register({ success }) {
                     </div>
 
                     <form onSubmit={submit} className="p-8">
+                        {/* Display any general errors */}
+                        {Object.keys(errors).length > 0 && (
+                            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <h4 className="text-red-800 font-semibold mb-2">Please fix the following errors:</h4>
+                                <ul className="text-red-700 text-sm space-y-1">
+                                    {Object.entries(errors).map(([field, message]) => (
+                                        <li key={field}>• {field}: {message}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
                         <div className={`transition-all duration-500 ${isAnimating ? 'opacity-0 transform translate-x-4' : 'opacity-100 transform translate-x-0'}`}>
                             {/* Step 1: Personal Information */}
                             {currentStep === 1 && (
@@ -553,50 +579,125 @@ export default function Register({ success }) {
                                     <div className="text-center mb-6">
                                         <CreditCard className="h-12 w-12 text-teal-500 mx-auto mb-2 animate-pulse" />
                                         <h3 className="text-xl font-semibold text-gray-800">Almost there!</h3>
-                                        <p className="text-gray-600">Complete your registration with payment details</p>
+                                        <p className="text-gray-600">Complete your registration with secure payment</p>
                                     </div>
 
-                                    <div className="bg-gradient-to-r from-teal-50 to-green-50 p-6 rounded-lg border border-teal-200">
-                                        <h4 className="font-semibold text-teal-800 mb-4">Payment Instructions</h4>
-                                        <div className="space-y-2 text-sm text-teal-700">
-                                            <p>• Send payment to: <strong>01939378080</strong></p>
-                                            <p>• Use Bkash, Rocket, or Nagad</p>
-                                            <p>• Keep your transaction ID ready</p>
+                                    <div className="bg-gradient-to-r from-blue-50 to-teal-50 p-6 rounded-lg border border-blue-200">
+                                        <h4 className="font-semibold text-blue-800 mb-4">Registration Fee</h4>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-lg text-gray-700">BUITS Membership Fee</span>
+                                            <span className="text-2xl font-bold text-blue-600">৳500</span>
+                                        </div>
+                                        <p className="text-sm text-blue-600 mt-2">One-time registration fee for lifetime membership</p>
+                                    </div>
+
+                                    <div className="space-y-4">
+                                        <h4 className="font-semibold text-gray-800">Choose Payment Method</h4>
+
+                                        {/* PipraPay Option */}
+                                        <div className="border-2 border-blue-200 rounded-lg p-4 bg-blue-50">
+                                            <label className="flex items-center cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="payment_method"
+                                                    value="piprapay"
+                                                    checked={data.payment_method === 'piprapay'}
+                                                    onChange={(e) => setData('payment_method', e.target.value)}
+                                                    className="w-4 h-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                                />
+                                                <div className="ml-3 flex-1">
+                                                    <div className="flex items-center justify-between">
+                                                        <div>
+                                                            <h5 className="font-semibold text-blue-800">PipraPay Gateway</h5>
+                                                            <p className="text-sm text-blue-600">Secure payment with Bkash, Rocket, Nagad & more</p>
+                                                        </div>
+                                                        <div className="flex space-x-2">
+                                                            <span className="px-2 py-1 bg-pink-100 text-pink-800 text-xs rounded">Bkash</span>
+                                                            <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">Rocket</span>
+                                                            <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">Nagad</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </label>
+                                        </div>
+
+                                        {/* Manual Payment Option */}
+                                        <div className="border-2 border-gray-200 rounded-lg p-4 bg-gray-50">
+                                            <label className="flex items-center cursor-pointer">
+                                                <input
+                                                    type="radio"
+                                                    name="payment_method"
+                                                    value="manual"
+                                                    checked={data.payment_method === 'manual'}
+                                                    onChange={(e) => setData('payment_method', e.target.value)}
+                                                    className="w-4 h-4 text-gray-600 border-gray-300 focus:ring-gray-500"
+                                                />
+                                                <div className="ml-3">
+                                                    <h5 className="font-semibold text-gray-800">Manual Payment</h5>
+                                                    <p className="text-sm text-gray-600">Pay manually and provide transaction details</p>
+                                                </div>
+                                            </label>
                                         </div>
                                     </div>
 
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        <div>
-                                            <InputLabel htmlFor="transaction_id" value="Transaction ID" className="text-gray-700 font-medium" />
-                                            <TextInput
-                                                id="transaction_id"
-                                                name="transaction_id"
-                                                value={data.transaction_id}
-                                                className="mt-2 block w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring-teal-500"
-                                                onChange={(e) => setData('transaction_id', e.target.value)}
-                                                placeholder="Enter transaction ID"
-                                                required
-                                            />
-                                            <InputError message={errors.transaction_id} className="mt-2" />
-                                        </div>
+                                    {/* Manual Payment Fields */}
+                                    {data.payment_method === 'manual' && (
+                                        <div className="space-y-4 p-4 bg-gray-50 rounded-lg border">
+                                            <div className="bg-gradient-to-r from-gray-100 to-gray-200 p-4 rounded-lg border border-gray-300">
+                                                <h4 className="font-semibold text-gray-800 mb-2">Payment Instructions</h4>
+                                                <div className="space-y-1 text-sm text-gray-700">
+                                                    <p>• Send ৳500 to: <strong>01939378080</strong></p>
+                                                    <p>• Use Bkash, Rocket, or Nagad</p>
+                                                    <p>• Keep your transaction ID ready</p>
+                                                </div>
+                                            </div>
 
-                                        <div>
-                                            <InputLabel htmlFor="to_account" value="Payment Method" className="text-gray-700 font-medium" />
-                                            <select
-                                                id="to_account"
-                                                name="to_account"
-                                                value={data.to_account}
-                                                onChange={(e) => setData('to_account', e.target.value)}
-                                                className="mt-2 block w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring-teal-500"
-                                                required
-                                            >
-                                                <option value="01939378080">Bkash - 01939378080</option>
-                                                <option value="01939378080">Rocket - 01939378080</option>
-                                                <option value="01939378080">Nagad - 01939378080</option>
-                                            </select>
-                                            <InputError message={errors.to_account} className="mt-2" />
+                                            <div className="grid md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <InputLabel htmlFor="transaction_id" value="Transaction ID" className="text-gray-700 font-medium" />
+                                                    <TextInput
+                                                        id="transaction_id"
+                                                        name="transaction_id"
+                                                        value={data.transaction_id || ''}
+                                                        className="mt-2 block w-full rounded-lg border-gray-300 focus:border-gray-500 focus:ring-gray-500"
+                                                        onChange={(e) => setData('transaction_id', e.target.value)}
+                                                        placeholder="Enter transaction ID"
+                                                        required={data.payment_method === 'manual'}
+                                                    />
+                                                    <InputError message={errors.transaction_id} className="mt-2" />
+                                                </div>
+
+                                                <div>
+                                                    <InputLabel htmlFor="to_account" value="Payment Method Used" className="text-gray-700 font-medium" />
+                                                    <select
+                                                        id="to_account"
+                                                        name="to_account"
+                                                        value={data.to_account || '01939378080'}
+                                                        onChange={(e) => setData('to_account', e.target.value)}
+                                                        className="mt-2 block w-full rounded-lg border-gray-300 focus:border-gray-500 focus:ring-gray-500"
+                                                        required={data.payment_method === 'manual'}
+                                                    >
+                                                        <option value="01939378080">Bkash - 01939378080</option>
+                                                        <option value="01939378080">Rocket - 01939378080</option>
+                                                        <option value="01939378080">Nagad - 01939378080</option>
+                                                    </select>
+                                                    <InputError message={errors.to_account} className="mt-2" />
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    )}
+
+                                    {/* PipraPay Info */}
+                                    {data.payment_method === 'piprapay' && (
+                                        <div className="bg-gradient-to-r from-blue-50 to-teal-50 p-4 rounded-lg border border-blue-200">
+                                            <div className="flex items-center">
+                                                <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                                                <p className="text-sm text-blue-700">
+                                                    You will be redirected to PipraPay secure payment gateway to complete your payment.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -646,12 +747,13 @@ export default function Register({ success }) {
                                     <ChevronRight className="h-5 w-5 ml-2" />
                                 </button>
                             ) : (
-                                <PrimaryButton
+                                <button
+                                    type="submit"
                                     disabled={processing || !validateCurrentStep()}
                                     className={`
                                         flex items-center px-8 py-3 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600
                                         text-white font-bold rounded-lg shadow-lg hover:scale-105 transition-all duration-200
-                                        ${processing ? 'opacity-50 cursor-not-allowed' : ''}
+                                        ${processing || !validateCurrentStep() ? 'opacity-50 cursor-not-allowed' : ''}
                                     `}
                                 >
                                     {processing ? (
@@ -665,7 +767,7 @@ export default function Register({ success }) {
                                             Complete Registration
                                         </>
                                     )}
-                                </PrimaryButton>
+                                </button>
                             )}
                         </div>
                     </form>

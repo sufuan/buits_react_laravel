@@ -19,6 +19,12 @@ use App\Http\Controllers\Admin\Certificates\GenerateCertificateController;
 use App\Http\Controllers\Admin\Certificates\CertificateController;
 use App\Http\Controllers\MuseumController;
 
+
+// payments 
+use App\Http\Controllers\PipraPayController;
+
+
+
 Route::get('/', function () {
     return Inertia::render('Welcome', [
         'canLogin' => Route::has('login'),
@@ -85,6 +91,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/executive-application/create', [App\Http\Controllers\ExecutiveApplicationController::class, 'create'])->name('executive-application.create');
     Route::post('/executive-application', [App\Http\Controllers\ExecutiveApplicationController::class, 'store'])->name('executive-application.store');
 });
+
+
+// payments 
+
+
+Route::post('/piprapay/create', [PipraPayController::class, 'createCharge'])->name('piprapay.create');
+Route::get('/piprapay/success', [PipraPayController::class, 'success'])->name('piprapay.success');
+Route::get('/piprapay/cancel', [PipraPayController::class, 'cancel'])->name('piprapay.cancel');
+Route::post('/piprapay/webhook', [PipraPayController::class, 'webhook'])->name('piprapay.webhook');
+
 
 
 
