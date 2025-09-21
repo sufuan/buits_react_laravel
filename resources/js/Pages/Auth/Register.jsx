@@ -39,7 +39,7 @@ export default function Register({ success }) {
         mother_name: '',
         current_address: '',
         permanent_address: '',
-        amount: '500', // Registration fee
+        amount: '1', // Registration fee
         payment_method: 'piprapay',
     });
 
@@ -586,7 +586,7 @@ export default function Register({ success }) {
                                         <h4 className="font-semibold text-blue-800 mb-4">Registration Fee</h4>
                                         <div className="flex items-center justify-between">
                                             <span className="text-lg text-gray-700">BUITS Membership Fee</span>
-                                            <span className="text-2xl font-bold text-blue-600">৳500</span>
+                                            <span className="text-2xl font-bold text-blue-600">৳{data.amount}</span>
                                         </div>
                                         <p className="text-sm text-blue-600 mt-2">One-time registration fee for lifetime membership</p>
                                     </div>
@@ -646,7 +646,7 @@ export default function Register({ success }) {
                                             <div className="bg-gradient-to-r from-gray-100 to-gray-200 p-4 rounded-lg border border-gray-300">
                                                 <h4 className="font-semibold text-gray-800 mb-2">Payment Instructions</h4>
                                                 <div className="space-y-1 text-sm text-gray-700">
-                                                    <p>• Send ৳500 to: <strong>01939378080</strong></p>
+                                                    <p>• Send ৳{data.amount} to: <strong>01939378080</strong></p>
                                                     <p>• Use Bkash, Rocket, or Nagad</p>
                                                     <p>• Keep your transaction ID ready</p>
                                                 </div>

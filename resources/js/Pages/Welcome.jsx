@@ -11,7 +11,7 @@ import Footer from '../Components/HomePage/Footer'
 import HolographicTimeline from '@/Components/HomePage/HolographicTimeline'
 import Jason from '@/Components/HomePage/Jason'
 import FirstVideo from '@/Components/HomePage/FirstVideo'
-import BrandSlider from '@/Components/HomePage/BrandSlider'
+
 
 
 function App() {
@@ -24,7 +24,7 @@ function App() {
         <Features />
         <FirstVideo />
         <Jason />
-        <BrandSlider />
+    
         <HolographicTimeline />
         <FloatingImage />
         <Contact />

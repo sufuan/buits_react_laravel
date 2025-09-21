@@ -32,31 +32,20 @@ class PipraPayController extends Controller
             // Check environment variables
             $apiKey = env('PIPRAPAY_API_KEY');
             $baseUrl = env('PIPRAPAY_BASE_URL');
-            $currency = env('PIPRAPAY_CURRENCY', 'BDT');
-
-            Log::info('PipraPay Environment Check:', [
-                'api_key_exists' => !empty($apiKey),
-                'api_key_length' => strlen($apiKey ?? ''),
-                'base_url' => $baseUrl,
-                'currency' => $currency
-            ]);
 
             if (empty($apiKey) || empty($baseUrl)) {
                 throw new \Exception('PipraPay configuration is missing. Please check environment variables.');
             }
 
-            // Basic validation for PipraPay
+            // Minimal validation for PipraPay - only what's needed for payment
             $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255',
+                'name' => 'required|string',
+                'email' => 'required|email',
                 'amount' => 'required|numeric|min:1',
             ]);
 
-            Log::info('Validation passed');
-
             // Store registration data in session for later use
             Session::put('registration_data', $request->all());
-            Log::info('Registration data stored in session');
 
             $chargeData = [
                 'full_name'   => $request->input('name'),
@@ -73,27 +62,8 @@ class PipraPayController extends Controller
                 'webhook_url' => route('piprapay.webhook'),
             ];
 
-            Log::info('Charge data prepared:', $chargeData);
-
             $response = $this->pipra->createCharge($chargeData);
             Log::info('PipraPay API response:', $response);
-
-            // Detailed response analysis
-            if (is_array($response)) {
-                Log::info('Response is array. Keys:', ['keys' => array_keys($response)]);
-                if (isset($response['status'])) {
-                    Log::info('Response status:', ['status' => $response['status']]);
-                }
-                if (isset($response['error'])) {
-                    Log::info('Response error:', ['error' => $response['error']]);
-                }
-                if (isset($response['pp_url'])) {
-                    Log::info('Response pp_url:', ['pp_url' => $response['pp_url']]);
-                }
-            } else {
-                Log::info('Response type:', ['type' => gettype($response)]);
-                Log::info('Response content:', ['content' => $response]);
-            }
 
             if (!empty($response['pp_url'])) {
                 Log::info('Redirecting to PipraPay URL:', ['url' => $response['pp_url']]);
