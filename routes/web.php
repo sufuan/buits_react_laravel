@@ -38,9 +38,8 @@ Route::get('/about', function () {
     return Inertia::render('About');
 })->name('about');
 
-Route::get('/events', function () {
-    return Inertia::render('Events');
-})->name('events');
+Route::get('/events', [App\Http\Controllers\EventController::class, 'index'])->name('events');
+Route::get('/events/{event}', [App\Http\Controllers\EventController::class, 'show'])->name('events.show');
 
 Route::get('/previous-committee', [App\Http\Controllers\PreviousCommitteeController::class, 'index'])->name('previous-committee');
 Route::get('/previous-committee/{committee}', [App\Http\Controllers\PreviousCommitteeController::class, 'show'])->name('previous-committee.show');
@@ -110,6 +109,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 'pendingUsersCount' => PendingUser::count(),
                 'pendingVolunteerApplications' => VolunteerApplication::where('status', 'pending')->count(),
                 'pendingExecutiveApplications' => ExecutiveApplication::where('status', 'pending')->count(),
+                'upcomingEventsCount' => \App\Models\Event::upcoming()->count(),
             ]);
         })->name('dashboard');
 
@@ -204,6 +204,18 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('check', [\App\Http\Controllers\Admin\NotificationController::class, 'check'])->name('check');
             Route::post('mark-seen', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsSeen'])->name('mark-seen');
+        });
+
+        // ================= Event Management =================
+        Route::prefix('events')->name('events.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\EventController::class, 'index'])->name('index');
+            Route::get('/api', [App\Http\Controllers\Admin\EventController::class, 'getEvents'])->name('api');
+            Route::get('/statistics', [App\Http\Controllers\Admin\EventController::class, 'statistics'])->name('statistics');
+            Route::post('/', [App\Http\Controllers\Admin\EventController::class, 'store'])->name('store');
+            Route::get('/{event}', [App\Http\Controllers\Admin\EventController::class, 'show'])->name('show');
+            Route::put('/{event}', [App\Http\Controllers\Admin\EventController::class, 'update'])->name('update');
+            Route::delete('/{event}', [App\Http\Controllers\Admin\EventController::class, 'destroy'])->name('destroy');
+            Route::patch('/{event}/dates', [App\Http\Controllers\Admin\EventController::class, 'updateDates'])->name('update-dates');
         });
 
         // ================= Certificate Module =================

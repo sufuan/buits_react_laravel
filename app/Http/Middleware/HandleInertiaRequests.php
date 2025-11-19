@@ -30,12 +30,16 @@ class HandleInertiaRequests extends Middleware
      */
     public function share(Request $request): array
     {
+        $admin = Auth::guard('admin')->user();
+
         return [
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user(),
-                'admin' => Auth::guard('admin')->user(),
+                'admin' => $admin,
             ],
+            // Share notification counts globally for admin pages
+            'upcomingEventsCount' => $admin ? \App\Models\Event::upcoming()->count() : 0,
         ];
     }
 }

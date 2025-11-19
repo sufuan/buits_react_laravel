@@ -170,12 +170,13 @@ const adminNavData = {
   ],
 }
 
-export function AdminSidebar({ 
-  user, 
-  pendingUsersCount = 0, 
+export function AdminSidebar({
+  user,
+  pendingUsersCount = 0,
   pendingVolunteerApplications = 0,
   pendingExecutiveApplications = 0,
-  ...props 
+  upcomingEventsCount = 0,
+  ...props
 }) {
   // Create notifications object for the sidebar - only include non-zero counts
   const notifications = {};
@@ -184,6 +185,7 @@ export function AdminSidebar({
   console.log('AdminSidebar - pendingUsersCount:', pendingUsersCount);
   console.log('AdminSidebar - pendingVolunteerApplications:', pendingVolunteerApplications);
   console.log('AdminSidebar - pendingExecutiveApplications:', pendingExecutiveApplications);
+  console.log('AdminSidebar - upcomingEventsCount:', upcomingEventsCount);
 
   // User Management notifications
   if (pendingUsersCount > 0) {
@@ -191,16 +193,22 @@ export function AdminSidebar({
     notifications["New User Requests"] = pendingUsersCount;
   }
 
+  // Event Management notifications
+  if (upcomingEventsCount > 0) {
+    notifications["Event Management"] = upcomingEventsCount;
+    notifications["All Events"] = upcomingEventsCount;
+  }
+
   // Application Management notifications
   const totalApplications = pendingVolunteerApplications + pendingExecutiveApplications;
   if (totalApplications > 0) {
     notifications["Application Management"] = totalApplications;
   }
-  
+
   if (pendingVolunteerApplications > 0) {
     notifications["Volunteer Applications"] = pendingVolunteerApplications;
   }
-  
+
   if (pendingExecutiveApplications > 0) {
     notifications["Executive Applications"] = pendingExecutiveApplications;
   }
