@@ -336,9 +336,10 @@ class GenerateCertificateController extends Controller
 
         switch ($element['type'] ?? '') {
             case 'content':
+            case 'text':
                 $content = $this->replacePlaceholders($template->content ?? $element['text'] ?? '', $user, $certificateNumber, $template);
                 return sprintf(
-                    '<div style="%s font-size: %spx; font-family: %s; color: %s; text-align: %s; display: flex; align-items: center; justify-content: center;">%s</div>',
+                    '<div style="%s font-size: %spx; font-family: %s; color: %s; text-align: %s; display: flex; flex-direction: column; justify-content: center; align-items: stretch;">%s</div>',
                     $style,
                     $element['fontSize'] ?? 16,
                     $element['fontFamily'] ?? 'Arial',

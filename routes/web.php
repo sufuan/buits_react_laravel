@@ -305,6 +305,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
                 Route::get('generate', 'index')->name('generate');
                 Route::get('generate/users', 'getUsersList')->name('generate.users');
                 Route::post('generate/certificates', 'generateCertificates')->name('generate.certificates');
+                // Fallback for refresh/GET access to certificates result
+                Route::get('generate/certificates', function() {
+                    return redirect()->route('admin.certificate.generate');
+                });
                 Route::post('generate/save', 'saveCertificates')->name('generate.save');
             });
 

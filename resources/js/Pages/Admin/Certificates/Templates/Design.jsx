@@ -40,10 +40,12 @@ export default function CertificateDesigner({ editData, auth }) {
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const Size = Quill.import('attributors/style/size');
+      const Align = Quill.import('attributors/style/align');
       // Use px values for inline styles which are more reliable
       Size.whitelist = ['10px', '11px', '12px', '14px', '16px', '18px', '20px', '24px', '30px', '36px', '48px', '60px', '72px'];
       Quill.register(Size, true);
-      console.log('Quill size registered with px whitelist:', Size.whitelist);
+      Quill.register(Align, true);
+      console.log('Quill size and align registered with inline styles');
     }
   }, []);
 
@@ -153,7 +155,7 @@ export default function CertificateDesigner({ editData, auth }) {
       ['bold', 'italic', 'underline', 'strike'],
       [{ 'color': [] }, { 'background': [] }],
       [{ 'align': [] }],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
       ['clean']
     ],
   };
@@ -182,7 +184,7 @@ export default function CertificateDesigner({ editData, auth }) {
     if (selectedTextElement) {
       console.log('=== Editor content changed ===');
       console.log('Raw content:', content);
-      
+
       // Create a temporary div to parse the new content
       const tempDiv = document.createElement('div');
       tempDiv.innerHTML = content;
@@ -191,19 +193,19 @@ export default function CertificateDesigner({ editData, auth }) {
       // Collect font sizes from inline styles and Quill size classes
       const nodes = tempDiv.querySelectorAll('*');
       const fontSizes = [];
-      
+
       nodes.forEach((node, index) => {
         if (!node) return;
         console.log(`Node ${index}:`, node.tagName, 'classes:', Array.from(node.classList || []), 'style:', node.style.cssText);
-        
+
         let fs = null;
-        
+
         // Check inline styles first (Quill should now use these with px values)
         if (node.style && node.style.fontSize) {
           fs = node.style.fontSize;
           console.log('Found inline fontSize:', fs);
         }
-        
+
         // Check for Quill size classes (now with px suffix)
         if (!fs && node.classList && node.classList.length) {
           node.classList.forEach((c) => {
@@ -216,7 +218,7 @@ export default function CertificateDesigner({ editData, auth }) {
             }
           });
         }
-        
+
         if (fs) {
           const n = parseFloat(fs);
           if (!isNaN(n)) {
@@ -270,26 +272,11 @@ export default function CertificateDesigner({ editData, auth }) {
       console.log('New styles to apply:', newStyles);
       console.log('Current element fontSize:', selectedTextElement.fontSize);
 
-      // Clean the HTML: remove all ql-size-* classes and inline font-size styles so
-      // the canvas renders using the element's numeric fontSize value.
-      nodes.forEach((node) => {
-        if (!node) return;
-        // remove classes like ql-size-18px
-        if (node.classList && node.classList.length) {
-          const toRemove = [];
-          node.classList.forEach((c) => {
-            if (/^ql-size-\d+px$/.test(c)) toRemove.push(c);
-          });
-          toRemove.forEach((c) => node.classList.remove(c));
-        }
-        // remove inline font-size styles
-        if (node.style && node.style.fontSize) {
-          node.style.removeProperty('font-size');
-        }
-      });
+      // Don't strip font-size styles. Let them persist so mixed sizes work.
+      // nodes.forEach((node) => { ... }); REMOVED cleanup
 
       const cleanedContent = tempDiv.innerHTML;
-      console.log('Cleaned content:', cleanedContent);
+      console.log('Content with styles preserved:', cleanedContent);
 
       if (Object.keys(newStyles).length > 0) {
         console.log('Updating elements with new styles...');
@@ -297,10 +284,10 @@ export default function CertificateDesigner({ editData, auth }) {
           prev.map((el) =>
             el.id === selectedTextElement.id
               ? {
-                  ...el,
-                  text: cleanedContent,
-                  ...newStyles,
-                }
+                ...el,
+                text: cleanedContent,
+                ...newStyles, // Still update base props for fallback
+              }
               : el
           )
         );
@@ -313,9 +300,9 @@ export default function CertificateDesigner({ editData, auth }) {
           prev.map((el) =>
             el.id === selectedTextElement.id
               ? {
-                  ...el,
-                  text: cleanedContent,
-                }
+                ...el,
+                text: cleanedContent,
+              }
               : el
           )
         );
@@ -423,16 +410,16 @@ export default function CertificateDesigner({ editData, auth }) {
   };
 
   //  Scale calculator for preview
-const calculateScale = (widthMm, heightMm) => {
-  const mmToPx = (mm) => mm * 3.7795; // convert mm to px
-  const screenW = window.innerWidth * 0.9;
-  const screenH = window.innerHeight * 0.8;
+  const calculateScale = (widthMm, heightMm) => {
+    const mmToPx = (mm) => mm * 3.7795; // convert mm to px
+    const screenW = window.innerWidth * 0.9;
+    const screenH = window.innerHeight * 0.8;
 
-  const wPx = mmToPx(widthMm);
-  const hPx = mmToPx(heightMm);
+    const wPx = mmToPx(widthMm);
+    const hPx = mmToPx(heightMm);
 
-  return Math.min(screenW / wPx, screenH / hPx, 1); // never scale above 100%
-};
+    return Math.min(screenW / wPx, screenH / hPx, 1); // never scale above 100%
+  };
 
 
   return (
@@ -590,6 +577,28 @@ const calculateScale = (widthMm, heightMm) => {
               </div>
             </div>
             <div className="flex items-center space-x-3">
+              <Button onClick={() => {
+                const newElement = {
+                  id: `text-${Date.now()}`,
+                  type: 'text',
+                  text: 'New Text',
+                  x: 100,
+                  y: 100,
+                  width: 200,
+                  height: 50,
+                  fontSize: 16,
+                  fontFamily: 'Arial',
+                  color: '#000000',
+                  textAlign: 'center',
+                };
+                setElements([...elements, newElement]);
+                setSelectedElement(newElement.id);
+                setSelectedTextElement(newElement);
+                setEditorContent(newElement.text);
+              }} variant="outline" size="sm">
+                <Type className="w-4 h-4 mr-2" />
+                Add Text
+              </Button>
               <Button onClick={resetDesign} variant="outline" size="sm">
                 <RotateCcw className="w-4 h-4" />
                 Reset
@@ -639,7 +648,7 @@ const calculateScale = (widthMm, heightMm) => {
                 </div>
               </CardContent>
             </Card>
-            
+
             {/* Text Editor Card */}
             <Card className="mt-4">
               <CardHeader className="pb-3">
@@ -761,59 +770,59 @@ const calculateScale = (widthMm, heightMm) => {
           </div>
 
           {/* Preview Modal */}
-       {showPreview && (
-  <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-    <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-auto max-h-[90vh] overflow-hidden flex flex-col">
-      {/* Modal Header */}
-      <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-        <h2 className="text-lg font-semibold text-gray-900">Certificate Preview</h2>
-        <div className="flex items-center space-x-2">
-          <Button
-            onClick={() => {
-              const element = document.createElement('a');
-              const file = new Blob([previewHtml], { type: 'text/html' });
-              element.href = URL.createObjectURL(file);
-              element.download = `${editData?.name || 'certificate'}-preview.html`;
-              document.body.appendChild(element);
-              element.click();
-              document.body.removeChild(element);
-            }}
-            variant="outline"
-            size="sm"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download
-          </Button>
-          <Button onClick={() => setShowPreview(false)} variant="outline" size="sm">
-            Close
-          </Button>
+          {showPreview && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-lg shadow-2xl w-full max-w-6xl h-auto max-h-[90vh] overflow-hidden flex flex-col">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                  <h2 className="text-lg font-semibold text-gray-900">Certificate Preview</h2>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={() => {
+                        const element = document.createElement('a');
+                        const file = new Blob([previewHtml], { type: 'text/html' });
+                        element.href = URL.createObjectURL(file);
+                        element.download = `${editData?.name || 'certificate'}-preview.html`;
+                        document.body.appendChild(element);
+                        element.click();
+                        document.body.removeChild(element);
+                      }}
+                      variant="outline"
+                      size="sm"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                    <Button onClick={() => setShowPreview(false)} variant="outline" size="sm">
+                      Close
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Modal Body */}
+                <div className="flex-1 flex items-center justify-center overflow-hidden p-4">
+                  <div
+                    className="relative bg-white border border-gray-300 shadow-md"
+                    style={{
+                      width: '297mm',
+                      height: '210mm',
+                      transform: `scale(${calculateScale(297, 210)})`,
+                      transformOrigin: 'center center',
+                    }}
+                  >
+                    <div
+                      className="w-full h-full"
+                      dangerouslySetInnerHTML={{ __html: previewHtml }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+
         </div>
       </div>
-
-      {/* Modal Body */}
-      <div className="flex-1 flex items-center justify-center overflow-hidden p-4">
-        <div
-          className="relative bg-white border border-gray-300 shadow-md"
-          style={{
-            width: '297mm',
-            height: '210mm',
-            transform: `scale(${calculateScale(297, 210)})`,
-            transformOrigin: 'center center',
-          }}
-        >
-          <div
-            className="w-full h-full"
-            dangerouslySetInnerHTML={{ __html: previewHtml }}
-          />
-        </div>
-      </div>
-    </div>
-  </div>
-)}
-
-
-        </div>
-      </div>
-    </AdminAuthenticatedLayout>
+    </AdminAuthenticatedLayout >
   );
 }
