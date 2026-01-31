@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { Button } from '@/Components/ui/button';
 import ReactQuill, { Quill } from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import 'react-quill/dist/quill.bubble.css'; // Import bubble theme
 import {
   Save,
   RotateCcw,
@@ -35,6 +36,7 @@ export default function CertificateDesigner({ editData, auth }) {
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const [editorContent, setEditorContent] = useState('');
   const [selectedTextElement, setSelectedTextElement] = useState(null);
+  const [editingId, setEditingId] = useState(null); // New state for inline editing
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -175,6 +177,15 @@ export default function CertificateDesigner({ editData, auth }) {
     } else {
       setSelectedTextElement(null);
       setEditorContent('');
+    }
+  };
+
+  // Handle inline text change
+  const handleInlineChange = (id, newContent) => {
+    setElements((prev) => prev.map((el) => el.id === id ? { ...el, text: newContent } : el));
+    // Sync sidebar if selected
+    if (selectedElement === id) {
+      setEditorContent(newContent);
     }
   };
 
@@ -557,6 +568,79 @@ export default function CertificateDesigner({ editData, auth }) {
         .ql-snow .ql-size-48px { font-size: 48px; }
         .ql-snow .ql-size-60px { font-size: 60px; }
         .ql-snow .ql-size-72px { font-size: 72px; }
+
+        /* Bubble theme size picker styling */
+        .ql-bubble .ql-picker.ql-size .ql-picker-label::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item::before {
+          content: attr(data-value) !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="10px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before {
+          content: '10px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="11px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="11px"]::before {
+          content: '11px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="12px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before {
+          content: '12px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="14px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before {
+          content: '14px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="16px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before {
+          content: '16px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="18px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before {
+          content: '18px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="20px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before {
+          content: '20px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="24px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before {
+          content: '24px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="30px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="30px"]::before {
+          content: '30px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="36px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="36px"]::before {
+          content: '36px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="48px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="48px"]::before {
+          content: '48px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="60px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="60px"]::before {
+          content: '60px' !important;
+        }
+        .ql-bubble .ql-picker.ql-size .ql-picker-label[data-value="72px"]::before,
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="72px"]::before {
+          content: '72px' !important;
+        }
+
+        /* Apply actual font sizes to bubble picker items */
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="10px"]::before { font-size: 10px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="11px"]::before { font-size: 11px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="12px"]::before { font-size: 12px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="14px"]::before { font-size: 14px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="16px"]::before { font-size: 16px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="18px"]::before { font-size: 18px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="20px"]::before { font-size: 20px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="24px"]::before { font-size: 24px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="30px"]::before { font-size: 30px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="36px"]::before { font-size: 36px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="48px"]::before { font-size: 48px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="60px"]::before { font-size: 60px; }
+        .ql-bubble .ql-picker.ql-size .ql-picker-item[data-value="72px"]::before { font-size: 72px; }
       `}</style>
       <div className="min-h-screen bg-gray-50">
         {/* Top Bar */}
@@ -590,12 +674,13 @@ export default function CertificateDesigner({ editData, auth }) {
                   fontFamily: 'Arial',
                   color: '#000000',
                   textAlign: 'center',
+                  backgroundColor: 'transparent', // Explicitly set transparent background
                 };
                 setElements([...elements, newElement]);
                 setSelectedElement(newElement.id);
                 setSelectedTextElement(newElement);
                 setEditorContent(newElement.text);
-              }} variant="outline" size="sm">
+              }} variant="default" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
                 <Type className="w-4 h-4 mr-2" />
                 Add Text
               </Button>
@@ -688,7 +773,11 @@ export default function CertificateDesigner({ editData, auth }) {
           </div>
 
           {/* Canvas */}
-          <div className="flex-1 bg-gray-100 p-8 overflow-auto">
+          <div className="flex-1 bg-gray-100 p-8 overflow-auto" onClick={() => {
+            setEditingId(null);
+            setSelectedElement(null);
+            setSelectedTextElement(null);
+          }}>
             <div className="flex items-center justify-center min-h-full">
               <div
                 ref={canvasRef}
@@ -699,6 +788,12 @@ export default function CertificateDesigner({ editData, auth }) {
                   minWidth: '400px',
                   minHeight: '300px',
                 }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setEditingId(null);
+                  setSelectedElement(null);
+                  setSelectedTextElement(null);
+                }} // Clicking on canvas background deselects all elements
               >
                 {editData?.background_image && (
                   <img
@@ -720,40 +815,77 @@ export default function CertificateDesigner({ editData, auth }) {
                         height: el.height * zoom,
                       }}
                       onDragStop={(e, d) => handleDragStop(el.id, { x: d.x / zoom, y: d.y / zoom })}
-                      onResize={(e, direction, ref, delta, position) =>
-                        handleResize(el.id, ref, { x: position.x / zoom, y: position.y / zoom })
-                      }
+                      onResizeStop={(e, direction, ref, delta, position) => {
+                        handleResize(el.id, ref, { x: position.x / zoom, y: position.y / zoom });
+                      }}
                       bounds="parent"
-                      enableResizing={el.type !== 'qr' && el.type !== 'photo'}
-                      onClick={() => handleElementClick(el.id)}
+                      enableResizing={editingId !== el.id && el.type !== 'qr' && el.type !== 'photo'}
+                      cancel=".no-drag"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleElementClick(el.id);
+                      }}
+                      onDoubleClick={(e) => {
+                        e.stopPropagation();
+                        if (el.type === 'content' || el.type === 'text') {
+                          setEditingId(el.id);
+                        }
+                      }}
                     >
                       <div
                         className={`
-                          w-full h-full border-2 transition-all duration-200
-                          ${selectedElement === el.id ? 'border-blue-500 shadow-lg' : 'border-gray-300 hover:border-gray-400'}
-                          ${el.type === 'photo' && el.style === 1 ? 'rounded-full overflow-hidden' : 'rounded'}
-                          ${el.type === 'qr' || el.type === 'photo' ? 'bg-gray-50' : 'bg-white/90'}
-                          cursor-move
-                        `}
+                        w-full h-full border-2 transition-all duration-200 relative group
+                        ${selectedElement === el.id ? 'border-blue-500 shadow-lg' : 'border-gray-300 hover:border-gray-400'}
+                        ${el.type === 'photo' && el.style === 1 ? 'rounded-full overflow-hidden' : 'rounded'}
+                        ${el.type === 'qr' || el.type === 'photo' ? 'bg-gray-50' : 'bg-white/90'}
+                        ${editingId === el.id ? 'z-50 cursor-text' : 'cursor-move'}
+                      `}
                         style={{
                           backgroundColor: el.backgroundColor || (el.type === 'content' ? 'transparent' : '#f9f9f9'),
                           border: el.border || undefined,
                         }}
                       >
+                        {/* Move Handle - Visible when selected or hovered, allows dragging even in edit mode */}
+                        {(selectedElement === el.id || editingId === el.id) && (
+                          <div className="absolute -top-3 -right-3 bg-blue-500 text-white rounded-full p-1 cursor-move shadow-sm z-50 hover:bg-blue-600 transition-colors" title="Drag to move">
+                            <Move className="w-3 h-3" />
+                          </div>
+                        )}
+
                         {el.type === 'image' ? (
                           <img src={el.src} alt={el.alt || el.id} className="w-full h-full object-contain" />
-                        ) : el.type === 'content' || el.type === 'text' ? (
-                          <div
-                            className="w-full h-full p-2 overflow-hidden"
-                            style={{
-                              fontSize: `${(el.fontSize || 16) * zoom}px`,
-                              fontFamily: el.fontFamily || 'Arial',
-                              color: el.color || '#000000',
-                              textAlign: el.textAlign || 'center',
-                              lineHeight: 1.2,
-                            }}
-                            dangerouslySetInnerHTML={{ __html: el.text }}
-                          />
+                        ) : (el.type === 'content' || el.type === 'text') ? (
+                          editingId === el.id ? (
+                            <div className="no-drag h-full">
+                              <ReactQuill
+                                theme="bubble"
+                                value={el.text}
+                                onChange={(val) => handleInlineChange(el.id, val)}
+                                modules={{
+                                  toolbar: [
+                                    [{ 'font': [] }],
+                                    [{ 'size': ['10px', '11px', '12px', '14px', '16px', '18px', '20px', '24px', '30px', '36px', '48px', '60px', '72px'] }],
+                                    ['bold', 'italic', 'underline'],
+                                    [{ 'align': [] }],
+                                    [{ 'color': [] }]
+                                  ]
+                                }}
+                                style={{ height: '100%', fontFamily: el.fontFamily || 'Arial' }}
+                              />
+                            </div>
+                          ) : (
+                            <div
+                              className="w-full h-full p-2 overflow-hidden"
+                              style={{
+                                fontSize: `${(el.fontSize || 16) * zoom}px`,
+                                fontFamily: el.fontFamily || 'Arial',
+                                color: el.color || '#000000',
+                                textAlign: el.textAlign || 'center',
+                                lineHeight: 1.2,
+                              }}
+                              dangerouslySetInnerHTML={{ __html: el.text }}
+                            />
+                          )
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-gray-500 text-sm">
                             {el.type === 'qr' && <QrCode className="w-6 h-6 mb-1" />}
@@ -823,6 +955,6 @@ export default function CertificateDesigner({ editData, auth }) {
 
         </div>
       </div>
-    </AdminAuthenticatedLayout >
+    </AdminAuthenticatedLayout>
   );
 }
