@@ -137,7 +137,7 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
     height: editData?.height?.replace('mm', '') || '',
     width: editData?.width?.replace('mm', '') || '',
     status: editData?.status || 1,
-    qr_code_student: editData?.qr_code ? JSON.parse(editData.qr_code) : ['admission_no'],
+    qr_code_student: editData?.qr_code ? JSON.parse(editData.qr_code) : ['member_id'],
     qr_code_staff: editData?.qr_code ? JSON.parse(editData.qr_code) : ['staff_id'],
     user_photo_style: editData?.user_photo_style ?? 0,
     user_image_size: editData?.user_image_size || '100',
@@ -203,33 +203,40 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
   useEffect(() => {
     const selectedType = types.find(t => t.id === Number(data.type_id));
     if (selectedType) {
-      if (selectedType.usertype === 'student') {
-        setShowStudentQR(true);
-        setShowEmployeeQR(false);
-      } else {
-        setShowEmployeeQR(true);
-        setShowStudentQR(false);
-      }
+      // Unified logic: Always show unified QR options
+      setShowStudentQR(true);
+      setShowEmployeeQR(false);
+
       // Fetch usable tags for selected type (simulate)
       fetchUsableTags(selectedType.id);
     } else {
-      setShowStudentQR(false);
+      setShowStudentQR(true); // Default to showing options even if no type selected yet, or false. usage: let's keep it visible or conditional on type selection
       setShowEmployeeQR(false);
       setUsableTags([]);
     }
   }, [data.type_id, types]);
 
-  // Simulate fetching usable tags for a given certificate type ID
+  // Fetch usable tags for a given certificate type ID
   function fetchUsableTags(typeId) {
-    // In real app, replace with axios/fetch call to backend
-    // e.g., axios.post('/certificate/templateType', { type_id: typeId })...
+    if (!typeId) {
+      setUsableTags([]);
+      return;
+    }
 
-    // For demo, let's simulate some tags
-    const demoTags = {
-      1: ['{{student_name}}', '{{course_name}}', '{{certificate_date}}'],
-      2: ['{{staff_name}}', '{{designation}}', '{{certificate_date}}'],
-    };
-    setUsableTags(demoTags[typeId] || ['{{default_tag}}']);
+    axios.post(route('admin.certificate.templates.type'), { type_id: typeId })
+      .then(response => {
+        if (response.data && response.data.status === 'success') {
+          // The backend now returns an array of strings (e.g. ['{{name}}', '{{email}}'])
+          setUsableTags(response.data.data || []);
+        } else {
+          console.error('Failed to fetch tags:', response.data.message);
+          setUsableTags([]);
+        }
+      })
+      .catch(error => {
+        console.error('Error fetching tags:', error);
+        setUsableTags([]);
+      });
   }
 
   // Handle file input changes
@@ -542,7 +549,7 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
                   </Label>
                   <ScrollArea className="h-[200px] w-full border rounded-md p-4">
                     <div className="space-y-2">
-                      {['admission_no', 'roll_no', 'date_of_birth', 'certificate_number', 'link'].map(option => (
+                      {['member_id', 'created_at', 'certificate_number', 'link'].map(option => (
                         <label key={option} className="flex items-center space-x-2">
                           <input
                             type="checkbox"
@@ -555,7 +562,9 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
                             }}
                             className="rounded border-gray-300"
                           />
-                          <span className="capitalize">{option.replace(/_/g, ' ')}</span>
+                          <span className="capitalize">
+                            {option === 'created_at' ? 'Joining Date' : option.replace(/_/g, ' ')}
+                          </span>
                         </label>
                       ))}
                     </div>
@@ -564,41 +573,12 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
                 </div>
               )}
 
-              {showEmployeeQR && (
-                <div className="mt-6">
-                  <Label>
-                    QR Code Text <span className="text-red-500">*</span>
-                  </Label>
-                  <ScrollArea className="h-[200px] w-full border rounded-md p-4">
-                    <div className="space-y-2">
-                      {['staff_id', 'joining_date', 'certificate_number', 'link'].map(option => (
-                        <label key={option} className="flex items-center space-x-2">
-                          <input
-                            type="checkbox"
-                            checked={data.qr_code_staff.includes(option)}
-                            onChange={e => {
-                              const newValue = e.target.checked
-                                ? [...data.qr_code_staff, option]
-                                : data.qr_code_staff.filter(item => item !== option);
-                              setData('qr_code_staff', newValue);
-                            }}
-                            className="rounded border-gray-300"
-                          />
-                          <span className="capitalize">{option.replace(/_/g, ' ')}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </ScrollArea>
-                  {errors.qr_code_staff && <p className="text-red-500 text-sm mt-1">{errors.qr_code_staff}</p>}
-                </div>
-              )}
-
               {/* Image Settings */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
                 <div>
                   <div className="space-y-2">
                     <Label htmlFor="user_photo_style">User Image Shape</Label>
-                    <Select 
+                    <Select
                       value={data.user_photo_style.toString()}
                       onValueChange={value => {
                         const numValue = Number(value);

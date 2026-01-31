@@ -315,8 +315,9 @@ export default function Index({ auth, templates, certificateTypes, departments, 
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
-                    <SelectItem value="student">Student</SelectItem>
-                    <SelectItem value="staff">Staff</SelectItem>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="volunteer">Volunteer</SelectItem>
+                    <SelectItem value="executive">Executive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -400,7 +401,7 @@ export default function Index({ auth, templates, certificateTypes, departments, 
                           </TableCell>
                           <TableCell>{user.session || '-'}</TableCell>
                           <TableCell>
-                            <Badge variant={user.usertype === 'student' ? 'default' : 'secondary'}>
+                            <Badge variant={user.usertype === 'member' ? 'default' : 'secondary'}>
                               {user.usertype || '-'}
                             </Badge>
                           </TableCell>

@@ -10,26 +10,16 @@ use Inertia\Inertia;
 class CertificateTypeController extends Controller
 {
     /**
-     * Get student-related shortcodes.
+     * Get available shortcodes for certificates.
      */
-    private function shortCodes()
+    private function getShortCodes()
     {
+        // Relevant fields for User model (IT Society)
         return explode(',', preg_replace('/\s+/', '', "
-            name, dob, present_address, guardian, created_at, admission_no, roll_no,
-            gender, admission_date, category, cast, father_name, mother_name, religion,
-            email, phone, average_mark, grade, gpa_with_optional, gpa_without_optional,
-            evaluation, exam_total_mark, std_total_mark, position, exam, class, section
-        "));
-    }
-
-    /**
-     * Get staff-related shortcodes.
-     */
-    private function shortCodesStaff()
-    {
-        return explode(',', preg_replace('/\s+/', '', "
-            name, gender, staff_id, joining_date, designation, department, qualification,
-            total_experience, birthday, email, mobileno, present_address, permanent_address
+            name, email, phone, member_id, department, session, usertype,
+            designation, committee_status, gender, date_of_birth, blood_group,
+            father_name, mother_name, current_address, permanent_address,
+            created_at, skills, image, class_roll
         "));
     }
 
@@ -40,8 +30,7 @@ class CertificateTypeController extends Controller
     {
         return Inertia::render('Admin/Certificates/Types/Index', [
             'types' => CertificateType::orderBy('id')->get(),
-            'shortCodes' => $this->shortCodes(),
-            'staffShortCodes' => $this->shortCodesStaff(),
+            'shortCodes' => $this->getShortCodes(),
         ]);
     }
 
@@ -51,8 +40,7 @@ class CertificateTypeController extends Controller
     public function create()
     {
         return Inertia::render('Admin/Certificates/Types/Create', [
-            'shortCodes' => $this->shortCodes(),
-            'staffShortCodes' => $this->shortCodesStaff(),
+            'shortCodes' => $this->getShortCodes(),
         ]);
     }
 
@@ -88,8 +76,7 @@ class CertificateTypeController extends Controller
 
         return Inertia::render('Admin/Certificates/Types/Edit', [
             'type' => $type,
-            'shortCodes' => $this->shortCodes(),
-            'staffShortCodes' => $this->shortCodesStaff(),
+            'shortCodes' => $this->getShortCodes(),
         ]);
     }
 

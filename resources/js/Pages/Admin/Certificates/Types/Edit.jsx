@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft } from 'lucide-react';
@@ -76,13 +76,15 @@ export default function CertificateTypeEdit({ type, shortCodes, staffShortCodes 
                                     <Select
                                         value={data.usertype}
                                         onValueChange={(value) => setData('usertype', value)}
+                                        required
                                     >
                                         <SelectTrigger className="w-full">
                                             <SelectValue placeholder="Select user type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="student">Student</SelectItem>
-                                            <SelectItem value="staff">Staff</SelectItem>
+                                            <SelectItem value="member">Member</SelectItem>
+                                            <SelectItem value="volunteer">Volunteer</SelectItem>
+                                            <SelectItem value="executive">Executive</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     {errors.usertype && (
@@ -92,19 +94,25 @@ export default function CertificateTypeEdit({ type, shortCodes, staffShortCodes 
 
                                 <div className="grid gap-2">
                                     <Label>Short Codes</Label>
+                                    <p className="text-sm text-muted-foreground">
+                                        Select the short codes that will be available for this certificate type.
+                                    </p>
                                     <Card>
                                         <ScrollArea className="h-72 rounded-md border">
                                             <div className="p-4">
                                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                                    {(data.usertype === 'staff' ? staffShortCodes : shortCodes).map(code => (
+                                                    {shortCodes.map(code => (
                                                         <div key={code} className="flex items-start space-x-2">
                                                             <Checkbox
                                                                 id={code}
                                                                 checked={data.short_code.includes(code)}
                                                                 onCheckedChange={(checked) => {
                                                                     const selected = [...data.short_code];
-                                                                    if (checked) selected.push(code);
-                                                                    else selected.splice(selected.indexOf(code), 1);
+                                                                    if (checked) {
+                                                                        selected.push(code);
+                                                                    } else {
+                                                                        selected.splice(selected.indexOf(code), 1);
+                                                                    }
                                                                     setData('short_code', selected);
                                                                 }}
                                                             />
@@ -117,6 +125,11 @@ export default function CertificateTypeEdit({ type, shortCodes, staffShortCodes 
                                                         </div>
                                                     ))}
                                                 </div>
+                                                {shortCodes.length === 0 && (
+                                                    <p className="text-sm text-muted-foreground text-center py-4">
+                                                        No short codes available.
+                                                    </p>
+                                                )}
                                             </div>
                                         </ScrollArea>
                                     </Card>

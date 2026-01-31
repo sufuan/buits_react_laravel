@@ -48,6 +48,9 @@ Route::get('/previous-committee/data/{committee}', [App\Http\Controllers\Previou
 // Public committee pages
 Route::get('/committees', [App\Http\Controllers\PublicCommitteeController::class, 'index'])->name('committees');
 
+// Public Member Profile (Dummy Route for QR Codes)
+Route::get('/p/{member_id}', [App\Http\Controllers\PublicProfileController::class, 'show'])->name('public.profile');
+
 // API routes for committee data
 Route::get('/api/committees', [App\Http\Controllers\PreviousCommitteeController::class, 'getCommitteeData'])->name('api.committees');
 Route::get('/api/committees/{committee}', [App\Http\Controllers\PreviousCommitteeController::class, 'getCommitteeData'])->name('api.committee');

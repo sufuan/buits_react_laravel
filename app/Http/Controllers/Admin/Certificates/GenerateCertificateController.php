@@ -109,7 +109,6 @@ class GenerateCertificateController extends Controller
             foreach ($qrCodes as $qrCode) {
                 switch ($qrCode) {
                     case 'member_id':
-                    case 'admission_no': // Legacy support
                         if ($user->member_id) {
                             $qrText .= "Member ID: " . $user->member_id . "\n";
                         }
@@ -137,7 +136,7 @@ class GenerateCertificateController extends Controller
                             $qrText .= "Date of Birth: " . $user->date_of_birth->format('d-m-Y') . "\n";
                         }
                         break;
-                    case 'roll_no': // Legacy support
+                    case 'class_roll':
                         if ($user->class_roll) {
                             $qrText .= "Roll No: " . $user->class_roll . "\n";
                         }
@@ -146,8 +145,9 @@ class GenerateCertificateController extends Controller
                         $qrText .= "Certificate No: " . $certificateNumber . "\n";
                         break;
                     case 'link':
-                        $url = route('certificate.verify');
-                        $qrText .= "Verify: " . $url . '?certificate_number=' . $certificateNumber . "\n";
+                        // Assuming public profile route is 'public.profile' and uses member_id
+                        $url = route('public.profile', ['member_id' => $user->member_id ?? $user->id]);
+                        $qrText .= "Profile: " . $url . "\n";
                         break;
                     default:
                         break;
@@ -186,68 +186,61 @@ class GenerateCertificateController extends Controller
     /**
      * Replace placeholders in certificate content
      */
+    /**
+     * Replace placeholders in certificate content
+     */
     private function replacePlaceholders($content, $user, $certificateNumber, $template)
     {
-        // Single curly braces placeholders
-        $singleBraceReplacements = [
-            '{name}' => $user->name,
-            '{email}' => $user->email,
-            '{phone}' => $user->phone ?? '',
-            '{member_id}' => $user->member_id ?? '',
-            '{department}' => $user->department ?? '',
-            '{session}' => $user->session ?? '',
-            '{usertype}' => ucfirst($user->usertype ?? ''),
-            '{gender}' => ucfirst($user->gender ?? ''),
-            '{date_of_birth}' => $user->date_of_birth?->format('d-m-Y') ?? '',
-            '{blood_group}' => $user->blood_group ?? '',
-            '{class_roll}' => $user->class_roll ?? '',
-            '{father_name}' => $user->father_name ?? '',
-            '{mother_name}' => $user->mother_name ?? '',
-            '{current_address}' => $user->current_address ?? '',
-            '{permanent_address}' => $user->permanent_address ?? '',
-            '{certificate_number}' => $certificateNumber,
-            '{certificate_name}' => $template->name,
-            '{issue_date}' => now()->format('d-m-Y'),
-            '{signature_name}' => $template->signature_name ?? '',
-            '{skills}' => $user->skills ?? '',
+        // Get designation (either from relation or fallback to usertype)
+        $designation = $user->designation ? $user->designation->name : ucfirst($user->usertype ?? 'Member');
+        
+        // Define all available data mappings
+        $data = [
+            'name' => $user->name,
+            'email' => $user->email,
+            'phone' => $user->phone ?? '',
+            'member_id' => $user->member_id ?? '',
+            'department' => $user->department ?? '',
+            'session' => $user->session ?? '',
+            'usertype' => ucfirst($user->usertype ?? ''),
+            'designation' => $designation,
+            'committee_status' => $user->committee_status ? 'Active Committee Member' : 'General Member',
+            'gender' => ucfirst($user->gender ?? ''),
+            'date_of_birth' => $user->date_of_birth?->format('d-m-Y') ?? '',
+            'blood_group' => $user->blood_group ?? '',
+            'father_name' => $user->father_name ?? '',
+            'mother_name' => $user->mother_name ?? '',
+            'current_address' => $user->current_address ?? '',
+            'permanent_address' => $user->permanent_address ?? '',
+            'class_roll' => $user->class_roll ?? '',
+            'certificate_number' => $certificateNumber,
+            'certificate_name' => $template->name,
+            'issue_date' => now()->format('d-m-Y'),
+            'signature_name' => $template->signature_name ?? '',
+            'skills' => $user->skills ?? '',
+            // Legacy/Duplicate mappings if needed
+            'student_name' => $user->name,
+            'staff_name' => $user->name,
         ];
 
-        // Double curly braces placeholders (legacy support)
-        $doubleBraceReplacements = [
-            '{{student_name}}' => $user->name,
-            '{{staff_name}}' => $user->name,
-            '{{name}}' => $user->name,
-            '{{email}}' => $user->email,
-            '{{phone}}' => $user->phone ?? '',
-            '{{member_id}}' => $user->member_id ?? '',
-            '{{department}}' => $user->department ?? '',
-            '{{session}}' => $user->session ?? '',
-            '{{usertype}}' => ucfirst($user->usertype ?? ''),
-            '{{gender}}' => ucfirst($user->gender ?? ''),
-            '{{date_of_birth}}' => $user->date_of_birth?->format('d-m-Y') ?? '',
-            '{{blood_group}}' => $user->blood_group ?? '',
-            '{{class_roll}}' => $user->class_roll ?? '',
-            '{{father_name}}' => $user->father_name ?? '',
-            '{{mother_name}}' => $user->mother_name ?? '',
-            '{{current_address}}' => $user->current_address ?? '',
-            '{{permanent_address}}' => $user->permanent_address ?? '',
-            '{{certificate_number}}' => $certificateNumber,
-            '{{certificate_name}}' => $template->name,
-            '{{certificate_date}}' => now()->format('d-m-Y'),
-            '{{issue_date}}' => now()->format('d-m-Y'),
-            '{{signature_name}}' => $template->signature_name ?? '',
-            '{{skills}}' => $user->skills ?? '',
-            // Course-related placeholders (not applicable to your project)
-            '{{course_name}}' => 'N/A',
-            '{{course}}' => 'N/A',
-            '{{designation}}' => $user->usertype ? ucfirst($user->usertype) : 'Member',
-        ];
+        // Replace Double Curly Braces {{ key }} (with optional spaces)
+        $content = preg_replace_callback('/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/', function($matches) use ($data) {
+            $key = $matches[1];
+            return isset($data[$key]) ? $data[$key] : $matches[0];
+        }, $content);
 
-        // Apply single brace replacements first
-        $content = str_replace(array_keys($singleBraceReplacements), array_values($singleBraceReplacements), $content);
-
-        // Then apply double brace replacements
-        $content = str_replace(array_keys($doubleBraceReplacements), array_values($doubleBraceReplacements), $content);
+        // Replace Single Curly Braces { key } (with optional spaces)
+        // We run this second to avoid replacing inner parts of double braces constructs if they partially match,
+        // although the regex engines usually differentiate.
+        // Actually, {{key}} matches {key} pattern? 
+        // \{ matches {. If we have {{key}}, the first { matches. 
+        // regex: /\{\s*([a-zA-Z0-9_]+)\s*\}/ matches {key}.
+        // If we have {{key}}, it might match the inner {key}.
+        // To prevent this, we can ensure it's NOT double braces: (?<!\{)\{\s*([a-zA-Z0-9_]+)\s*\}(?!\})
+        $content = preg_replace_callback('/(?<!\{)\{\s*([a-zA-Z0-9_]+)\s*\}(?!\})/', function($matches) use ($data) {
+            $key = $matches[1];
+            return isset($data[$key]) ? $data[$key] : $matches[0];
+        }, $content);
 
         // Clean up any remaining unmatched placeholders
         $content = $this->cleanupUnmatchedPlaceholders($content);

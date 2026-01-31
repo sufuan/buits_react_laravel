@@ -108,14 +108,11 @@ class CertificateTemplateController extends Controller
             $template->width = floatval($request->width) . 'mm';
 
             // Determine QR code based on certificate type
-            $certificateType = CertificateType::find($request->type_id);
-            if ($certificateType && $certificateType->usertype === 'student') {
-                $qrData = $request->qr_code_student ?: ['admission_no'];
-                $template->qr_code = json_encode(array_values($qrData));
-            } else {
-                $qrData = $request->qr_code_staff ?: ['staff_id'];
-                $template->qr_code = json_encode(array_values($qrData));
-            }
+            // Determine QR code - Unified Logic
+            // Always prefer qr_code_student as that's what the frontend sends now for all types
+            // Fallback to defaults if empty
+            $qrData = $request->qr_code_student ?: ($request->qr_code_staff ?: ['member_id']);
+            $template->qr_code = json_encode(array_values($qrData));
 
             $template->qr_image_size = $request->qr_image_size;
             $template->user_photo_style = $request->user_photo_style;
@@ -255,17 +252,49 @@ class CertificateTemplateController extends Controller
     {
         try {
             $certificate_type = CertificateType::find($request->type_id);
-            $html = view('admin.certificates.useable_tags', compact('certificate_type'))->render();
+            
+            if (!$certificate_type) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Certificate Type not found'
+                ], 404);
+            }
+
+            // Parse short_code: it might be a comma-separated string or JSON
+            $short_codes = [];
+            if ($certificate_type->short_code) {
+                // If it looks like JSON (starts with [), decode it
+                if (str_starts_with(trim($certificate_type->short_code), '[')) {
+                    $json = json_decode($certificate_type->short_code, true);
+                    $short_codes = is_array($json) ? $json : [];
+                } else {
+                    // Otherwise assume comma-separated
+                    $short_codes = array_map('trim', explode(',', $certificate_type->short_code));
+                }
+            }
+
+            // Ensure codes are formatted with curly braces if not already
+            $formatted_codes = array_map(function($code) {
+                // Remove existing braces to clean up, then wrap in {{ }}
+                $clean = trim($code, '{} ');
+                // Some might prefer single { or double {{. 
+                // The previous Turn 54 showed keys like '{name}' and '{{name}}'.
+                // Frontend buttons usually insert what's displayed. 
+                // Let's standardise on {{ }} for consistency with the controller replacements 
+                // (or provide both if needed, but usually the UI picks one).
+                // Looking at fetchUsableTags mock: it used {{ }}.
+                return '{{' . $clean . '}}';
+            }, $short_codes);
 
             return response()->json([
                 'status' => 'success',
-                'data' => $html,
+                'data' => $formatted_codes,
             ]);
         } catch (\Throwable $th) {
             return response()->json([
                 'status' => 'error',
-                'data' => $th->getMessage(),
-            ]);
+                'message' => $th->getMessage(),
+            ], 500);
         }
     }
 

@@ -131,7 +131,8 @@ export default function Create({ auth, types = [], canAdd = true }) {
     height: '',
     width: '',
     status: 1,
-    qr_code_student: ['admission_no'],
+    status: 1,
+    qr_code_student: ['member_id'],
     qr_code_staff: ['staff_id'],
     user_photo_style: 0,
     user_image_size: '100',
@@ -164,13 +165,10 @@ export default function Create({ auth, types = [], canAdd = true }) {
     setData('type_id', value);
     const selectedType = types.find(type => type.id == value);
     if (selectedType) {
-      if (selectedType.usertype === 'student') {
-        setShowStudentQR(true);
-        setShowEmployeeQR(false);
-      } else {
-        setShowStudentQR(false);
-        setShowEmployeeQR(true);
-      }
+      // Unified logic for all types (Member/Volunteer/Executive)
+      setShowStudentQR(true); // Reusing this state variable for the single unified section
+      setShowEmployeeQR(false);
+
       // Fetch usable tags for selected type
       fetchUsableTags(selectedType.id);
     } else {
@@ -280,9 +278,9 @@ export default function Create({ auth, types = [], canAdd = true }) {
       [{ 'size': ['small', false, 'large', 'huge'] }],
       ['bold', 'italic', 'underline', 'strike'],
       [{ 'color': [] }, { 'background': [] }],
-      [{ 'script': 'sub'}, { 'script': 'super' }],
+      [{ 'script': 'sub' }, { 'script': 'super' }],
       [{ 'header': 1 }, { 'header': 2 }, 'blockquote'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }, { 'indent': '-1'}, { 'indent': '+1' }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }, { 'indent': '-1' }, { 'indent': '+1' }],
       [{ 'direction': 'rtl' }, { 'align': [] }],
       ['link', 'image'],
       ['clean']
@@ -408,7 +406,7 @@ export default function Create({ auth, types = [], canAdd = true }) {
                 {/* User Photo Style */}
                 <div>
                   <Label>User Photo Style</Label>
-                  <Select 
+                  <Select
                     defaultValue="0"
                     value={data.user_photo_style.toString()}
                     onValueChange={value => setData('user_photo_style', Number(value))}
@@ -456,7 +454,7 @@ export default function Create({ auth, types = [], canAdd = true }) {
                     </Label>
                     <ScrollArea className="h-[200px] w-full border rounded-md p-4">
                       <div className="space-y-2">
-                        {['admission_no', 'roll_no', 'date_of_birth', 'certificate_number', 'link'].map(option => (
+                        {['member_id', 'created_at', 'certificate_number', 'link'].map(option => (
                           <label key={option} className="flex items-center space-x-2">
                             <input
                               type="checkbox"
@@ -469,35 +467,9 @@ export default function Create({ auth, types = [], canAdd = true }) {
                               }}
                               className="rounded border-gray-300"
                             />
-                            <span className="capitalize">{option.replace(/_/g, ' ')}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </ScrollArea>
-                  </div>
-                )}
-
-                {showEmployeeQR && (
-                  <div className="mt-6">
-                    <Label>
-                      QR Code Text <span className="text-red-500">*</span>
-                    </Label>
-                    <ScrollArea className="h-[200px] w-full border rounded-md p-4">
-                      <div className="space-y-2">
-                        {['staff_id', 'joining_date', 'certificate_number', 'link'].map(option => (
-                          <label key={option} className="flex items-center space-x-2">
-                            <input
-                              type="checkbox"
-                              checked={data.qr_code_staff.includes(option)}
-                              onChange={e => {
-                                const newValue = e.target.checked
-                                  ? [...data.qr_code_staff, option]
-                                  : data.qr_code_staff.filter(item => item !== option);
-                                setData('qr_code_staff', newValue);
-                              }}
-                              className="rounded border-gray-300"
-                            />
-                            <span className="capitalize">{option.replace(/_/g, ' ')}</span>
+                            <span className="capitalize">
+                              {option === 'created_at' ? 'Joining Date' : option.replace(/_/g, ' ')}
+                            </span>
                           </label>
                         ))}
                       </div>

@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ArrowLeft } from 'lucide-react';
@@ -82,8 +82,9 @@ export default function CertificateTypeCreate({ shortCodes, staffShortCodes }) {
                                             <SelectValue placeholder="Select user type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="student">Student</SelectItem>
-                                            <SelectItem value="staff">Staff</SelectItem>
+                                            <SelectItem value="member">Member</SelectItem>
+                                            <SelectItem value="volunteer">Volunteer</SelectItem>
+                                            <SelectItem value="executive">Executive</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     {errors.usertype && (
@@ -100,7 +101,7 @@ export default function CertificateTypeCreate({ shortCodes, staffShortCodes }) {
                                         <ScrollArea className="h-72 rounded-md border">
                                             <div className="p-4">
                                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                                    {(data.usertype === 'staff' ? staffShortCodes : shortCodes).map(code => (
+                                                    {shortCodes.map(code => (
                                                         <div key={code} className="flex items-start space-x-2">
                                                             <Checkbox
                                                                 id={code}
@@ -124,9 +125,9 @@ export default function CertificateTypeCreate({ shortCodes, staffShortCodes }) {
                                                         </div>
                                                     ))}
                                                 </div>
-                                                {data.usertype && (data.usertype === 'staff' ? staffShortCodes : shortCodes).length === 0 && (
+                                                {shortCodes.length === 0 && (
                                                     <p className="text-sm text-muted-foreground text-center py-4">
-                                                        No short codes available for {data.usertype} type.
+                                                        No short codes available.
                                                     </p>
                                                 )}
                                             </div>
