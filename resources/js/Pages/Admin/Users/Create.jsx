@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import { Head, useForm, Link } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 import { Button } from '@/components/ui/button';
@@ -9,13 +10,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-    User, 
-    Mail, 
-    Phone, 
-    GraduationCap, 
-    Calendar, 
-    MapPin, 
+import {
+    User,
+    Mail,
+    Phone,
+    GraduationCap,
+    Calendar,
+    MapPin,
     Eye,
     EyeOff,
     UserPlus,
@@ -29,7 +30,7 @@ export default function Create({ errors }) {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [passwordStrength, setPasswordStrength] = useState(0);
-    
+
     const { data, setData, post, processing, reset, clearErrors } = useForm({
         name: '',
         email: '',
@@ -47,7 +48,7 @@ export default function Create({ errors }) {
         current_address: '',
         permanent_address: '',
         skills: '',
-        usertype: 'user',
+        usertype: 'member',
         transaction_id: '',
     });
 
@@ -122,11 +123,11 @@ export default function Create({ errors }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        
+
         // Basic client-side validation
         const requiredFields = ['name', 'email', 'password', 'password_confirmation', 'phone', 'department', 'session', 'gender'];
         const missingFields = requiredFields.filter(field => !data[field]);
-        
+
         if (missingFields.length > 0) {
             // Focus on the first missing field
             const firstMissingField = document.getElementById(missingFields[0]);
@@ -135,18 +136,20 @@ export default function Create({ errors }) {
             }
             return;
         }
-        
+
         // Check if passwords match
         if (data.password !== data.password_confirmation) {
             document.getElementById('password_confirmation').focus();
             return;
         }
-        
+
         post(route('admin.users.store'), {
             onSuccess: () => {
                 reset();
+                toast.success('User created successfully');
             },
             onError: (errors) => {
+                toast.error('Failed to create user. Please check the form.');
                 // Focus on the first field with an error
                 const firstErrorField = Object.keys(errors)[0];
                 if (firstErrorField) {
@@ -244,7 +247,7 @@ export default function Create({ errors }) {
                                                 type="email"
                                                 value={data.email}
                                                 onChange={(e) => handleFieldChange('email', e.target.value)}
-                                                className={`pl-10 pr-10 ${errors.email ? 'border-red-500' : 
+                                                className={`pl-10 pr-10 ${errors.email ? 'border-red-500' :
                                                     data.email && isValidEmail(data.email) ? 'border-green-500' : ''}`}
                                                 placeholder="Enter email address"
                                             />
@@ -287,7 +290,7 @@ export default function Create({ errors }) {
                                             <div className="space-y-1">
                                                 <div className="flex items-center gap-2">
                                                     <div className="flex-1 bg-gray-200 rounded-full h-2">
-                                                        <div 
+                                                        <div
                                                             className={`h-2 rounded-full transition-all duration-300 ${getPasswordStrengthColor(passwordStrength)}`}
                                                             style={{ width: `${(passwordStrength / 5) * 100}%` }}
                                                         />
@@ -315,7 +318,7 @@ export default function Create({ errors }) {
                                                 type={showConfirmPassword ? "text" : "password"}
                                                 value={data.password_confirmation}
                                                 onChange={(e) => handleFieldChange('password_confirmation', e.target.value)}
-                                                className={`pl-10 pr-10 ${errors.password_confirmation ? 'border-red-500' : 
+                                                className={`pl-10 pr-10 ${errors.password_confirmation ? 'border-red-500' :
                                                     data.password_confirmation && data.password && data.password_confirmation === data.password ? 'border-green-500' : ''}`}
                                                 placeholder="Confirm password"
                                             />
@@ -454,10 +457,9 @@ export default function Create({ errors }) {
                                                 <SelectValue placeholder="Select user type" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="user">User</SelectItem>
-                                                <SelectItem value="student">Student</SelectItem>
+                                                <SelectItem value="member">Member</SelectItem>
                                                 <SelectItem value="alumni">Alumni</SelectItem>
-                                                <SelectItem value="faculty">Faculty</SelectItem>
+                                                <SelectItem value="volunteer">Volunteer</SelectItem>
                                             </SelectContent>
                                         </Select>
                                     </div>

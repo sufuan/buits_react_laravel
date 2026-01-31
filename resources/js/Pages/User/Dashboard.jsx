@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { UserSidebar } from "@/components/user-sidebar"
 import {
   Breadcrumb,
@@ -34,8 +34,10 @@ export default function Dashboard({ auth }) {
   const user = auth?.user;
 
   // Debug: Log the auth object to see what we're getting
+  const { settings } = usePage().props;
   console.log('Auth object:', auth);
   console.log('User object:', user);
+  console.log('Settings:', settings);
 
   const handleLogout = () => {
     router.post(route('logout'));
@@ -198,26 +200,38 @@ export default function Dashboard({ auth }) {
                         <p className="text-xs text-gray-500">Your current membership level</p>
                       </div>
                     </div>
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                      user?.usertype === 'member' ? 'bg-green-100 text-green-800' :
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${user?.usertype === 'member' ? 'bg-green-100 text-green-800' :
                       user?.usertype === 'volunteer' ? 'bg-blue-100 text-blue-800' :
-                      user?.usertype === 'executive' ? 'bg-purple-100 text-purple-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
+                        user?.usertype === 'executive' ? 'bg-purple-100 text-purple-800' :
+                          'bg-gray-100 text-gray-800'
+                      }`}>
                       {user?.usertype ? user.usertype.charAt(0).toUpperCase() + user.usertype.slice(1) : 'Unknown'}
                     </span>
                   </div>
 
                   {/* Application Actions */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    {/* Volunteer Application */}
-                    {user?.usertype === 'member' && (
-                      <Button asChild className="h-auto p-4 flex flex-col items-center gap-2 bg-blue-600 hover:bg-blue-700">
-                        <Link href={route('volunteer-application.create')}>
-                          <Users className="h-6 w-6" />
-                          <span className="text-sm">Apply for Volunteer</span>
-                        </Link>
-                      </Button>
+                    {/* Volunteer Application - Show Apply Button OR Status */}
+                    {user?.usertype === 'member' && settings?.volunteer_applications_enabled && (
+                      !user.volunteer_application ? (
+                        <Button asChild className="h-auto p-4 flex flex-col items-center gap-2 bg-blue-600 hover:bg-blue-700">
+                          <Link href={route('volunteer-application.create')}>
+                            <Users className="h-6 w-6" />
+                            <span className="text-sm">Apply for Volunteer</span>
+                          </Link>
+                        </Button>
+                      ) : (
+                        <div className="h-auto p-4 flex flex-col items-center gap-2 bg-gray-100 border rounded-md">
+                          <Users className="h-6 w-6 text-gray-500" />
+                          <span className="text-sm font-medium">Volunteer Application</span>
+                          <span className={`text-xs px-2 py-1 rounded-full ${user.volunteer_application.status === 'approved' ? 'bg-green-100 text-green-800' :
+                            user.volunteer_application.status === 'rejected' ? 'bg-red-100 text-red-800' :
+                              'bg-yellow-100 text-yellow-800'
+                            }`}>
+                            Status: {user.volunteer_application.status.charAt(0).toUpperCase() + user.volunteer_application.status.slice(1)}
+                          </span>
+                        </div>
+                      )
                     )}
 
                     {/* Executive Application */}
@@ -239,13 +253,13 @@ export default function Dashboard({ auth }) {
                       <span>Executive</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full transition-all duration-300 ${
-                          user?.usertype === 'member' ? 'bg-green-500 w-1/3' :
-                          user?.usertype === 'volunteer' ? 'bg-blue-500 w-2/3' :
-                          user?.usertype === 'executive' ? 'bg-purple-500 w-full' :
-                          'bg-gray-300 w-0'
-                        }`}
+                      <div
+                        className={`h-2 rounded-full transition-all duration-300 ${user?.usertype === 'executive' ? 'bg-purple-500 w-full' :
+                          user?.usertype === 'volunteer' ? 'bg-blue-500 w-1/2' :
+                            user?.volunteer_application?.status === 'pending' ? 'bg-blue-300 w-1/4' : // Show progress for pending
+                              user?.usertype === 'member' ? 'bg-green-500 w-[10%]' : // Show non-zero for member
+                                'bg-gray-300 w-0'
+                          }`}
                       ></div>
                     </div>
                   </div>

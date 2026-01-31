@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\ExecutiveApplication;
 use App\Models\PendingUser;
+use App\Models\Setting;
+use App\Models\AdminLog;
 use Illuminate\Http\Request;
 use App\Models\VolunteerApplication;
 use Inertia\Inertia;
@@ -39,6 +41,12 @@ class VolunteerApplicationController extends Controller
     {
         $user = Auth::user();
         
+        // Check if volunteer applications are enabled
+        $setting = Setting::where('key', 'volunteer_applications_enabled')->first();
+        if ($setting && $setting->value !== 'true') {
+            return redirect()->route('dashboard')->with('error', 'Volunteer applications are currently closed.');
+        }
+
         // Check if user is eligible (must be member and not already applied)
         if ($user->usertype !== 'member') {
             return redirect()->back()->with('error', 'Only members can apply for volunteer role.');
@@ -60,6 +68,12 @@ class VolunteerApplicationController extends Controller
     public function store(Request $request)
     {
         $user = Auth::user();
+
+        // Check if volunteer applications are enabled
+        $setting = Setting::where('key', 'volunteer_applications_enabled')->first();
+        if ($setting && $setting->value !== 'true') {
+            return redirect()->route('dashboard')->with('error', 'Volunteer applications are currently closed.');
+        }
 
         // Validate user eligibility
         if ($user->usertype !== 'member') {
@@ -116,6 +130,17 @@ class VolunteerApplicationController extends Controller
         if ($validated['status'] === 'approved') {
             $application->user->update(['usertype' => 'volunteer']);
         }
+
+        // Log the action
+        AdminLog::create([
+            'admin_id' => Auth::guard('admin')->id(),
+            'target_user_id' => $application->user_id,
+            'action' => $validated['status'] === 'approved' ? 'approve_volunteer_application' : 'reject_volunteer_application',
+            'details' => [
+                'reason' => $validated['status'] === 'rejected' ? $validated['admin_notes'] : null
+            ],
+            'ip_address' => $request->ip()
+        ]);
 
         return redirect()->route('admin.applications.volunteer.index')->with('success', 'Application status updated successfully!');
     }

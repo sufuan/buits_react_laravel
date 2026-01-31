@@ -13,8 +13,11 @@ class PreviousCommitteeController extends Controller
      */
     public function index()
     {
-        // Get current committee members (auto-assigned executives)
-        $currentMembers = \App\Models\User::where('usertype', 'executive')
+        // Check if published
+        $isPublished = \App\Models\Setting::where('key', 'is_current_committee_published')->value('value') === 'true';
+
+        // Get current committee members (auto-assigned executives) - Only if published
+        $currentMembers = $isPublished ? \App\Models\User::where('usertype', 'executive')
             ->where('is_approved', true)
             ->whereNotNull('designation_id')
             ->where('committee_status', 'active')
@@ -33,7 +36,7 @@ class PreviousCommitteeController extends Controller
                     'status' => 'current',
                     'is_auto_assigned' => true
                 ];
-            });
+            }) : collect([]);
 
         // Get current committee number
         $currentCommitteeNumber = \App\Models\CommitteeAssignment::getCurrentCommitteeNumber();
@@ -70,7 +73,8 @@ class PreviousCommitteeController extends Controller
             'currentMembers' => $currentMembers,
             'currentCommitteeNumber' => $currentCommitteeNumber,
             'previousCommittees' => $previousCommittees,
-            'totalCurrentMembers' => $currentMembers->count()
+            'totalCurrentMembers' => $currentMembers->count(),
+            'isPublished' => $isPublished
         ]);
     }
 

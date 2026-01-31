@@ -9,13 +9,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-    User, 
-    Mail, 
-    Phone, 
-    GraduationCap, 
-    Calendar, 
-    MapPin, 
+import {
+    User,
+    Mail,
+    Phone,
+    GraduationCap,
+    Calendar,
+    MapPin,
     ArrowLeft,
     Save,
     AlertCircle,
@@ -237,9 +237,9 @@ export default function Edit({ user, errors, departments = [] }) {
                                                 <SelectValue placeholder="Select gender" />
                                             </SelectTrigger>
                                             <SelectContent>
-                                                <SelectItem value="male">Male</SelectItem>
-                                                <SelectItem value="female">Female</SelectItem>
-                                                <SelectItem value="other">Other</SelectItem>
+                                                <SelectItem value="member">Member</SelectItem>
+                                                <SelectItem value="alumni">Alumni</SelectItem>
+                                                <SelectItem value="volunteer">Volunteer</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         {errors.gender && (

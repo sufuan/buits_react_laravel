@@ -330,21 +330,7 @@ class UserImportService
             'phone' => $row['phone'] ?? '',
             'department' => $row['department'],
             'session' => $row['session'],
-            'usertype' => $row['usertype'] ?? 'user',
-            'gender' => strtolower($row['gender'] ?? 'other'),
-            'class_roll' => $row['class_roll'] ?? null,
-            'father_name' => $row['father_name'] ?? null,
-            'mother_name' => $row['mother_name'] ?? null,
-            'current_address' => $row['current_address'] ?? null,
-            'permanent_address' => $row['permanent_address'] ?? null,
-            'blood_group' => $row['blood_group'] ?? null,
-            'date_of_birth' => !empty($row['date_of_birth']) ? $this->parseDate($row['date_of_birth']) : null,
-            'transaction_id' => $row['transaction_id'] ?? null,
-            'to_account' => $row['to_account'] ?? null,
-            'skills' => $row['skills'] ?? null,
-            'member_id' => $row['member_id'] ?? $this->generateMemberId($row['department'], $row['session']),
-            'is_approved' => true,
-            'usertype' => 'member', // Set default usertype to member for imported users
+            'usertype' => 'member', // Default to member for imported users
         ];
     }
 

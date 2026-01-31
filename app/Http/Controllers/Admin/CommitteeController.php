@@ -56,12 +56,16 @@ class CommitteeController extends Controller
         // No available users needed since all executives are automatically members
         $availableUsers = collect([]);
 
+        // Check if published
+        $isPublished = \App\Models\Setting::where('key', 'is_current_committee_published')->value('value') === 'true';
+
         return Inertia::render('Admin/Committee/CurrentCommittee', [
             'currentMembers' => $currentMembers,
             'currentCommitteeNumber' => $currentCommitteeNumber ?: 1,
             'designations' => $designations,
             'availableUsers' => $availableUsers,
             'totalCurrentMembers' => $currentMembers->count(),
+            'isPublished' => $isPublished,
             'flash' => session()->get('flash', [])
         ]);
     }
@@ -164,6 +168,23 @@ class CommitteeController extends Controller
     }
 
     /**
+     * Publish current committee
+     */
+    public function publishCommittee()
+    {
+        try {
+            $setting = \App\Models\Setting::updateOrCreate(
+                ['key' => 'is_current_committee_published'],
+                ['value' => 'true']
+            );
+
+            return back()->with('success', 'Current committee published successfully.');
+        } catch (\Exception $e) {
+            return back()->with('error', 'Failed to publish committee: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * End current tenure and archive all current members
      */
     public function endTenure(Request $request)
@@ -230,20 +251,21 @@ class CommitteeController extends Controller
             ]);
 
             // 4. Store the new committee number for the next committee cycle
-            // We'll use a simple approach by creating a dummy assignment record to track committee number
-            // or update the getCurrentCommitteeNumber method
-            
-            // For now, let's store it in cache or create a simple setting record
             cache(['current_committee_number' => $request->new_committee_number], now()->addYears(1));
+
+            // 5. Reset published status to false
+             \App\Models\Setting::updateOrCreate(
+                ['key' => 'is_current_committee_published'],
+                ['value' => 'false']
+            );
 
             DB::commit();
             
             Log::info('End tenure completed successfully. Committee cycle: ' . $request->new_committee_number);
 
             return back()->with('success', 
-                'Committee tenure ended successfully! All ' . $currentExecutives->count() . ' executive members have been archived and removed from current committee. ' .
-                'New committee cycle "' . $request->new_committee_number . '" has started. ' .
-                'To add members to the new committee, approve executives with designations in User Role Management.'
+                'Committee tenure ended successfully! All ' . $currentExecutives->count() . ' executive members have been archived. ' .
+                'New committee cycle "' . $request->new_committee_number . '" has started (unpublished).'
             );
 
         } catch (\Exception $e) {

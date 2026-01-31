@@ -1,5 +1,5 @@
 import * as React from "react"
-import { Link } from "@inertiajs/react"
+import { Link, usePage } from "@inertiajs/react"
 import {
   Home,
   User,
@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 
 export function UserSidebar({ user, onLogout, ...props }) {
+  const { settings } = usePage().props;
   const menuItems = [
     {
       title: "Dashboard",
@@ -47,7 +48,8 @@ export function UserSidebar({ user, onLogout, ...props }) {
   ]
 
   // Add conditional menu items based on user type
-  if (user?.usertype === 'member') {
+  // Only show if member, enabled setting, AND DOES NOT have an existing application
+  if (user?.usertype === 'member' && settings?.volunteer_applications_enabled && !user?.volunteer_application) {
     menuItems.push({
       title: "Apply for Volunteer",
       url: route('volunteer-application.create'),
@@ -78,7 +80,7 @@ export function UserSidebar({ user, onLogout, ...props }) {
           </div>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarMenu>
           {menuItems.map((item) => {
@@ -96,7 +98,7 @@ export function UserSidebar({ user, onLogout, ...props }) {
           })}
         </SidebarMenu>
       </SidebarContent>
-      
+
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -150,7 +152,7 @@ export function UserSidebar({ user, onLogout, ...props }) {
                   Preferences
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={onLogout}
                   className="cursor-pointer text-red-600 focus:text-red-600"
                 >

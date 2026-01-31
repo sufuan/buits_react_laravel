@@ -3,13 +3,14 @@ import { Head, useForm, usePage } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 import { PlusIcon, TrashIcon, ExclamationTriangleIcon, PencilIcon, ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/outline';
 
-export default function CurrentCommittee({ 
-    auth, 
-    currentMembers, 
-    currentCommitteeNumber, 
-    designations, 
-    availableUsers, 
-    totalCurrentMembers 
+export default function CurrentCommittee({
+    auth,
+    currentMembers,
+    currentCommitteeNumber,
+    designations,
+    availableUsers,
+    totalCurrentMembers,
+    isPublished
 }) {
     const [showEditMemberModal, setShowEditMemberModal] = useState(false);
     const [showEndTenureModal, setShowEndTenureModal] = useState(false);
@@ -18,6 +19,18 @@ export default function CurrentCommittee({
     const [sortField, setSortField] = useState('member_order');
     const [sortDirection, setSortDirection] = useState('asc');
     const { flash = {} } = usePage().props;
+    const { post } = useForm();
+
+    const handlePublishCommittee = () => {
+        if (confirm('Are you sure you want to publish the current committee? This will make it visible to the public.')) {
+            post(route('admin.committee.publish'), {
+                preserveScroll: true,
+                onSuccess: () => {
+                    // Success is handled by flash message
+                }
+            });
+        }
+    };
 
     // Edit Member Form
     const { data: editMemberData, setData: setEditMemberData, patch: patchEditMember, processing: processingEdit, errors: editErrors, reset: resetEdit } = useForm({
@@ -37,7 +50,7 @@ export default function CurrentCommittee({
         const direction = sortField === field && sortDirection === 'asc' ? 'desc' : 'asc';
         setSortField(field);
         setSortDirection(direction);
-        
+
         const sorted = [...sortedMembers].sort((a, b) => {
             if (field === 'member_order') {
                 return direction === 'asc' ? a[field] - b[field] : b[field] - a[field];
@@ -114,7 +127,7 @@ export default function CurrentCommittee({
             id: member.id,
             member_order: index + 1
         }));
-        
+
         const form = useForm({ members: updatedMembers });
         form.patch(route('committee.current.update-order'));
     };
@@ -142,7 +155,7 @@ export default function CurrentCommittee({
                                 <div>
                                     <h2 className="text-3xl font-bold text-gray-900">Current Committee</h2>
                                     <p className="text-gray-600 mt-1">
-                                        {currentCommitteeNumber ? `Committee ${currentCommitteeNumber}` : 'Committee 1'} 
+                                        {currentCommitteeNumber ? `Committee ${currentCommitteeNumber}` : 'Committee 1'}
                                         • {totalCurrentMembers} executive members
                                     </p>
                                     <p className="text-sm text-blue-600 mt-1">
@@ -151,13 +164,26 @@ export default function CurrentCommittee({
                                 </div>
                                 <div className="flex space-x-3">
                                     {totalCurrentMembers > 0 && (
-                                        <button
-                                            onClick={() => setShowEndTenureModal(true)}
-                                            className="inline-flex items-center px-6 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
-                                        >
-                                            <ExclamationTriangleIcon className="w-4 h-4 mr-2" />
-                                            End Tenure
-                                        </button>
+                                        !isPublished ? (
+                                            <button
+                                                onClick={handlePublishCommittee}
+                                                className="inline-flex items-center px-6 py-2 bg-green-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                </svg>
+                                                Publish Committee
+                                            </button>
+                                        ) : (
+                                            <button
+                                                onClick={() => setShowEndTenureModal(true)}
+                                                className="inline-flex items-center px-6 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:bg-red-700 active:bg-red-900 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition ease-in-out duration-150"
+                                            >
+                                                <ExclamationTriangleIcon className="w-4 h-4 mr-2" />
+                                                End Tenure
+                                            </button>
+                                        )
                                     )}
                                 </div>
                             </div>
@@ -190,45 +216,45 @@ export default function CurrentCommittee({
                                     <table className="min-w-full divide-y divide-gray-300">
                                         <thead className="bg-gray-50">
                                             <tr>
-                                                <th 
+                                                <th
                                                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                                     onClick={() => handleSort('member_order')}
                                                 >
                                                     <div className="flex items-center space-x-1">
                                                         <span>Order</span>
                                                         {sortField === 'member_order' && (
-                                                            sortDirection === 'asc' ? 
-                                                            <ArrowUpIcon className="w-4 h-4" /> : 
-                                                            <ArrowDownIcon className="w-4 h-4" />
+                                                            sortDirection === 'asc' ?
+                                                                <ArrowUpIcon className="w-4 h-4" /> :
+                                                                <ArrowDownIcon className="w-4 h-4" />
                                                         )}
                                                     </div>
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Photo
                                                 </th>
-                                                <th 
+                                                <th
                                                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                                     onClick={() => handleSort('user_name')}
                                                 >
                                                     <div className="flex items-center space-x-1">
                                                         <span>Executive Member</span>
                                                         {sortField === 'user_name' && (
-                                                            sortDirection === 'asc' ? 
-                                                            <ArrowUpIcon className="w-4 h-4" /> : 
-                                                            <ArrowDownIcon className="w-4 h-4" />
+                                                            sortDirection === 'asc' ?
+                                                                <ArrowUpIcon className="w-4 h-4" /> :
+                                                                <ArrowDownIcon className="w-4 h-4" />
                                                         )}
                                                     </div>
                                                 </th>
-                                                <th 
+                                                <th
                                                     className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                                                     onClick={() => handleSort('designation_name')}
                                                 >
                                                     <div className="flex items-center space-x-1">
                                                         <span>Designation</span>
                                                         {sortField === 'designation_name' && (
-                                                            sortDirection === 'asc' ? 
-                                                            <ArrowUpIcon className="w-4 h-4" /> : 
-                                                            <ArrowDownIcon className="w-4 h-4" />
+                                                            sortDirection === 'asc' ?
+                                                                <ArrowUpIcon className="w-4 h-4" /> :
+                                                                <ArrowDownIcon className="w-4 h-4" />
                                                         )}
                                                     </div>
                                                 </th>
@@ -310,10 +336,10 @@ export default function CurrentCommittee({
                             <ExclamationTriangleIcon className="w-8 h-8 text-red-600 mr-3" />
                             <h3 className="text-lg font-bold text-gray-900">End Committee Tenure</h3>
                         </div>
-                        
+
                         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded">
                             <p className="text-sm text-red-800">
-                                <strong>Warning:</strong> This will archive all current executive committee members ({totalCurrentMembers} members) 
+                                <strong>Warning:</strong> This will archive all current executive committee members ({totalCurrentMembers} members)
                                 and remove them from the current committee. They will be moved to previous committee records.
                                 To add new members to the committee, approve executives with designations in User Role Management.
                                 This action cannot be undone.

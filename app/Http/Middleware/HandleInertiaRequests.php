@@ -35,11 +35,23 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'auth' => [
-                'user' => $request->user(),
-                'admin' => $admin,
+                'user' => $request->user() ? $request->user()->load('volunteerApplication') : null,
+                'admin' => $admin ? [
+                    'id' => $admin->id,
+                    'name' => $admin->name,
+                    'email' => $admin->email,
+                    'username' => $admin->username,
+                    'status' => $admin->status,
+                    'permissions' => $admin->getAllPermissions()->pluck('name'),
+                    'roles' => $admin->getRoleNames(),
+                ] : null,
             ],
             // Share notification counts globally for admin pages
             'upcomingEventsCount' => $admin ? \App\Models\Event::upcoming()->count() : 0,
+
+            'settings' => [
+                'volunteer_applications_enabled' => \App\Models\Setting::where('key', 'volunteer_applications_enabled')->value('value') === 'true',
+            ],
         ];
     }
 }

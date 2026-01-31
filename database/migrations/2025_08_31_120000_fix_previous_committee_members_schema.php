@@ -63,6 +63,7 @@ return new class extends Migration
                 $table->dropColumn('tenure_end');
             }
             if (Schema::hasColumn('previous_committee_members', 'user_id')) {
+                $table->dropForeign(['user_id']);
                 $table->dropColumn('user_id');
             }
             if (Schema::hasColumn('previous_committee_members', 'designation_title')) {

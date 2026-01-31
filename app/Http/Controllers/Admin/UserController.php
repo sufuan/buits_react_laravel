@@ -96,7 +96,7 @@ class UserController extends Controller
                 'current_address' => $request->current_address,
                 'permanent_address' => $request->permanent_address,
                 'skills' => $request->skills,
-                'usertype' => $request->usertype ?? 'user',
+                'usertype' => $request->usertype ?? 'member',
                 'transaction_id' => $request->transaction_id,
                 'is_approved' => true,
                 'member_id' => $memberId,
@@ -188,7 +188,7 @@ class UserController extends Controller
                 'current_address' => $request->current_address,
                 'permanent_address' => $request->permanent_address,
                 'skills' => $request->skills,
-                'usertype' => $request->usertype ?? 'user',
+                'usertype' => $request->usertype ?? $user->usertype,
                 'transaction_id' => $request->transaction_id,
                 'member_id' => $memberId,
             ]);
@@ -410,7 +410,7 @@ class UserController extends Controller
                 'departments' => $validator->getValidDepartments(),
                 'blood_groups' => $validator->getValidBloodGroups(),
                 'genders' => ['male', 'female', 'other'],
-                'user_types' => ['user', 'admin', 'moderator'],
+                'user_types' => ['member', 'alumni', 'volunteer'],
                 'session_format' => 'YYYY-YY or YYYY-YYYY',
                 'phone_format' => '01XXXXXXXXX'
             ];
@@ -681,7 +681,7 @@ class UserController extends Controller
                     'departments' => $validator->getValidDepartments(),
                     'blood_groups' => $validator->getValidBloodGroups(),
                     'genders' => ['male', 'female', 'other'],
-                    'user_types' => ['user', 'admin', 'moderator'],
+                    'user_types' => ['member', 'alumni', 'volunteer'],
                     'session_format' => 'YYYY-YY or YYYY-YYYY',
                     'phone_format' => '01XXXXXXXXX'
                 ]

@@ -552,7 +552,7 @@ class UserImportValidator
     protected function validateUserType(string $usertype, int $rowNumber): array
     {
         $errors = [];
-        $validTypes = ['user', 'admin', 'moderator'];
+        $validTypes = ['member', 'alumni', 'volunteer'];
         
         if (!in_array(strtolower(trim($usertype)), $validTypes)) {
             $errors[] = new ValidationErrorDTO(

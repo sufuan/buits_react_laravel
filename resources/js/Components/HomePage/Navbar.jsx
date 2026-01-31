@@ -3,7 +3,7 @@ import gsap from "gsap";
 import { useWindowScroll } from "react-use";
 import { useEffect, useRef, useState } from "react";
 import { TiLocationArrow } from "react-icons/ti";
-import { Link } from "@inertiajs/react";
+import { Link, usePage } from "@inertiajs/react";
 import { useAudio } from "../../Contexts/AudioContext";
 
 import Button from "./Button";
@@ -18,6 +18,15 @@ const navItems = [
 ];
 
 const NavBar = () => {
+  const { settings, auth } = usePage().props;
+  const isVolunteerEnabled = settings?.volunteer_applications_enabled;
+
+  // Dynamically insert Volunteer link if enabled
+  const dynamicNavItems = [...navItems];
+  if (isVolunteerEnabled) {
+    // Insert before Login (index 4)
+    dynamicNavItems.splice(4, 0, { name: "Become a Volunteer", href: "/volunteer-application/create" });
+  }
   // Get audio controls from context
   const { isIndicatorActive, toggleAudio } = useAudio();
 
@@ -152,7 +161,7 @@ const NavBar = () => {
             <div className="flex h-full items-center">
               {/* Desktop Navigation */}
               <div className="hidden md:block">
-                {navItems.map((item, index) => (
+                {dynamicNavItems.map((item, index) => (
                   <Link
                     key={index}
                     href={item.href}
@@ -262,7 +271,7 @@ const NavBar = () => {
       >
         {/* Mobile Navigation Items */}
         <div className="flex flex-col items-start justify-center space-y-6 px-8 w-full max-w-md">
-          {navItems.map((item, index) => (
+          {dynamicNavItems.map((item, index) => (
             <div
               key={index}
               ref={(el) => (menuItemsRef.current[index] = el)}
@@ -287,7 +296,7 @@ const NavBar = () => {
           ))}
         </div>
 
-  {/* Mobile Audio Button removed from overlay to avoid duplicate controls under the close icon */}
+        {/* Mobile Audio Button removed from overlay to avoid duplicate controls under the close icon */}
       </div>
     </>
   );

@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { Head, Link, router } from '@inertiajs/react';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 
-export default function VolunteerApplicationManagement({ 
-    applications, 
+export default function VolunteerApplicationManagement({
+    applications,
     pendingUsersCount = 0,
     pendingVolunteerApplications = 0,
-    pendingExecutiveApplications = 0 
+    pendingExecutiveApplications = 0
 }) {
     const [processing, setProcessing] = useState(false);
     const [selectedApplications, setSelectedApplications] = useState([]);
@@ -32,7 +32,7 @@ export default function VolunteerApplicationManagement({
 
     const handleBulkStatusChange = (status) => {
         if (selectedApplications.length === 0) return;
-        
+
         if (status === 'approved') {
             if (confirm(`Approve ${selectedApplications.length} volunteer applications? This will change their role to volunteer.`)) {
                 selectedApplications.forEach(id => {
@@ -80,7 +80,7 @@ export default function VolunteerApplicationManagement({
             approved: 'bg-green-100 text-green-800',
             rejected: 'bg-red-100 text-red-800'
         };
-        
+
         return badges[status] || 'bg-gray-100 text-gray-800';
     };
 
@@ -139,7 +139,7 @@ export default function VolunteerApplicationManagement({
                                         </button>
                                     </div>
                                 </div>
-                                
+
                                 {selectedApplications.length > 0 && (
                                     <div className="flex items-center space-x-2">
                                         <span className="text-sm text-gray-600">
@@ -181,16 +181,19 @@ export default function VolunteerApplicationManagement({
                                                     />
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Applicant
+                                                    User Name
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Department
+                                                    Email
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Reason
+                                                    Current Role
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                                    Applied On
+                                                    Application Message
+                                                </th>
+                                                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                                    Submitted At
                                                 </th>
                                                 <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                                                     Status
@@ -214,22 +217,17 @@ export default function VolunteerApplicationManagement({
                                                         )}
                                                     </td>
                                                     <td className="px-6 py-4 whitespace-nowrap">
-                                                        <div className="flex items-center">
-                                                            <div>
-                                                                <div className="text-sm font-medium text-gray-900">
-                                                                    {application.user.name}
-                                                                </div>
-                                                                <div className="text-sm text-gray-500">
-                                                                    {application.user.email}
-                                                                </div>
-                                                                <div className="text-xs text-gray-400">
-                                                                    ID: {application.user.member_id || 'N/A'}
-                                                                </div>
-                                                            </div>
+                                                        <div className="text-sm font-medium text-gray-900">
+                                                            {application.user.name}
                                                         </div>
                                                     </td>
-                                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                                                        {application.user.department || 'N/A'}
+                                                    <td className="px-6 py-4 whitespace-nowrap">
+                                                        <div className="text-sm text-gray-500">
+                                                            {application.user.email}
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4 whitespace-nowrap capitalize text-sm text-gray-500">
+                                                        {application.user.usertype}
                                                     </td>
                                                     <td className="px-6 py-4 text-sm text-gray-900 max-w-xs">
                                                         <div className="truncate" title={application.reason}>

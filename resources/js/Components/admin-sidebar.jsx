@@ -19,6 +19,8 @@ import {
   UserCog, // Role Management Icon
   ClipboardList, // Applications Icon
   Crown, // Executive Icon
+  ShieldCheck, // Roles & Permissions Icon
+  Key, // Permission Icon
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -61,11 +63,22 @@ const adminNavData = {
       items: [
         {
           title: "All Admins",
-          url: "/admin/admins",
+          url: "/admin/admin-management",
+        },
+      ],
+    },
+    {
+      title: "Roles & Permissions",
+      url: "#",
+      icon: ShieldCheck,
+      items: [
+        {
+          title: "Manage Roles",
+          url: "/admin/roles",
         },
         {
-          title: "Create Admin",
-          url: "/admin/admins/create",
+          title: "Assign Roles to Users",
+          url: "/admin/admin-management",
         },
       ],
     },
@@ -91,7 +104,7 @@ const adminNavData = {
       items: [
         {
           title: "Approve Volunteer Request",
-          url: "/admin/volunteers/approve",
+          url: "/admin/applications/volunteer",
         },
       ],
     },
@@ -111,21 +124,6 @@ const adminNavData = {
       ],
     },
     {
-      title: "Role Management",
-      url: "#",
-      icon: UserCog,
-      items: [
-        {
-          title: "User Role Management",
-          url: "/admin/user-role-management",
-        },
-        {
-          title: "Designations",
-          url: "/admin/designations",
-        },
-      ],
-    },
-    {
       title: "Committee Management",
       url: "#",
       icon: Crown,
@@ -133,6 +131,14 @@ const adminNavData = {
         {
           title: "Current Committee",
           url: "/admin/committee/current",
+        },
+        {
+          title: "User Role Management",
+          url: "/admin/user-role-management",
+        },
+        {
+          title: "Designations",
+          url: "/admin/designations",
         },
         {
           title: "Previous Committees",

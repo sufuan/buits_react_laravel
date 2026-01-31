@@ -175,10 +175,35 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('export/csv', [App\Http\Controllers\Admin\UserRoleManagementController::class, 'exportCsv'])->name('export.csv');
         });
 
+        // ================= Settings Management =================
+        Route::prefix('settings')->name('settings.')->group(function () {
+             Route::get('volunteer', [App\Http\Controllers\Admin\Settings\VolunteerSettingsController::class, 'index'])->name('volunteer');
+             Route::post('volunteer', [App\Http\Controllers\Admin\Settings\VolunteerSettingsController::class, 'update'])->name('volunteer.update');
+        });
+
         // ================= Designations Management =================
         Route::resource('designations', App\Http\Controllers\Admin\DesignationController::class, [
             'as' => 'admin'
         ]);
+
+        // ================= Roles & Permissions Management =================
+        Route::prefix('roles')->name('roles.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\RoleController::class, 'index'])->name('index');
+            Route::post('/', [App\Http\Controllers\Admin\RoleController::class, 'store'])->name('store');
+            Route::put('{role}', [App\Http\Controllers\Admin\RoleController::class, 'update'])->name('update');
+            Route::delete('{role}', [App\Http\Controllers\Admin\RoleController::class, 'destroy'])->name('destroy');
+            Route::put('{role}/assign-permissions', [App\Http\Controllers\Admin\RoleController::class, 'assignPermissions'])->name('assign-permissions');
+        });
+
+        // ================= Admin Management =================
+        Route::prefix('admin-management')->name('admin-management.')->group(function () {
+            Route::get('/', [App\Http\Controllers\Admin\AdminManagementController::class, 'index'])->name('index');
+            Route::post('/', [App\Http\Controllers\Admin\AdminManagementController::class, 'store'])->name('store');
+            Route::put('{admin}', [App\Http\Controllers\Admin\AdminManagementController::class, 'update'])->name('update');
+            Route::delete('{admin}', [App\Http\Controllers\Admin\AdminManagementController::class, 'destroy'])->name('destroy');
+            Route::put('{admin}/assign-role', [App\Http\Controllers\Admin\AdminManagementController::class, 'assignRole'])->name('assign-role');
+            Route::put('{admin}/change-status', [App\Http\Controllers\Admin\AdminManagementController::class, 'changeStatus'])->name('change-status');
+        });
 
         // ================= Committee Management =================
         // Phase 4 – Routes (Exact Specification)
@@ -197,6 +222,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::delete('current/remove-member/{assignment}', [App\Http\Controllers\Admin\CommitteeController::class, 'removeMember'])->name('current.remove-member');
             Route::patch('current/update-order', [App\Http\Controllers\Admin\CommitteeController::class, 'updateMemberOrder'])->name('current.update-order');
             Route::post('approve-executive', [App\Http\Controllers\Admin\CommitteeController::class, 'approveExecutiveApplication'])->name('approve-executive');
+            Route::post('publish', [App\Http\Controllers\Admin\CommitteeController::class, 'publishCommittee'])->name('publish');
             Route::get('stats', [App\Http\Controllers\Admin\CommitteeController::class, 'getCommitteeStats'])->name('stats');
         });
 
