@@ -29,9 +29,9 @@ Route::get('/', function () {
 });
 
 // Certificate verification route (public)
-Route::get('/certificate/verify', function () {
-    return Inertia::render('Certificate/Verify');
-})->name('certificate.verify');
+use App\Http\Controllers\CertificateVerificationController;
+Route::get('/certificate/verify/{certificateNumber}', [CertificateVerificationController::class, 'verify'])->name('certificate.verify');
+
 
 // Public navigation routes
 Route::get('/about', function () {

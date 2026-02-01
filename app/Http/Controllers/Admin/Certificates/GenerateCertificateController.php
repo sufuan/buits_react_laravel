@@ -103,65 +103,72 @@ class GenerateCertificateController extends Controller
     private function generateQRCode($template, $user, $certificateNumber)
     {
         try {
-            $qrText = "Certificate Verification\n";
             $qrCodes = json_decode($template->qr_code, true) ?? [];
-
-            foreach ($qrCodes as $qrCode) {
-                switch ($qrCode) {
-                    case 'member_id':
-                        if ($user->member_id) {
-                            $qrText .= "Member ID: " . $user->member_id . "\n";
-                        }
-                        break;
-                    case 'email':
-                        $qrText .= "Email: " . $user->email . "\n";
-                        break;
-                    case 'phone':
-                        if ($user->phone) {
-                            $qrText .= "Phone: " . $user->phone . "\n";
-                        }
-                        break;
-                    case 'department':
-                        if ($user->department) {
-                            $qrText .= "Department: " . $user->department . "\n";
-                        }
-                        break;
-                    case 'session':
-                        if ($user->session) {
-                            $qrText .= "Session: " . $user->session . "\n";
-                        }
-                        break;
-                    case 'date_of_birth':
-                        if ($user->date_of_birth) {
-                            $qrText .= "Date of Birth: " . $user->date_of_birth->format('d-m-Y') . "\n";
-                        }
-                        break;
-                    case 'class_roll':
-                        if ($user->class_roll) {
-                            $qrText .= "Roll No: " . $user->class_roll . "\n";
-                        }
-                        break;
-                    case 'certificate_number':
-                        $qrText .= "Certificate No: " . $certificateNumber . "\n";
-                        break;
-                    case 'link':
-                        // Assuming public profile route is 'public.profile' and uses member_id
-                        $url = route('public.profile', ['member_id' => $user->member_id ?? $user->id]);
-                        $qrText .= "Profile: " . $url . "\n";
-                        break;
-                    default:
-                        break;
+            
+            // Check if 'link' option is selected
+            if (in_array('link', $qrCodes)) {
+                // Generate URL-based QR code for automatic browser redirect
+                $verificationUrl = route('certificate.verify', ['certificateNumber' => $certificateNumber]);
+                $qrData = $verificationUrl;
+            } else {
+                // Generate text-based QR code with user information
+                $qrText = "Certificate Verification\n";
+                
+                foreach ($qrCodes as $qrCode) {
+                    switch ($qrCode) {
+                        case 'member_id':
+                            if ($user->member_id) {
+                                $qrText .= "Member ID: " . $user->member_id . "\n";
+                            }
+                            break;
+                        case 'email':
+                            $qrText .= "Email: " . $user->email . "\n";
+                            break;
+                        case 'phone':
+                            if ($user->phone) {
+                                $qrText .= "Phone: " . $user->phone . "\n";
+                            }
+                            break;
+                        case 'department':
+                            if ($user->department) {
+                                $qrText .= "Department: " . $user->department . "\n";
+                            }
+                            break;
+                        case 'session':
+                            if ($user->session) {
+                                $qrText .= "Session: " . $user->session . "\n";
+                            }
+                            break;
+                        case 'date_of_birth':
+                            if ($user->date_of_birth) {
+                                $qrText .= "Date of Birth: " . $user->date_of_birth->format('d-m-Y') . "\n";
+                            }
+                            break;
+                        case 'class_roll':
+                            if ($user->class_roll) {
+                                $qrText .= "Roll No: " . $user->class_roll . "\n";
+                            }
+                            break;
+                        case 'certificate_number':
+                            $qrText .= "Certificate No: " . $certificateNumber . "\n";
+                            break;
+                        default:
+                            break;
+                    }
                 }
+                
+                $qrData = trim($qrText);
             }
 
-            // Generate a simple QR code using a free online service
+            // Generate QR code image
             $size = $template->qr_image_size ?? 100;
-            $encodedText = urlencode(trim($qrText));
+            $encodedData = urlencode($qrData);
 
             // Using QR Server API (free service)
-            $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size={$size}x{$size}&data={$encodedText}";
+            $qrImageUrl = "https://api.qrserver.com/v1/create-qr-code/?size={$size}x{$size}&data={$encodedData}";
 
             return '<img src="' . $qrImageUrl . '" style="width:' . $size . 'px; height:' . $size . 'px; object-fit: contain;" alt="QR Code" />';
+
 
         } catch (\Exception) {
             // Fallback to placeholder if QR generation fails
