@@ -36,7 +36,7 @@ const BrandSlider = () => {
       animation: tween,
       scrub: 1,
       invalidateOnRefresh: true,
-   
+
     });
 
     // Cleanup function
@@ -72,8 +72,7 @@ const BrandSlider = () => {
         </div>
       </div>
 
-      {/* Small gap after */}
-      <div className="space-20vh lightBG"></div>
+
 
       {/* Styles */}
       <style jsx>{`

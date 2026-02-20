@@ -1,0 +1,582 @@
+/* ===== Hero Section (User Revised Plan) ===== */
+.hero-container {
+    position: relative;
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: #dfdff2;
+    /* Initial background */
+}
+
+.hero-cover-title {
+    font-family: 'zentry', sans-serif;
+    font-weight: 900;
+    font-size: clamp(4rem, 15vw, 18rem);
+    line-height: 0.9;
+    letter-spacing: 0.06em;
+    color: #000;
+    text-transform: uppercase;
+    white-space: nowrap;
+    will-change: transform;
+    /* Positioned absolutely in JSX */
+}
+
+/* The expanding card */
+.hero-card {
+    position: relative;
+    width: 30vw;
+    height: 40vh;
+    transform: rotate(15deg);
+    /* Initial rotation */
+    background: linear-gradient(165deg, #9b8bff 0%, #7c6ae8 35%, #6a50e0 65%, #5a3ed4 100%);
+    border-radius: 16px;
+    overflow: hidden;
+    /* GSAP handles scale/rotation */
+    will-change: transform, width, height;
+    box-shadow: 0 30px 60px rgba(90, 69, 201, 0.3);
+    z-index: 10;
+    /* Ensure it covers the title */
+    margin-top: 30vh;
+    /* Push down significantly to clear title */
+
+    /* Ensure flex centering for internal content if needed */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Black overlay to fade in */
+.black-overlay {
+    position: absolute;
+    inset: 0;
+    background-color: #000;
+    opacity: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Content container - detached from card */
+.content-inner {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    /* Above the card */
+    color: white;
+    text-align: center;
+    /* Centered text */
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    /* Centered alignment */
+    padding: 2vw;
+    /* Reduced padding */
+    opacity: 0;
+    /* Handled by GSAP */
+    pointer-events: none;
+    /* Let clicks pass through to card/scroll */
+}
+
+/* Text styles inside content-inner */
+.hero-cover-label {
+    font-family: 'robert-medium', sans-serif;
+    font-size: 12px;
+    /* Smaller label */
+    font-weight: 600;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    letter-spacing: 0.1em;
+}
+
+.hero-cover-heading {
+    font-family: 'zentry', sans-serif;
+    font-size: clamp(1rem, 3vw, 2.5rem);
+    /* Much smaller heading */
+    font-weight: 900;
+    line-height: 1;
+    text-transform: uppercase;
+}
+
+.hero-cover-heading .highlight {
+    display: block;
+}
+
+.hero-cover-heading .sub {
+    display: block;
+    font-size: clamp(0.8rem, 1.2vw, 1rem);
+    /* Smaller sub-heading */
+    margin-top: 10px;
+    opacity: 0.7;
+}
+
+.hero-cover-description {
+    font-family: 'circular-web', 'General Sans', sans-serif;
+    font-size: 1rem;
+    line-height: 1.6;
+    max-width: 600px;
+    /* Wider to reduce height */
+    padding-top: 20px;
+}
+
+/* Logo container inside card (z-index 0, behind overlay) */
+.hero-cover-card-inner {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 0;
+}
+
+.hero-cover-card-logo {
+    width: 30%;
+    height: auto;
+    opacity: 0.6;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-card {
+        width: 60vw;
+        height: 30vh;
+    }
+
+    .content-inner {
+        padding: 20px;
+        align-items: center;
+        text-align: center;
+    }
+}
+
+
+/* ===== CSS Custom Properties ===== */
+:root {
+    --about-bg-dark: #0a0a14;
+    --about-bg-gradient: linear-gradient(180deg, #0f0f1a 0%, #0a0a14 100%);
+
+    /* Card Theme Colors */
+    --humble-bg: linear-gradient(145deg, #8B1A90 0%, #6D1072 50%, #4A0C50 100%);
+    --experiment-bg: linear-gradient(145deg, #4A2A28 0%, #301B1A 50%, #1F1110 100%);
+    --career-bg: linear-gradient(145deg, #0E6B66 0%, #0A4D4A 50%, #073533 100%);
+    --students-bg: linear-gradient(145deg, #5A3218 0%, #452614 50%, #2E190D 100%);
+
+    /* Typography */
+    --about-text-white: #ffffff;
+    --about-text-muted: rgba(255, 255, 255, 0.85);
+
+    /* Card Dimensions */
+    --card-width: 280px;
+    --card-height: 380px;
+    --card-radius: 20px;
+
+    /* Animation */
+    --flip-duration: 0.7s;
+    --flip-timing: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ===== Mission Section ===== */
+.about-page .mission-section {
+    background: #0F0817;
+    padding: 80px 20px;
+}
+
+.about-page .mission-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.about-page .mission-cards-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 24px;
+}
+
+.about-page .mission-card {
+    background: #1A0B2E;
+    border-radius: 20px;
+    padding: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.about-page .why-card,
+.about-page .what-card,
+.about-page .how-card {
+    background: linear-gradient(135deg, #1E122B 0%, #1A0B2E 100%);
+}
+
+.about-page .mission-card-content {
+    flex: 1;
+}
+
+.about-page .mission-card-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #AF52DE;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+}
+
+.about-page .mission-card-text {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: rgba(255, 255, 255, 0.8);
+    font-weight: 400;
+}
+
+.about-page .mission-card-image {
+    flex-shrink: 0;
+    width: 180px;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.about-page .mission-card-image svg {
+    width: 100%;
+    height: 100%;
+}
+
+/* Mission Section Responsive */
+@media screen and (max-width: 1000px) {
+    .about-page .mission-cards-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media screen and (max-width: 700px) {
+    .about-page .mission-section {
+        padding: 60px 15px;
+    }
+
+    .about-page .mission-card {
+        flex-direction: column;
+        text-align: center;
+        padding: 30px 25px;
+    }
+
+    .about-page .mission-card-image {
+        width: 150px;
+        height: 130px;
+        order: -1;
+    }
+
+    .about-page .mission-card-title {
+        font-size: 1.3rem;
+    }
+
+    .about-page .mission-card-text {
+        font-size: 0.95rem;
+    }
+}
+
+/* ===== Values Section ===== */
+.about-page .values-section {
+    background: var(--about-bg-gradient);
+    padding: 100px 20px;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Subtle background glow effect */
+.about-page .values-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    height: 800px;
+    background: radial-gradient(circle, rgba(139, 26, 144, 0.1) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.about-page .about-container {
+    max-width: 1280px;
+    width: 100%;
+    margin: 0 auto;
+}
+
+/* ===== Section Title ===== */
+.about-page .section-title {
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 800;
+    text-align: center;
+    margin-bottom: 60px;
+    letter-spacing: -0.02em;
+    position: relative;
+    color: var(--about-text-white);
+}
+
+.about-page .section-title .accent {
+    color: #FF6B6B;
+    animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    50%,
+    100% {
+        opacity: 1;
+    }
+
+    25%,
+    75% {
+        opacity: 0.3;
+    }
+}
+
+/* ===== Cards Grid ===== */
+.about-page .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 24px;
+    justify-items: center;
+}
+
+/* ===== Flip Card Styles ===== */
+.about-page .flip-card {
+    width: var(--card-width);
+    height: var(--card-height);
+    perspective: 1000px;
+    cursor: pointer;
+    position: relative;
+}
+
+.about-page .flip-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform var(--flip-duration) var(--flip-timing);
+    transform-style: preserve-3d;
+}
+
+/* Hover flip effect for desktop */
+@media (hover: hover) and (pointer: fine) {
+    .about-page .flip-card:hover .flip-card-inner {
+        transform: rotateY(180deg);
+    }
+}
+
+/* Flipped state for mobile (via JS) */
+.about-page .flip-card.flipped .flip-card-inner {
+    transform: rotateY(180deg);
+}
+
+.about-page .flip-card-front,
+.about-page .flip-card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: var(--card-radius);
+    padding: 30px 25px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow:
+        0 25px 50px -12px rgba(0, 0, 0, 0.5),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.about-page .flip-card-back {
+    transform: rotateY(180deg);
+}
+
+/* ===== Card Theme Colors ===== */
+.about-page .flip-card-front.humble,
+.about-page .flip-card-back.humble {
+    background: var(--humble-bg);
+}
+
+.about-page .flip-card-front.experiment,
+.about-page .flip-card-back.experiment {
+    background: var(--experiment-bg);
+}
+
+.about-page .flip-card-front.career,
+.about-page .flip-card-back.career {
+    background: var(--career-bg);
+}
+
+.about-page .flip-card-front.students,
+.about-page .flip-card-back.students {
+    background: var(--students-bg);
+}
+
+/* ===== Card Content ===== */
+.about-page .card-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    text-transform: capitalize;
+    letter-spacing: 0.02em;
+    line-height: 1.3;
+    margin-bottom: 15px;
+    color: var(--about-text-white);
+}
+
+.about-page .flip-card-front .card-title {
+    text-transform: uppercase;
+}
+
+.about-page .card-illustration {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.about-page .card-illustration svg {
+    width: 100%;
+    max-width: 180px;
+    height: auto;
+    opacity: 0.9;
+    transition: transform 0.3s ease;
+}
+
+.about-page .flip-card:hover .card-illustration svg {
+    transform: scale(1.05);
+}
+
+.about-page .flip-card-back {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+.about-page .card-description {
+    font-size: 0.95rem;
+    line-height: 1.7;
+    color: var(--about-text-muted);
+    font-weight: 400;
+}
+
+/* ===== Card Glow Effect ===== */
+.about-page .flip-card::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90%;
+    height: 90%;
+    background: inherit;
+    border-radius: var(--card-radius);
+    filter: blur(40px);
+    opacity: 0;
+    z-index: -1;
+    transition: opacity 0.4s ease;
+}
+
+.about-page .flip-card.humble::after {
+    background: #8B1A90;
+}
+
+.about-page .flip-card.experiment::after {
+    background: #4A2A28;
+}
+
+.about-page .flip-card.career::after {
+    background: #0E6B66;
+}
+
+.about-page .flip-card.students::after {
+    background: #5A3218;
+}
+
+.about-page .flip-card:hover::after {
+    opacity: 0.3;
+}
+
+/* ===== Card Reveal Animation ===== */
+.about-page .flip-card.reveal-initial {
+    opacity: 0;
+    transform: translateY(30px);
+}
+
+.about-page .flip-card.reveal-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* ===== Responsive Design ===== */
+@media screen and (max-width: 1200px) {
+    .about-page .cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 30px;
+    }
+
+    .about-page {
+        --card-width: 300px;
+        --card-height: 400px;
+    }
+}
+
+@media screen and (max-width: 700px) {
+    .about-page .values-section {
+        padding: 60px 15px;
+    }
+
+    .about-page .section-title {
+        margin-bottom: 40px;
+    }
+
+    .about-page .cards-grid {
+        grid-template-columns: 1fr;
+        gap: 25px;
+    }
+
+    .about-page {
+        --card-width: min(320px, 90vw);
+        --card-height: 400px;
+    }
+
+    .about-page .flip-card-front,
+    .about-page .flip-card-back {
+        padding: 25px 20px;
+    }
+
+    .about-page .card-title {
+        font-size: 1.25rem;
+    }
+
+    .about-page .card-description {
+        font-size: 0.9rem;
+    }
+}
+
+/* ===== Accessibility ===== */
+@media (prefers-reduced-motion: reduce) {
+    .about-page .flip-card-inner {
+        transition: none;
+    }
+
+    .about-page .section-title .accent {
+        animation: none;
+    }
+}
+
+/* Focus states for keyboard navigation */
+.about-page .flip-card:focus-visible {
+    outline: 3px solid rgba(255, 255, 255, 0.5);
+    outline-offset: 4px;
+    border-radius: var(--card-radius);
+}

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phitron Ranked Coders</title>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="phitron-styles.css">
+</head>
+
+<body>
+
+    <section class="phitron-section">
+        <div class="container">
+            <h2 class="section-title">প্রবলেম সল্ভারস ক্লাবের <span class="purple-text">র‍্যাংকড কোডার</span></h2>
+
+            <div class="dashed-container">
+                <!-- Shooting Star Border Visuals -->
+                <div class="dashed-border-bg">
+                    <div class="border-line border-left"></div>
+                    <div class="border-line border-right"></div>
+                    <div class="border-line border-bottom"></div>
+                    <div class="shooting-star"></div>
+                </div>
+
+                <!-- Grid of Coders -->
+                <div class="coders-grid" id="codersGrid">
+                    <!-- Grid items will be injected by JS -->
+                </div>
+
+                <!-- Marquee / Slider Section -->
+                <div class="marquee-container">
+                    <button class="nav-btn prev-btn" id="prevBtn">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+
+                    <div class="marquee-wrapper">
+                        <div class="marquee-track" id="marqueeTrack">
+                            <!-- Items injected by JS -->
+                        </div>
+                    </div>
+
+                    <button class="nav-btn next-btn" id="nextBtn">
+                        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M9 18L15 12L9 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="button-wrapper">
+                <a href="#" class="view-all-btn">View All</a>
+            </div>
+        </div>
+    </section>
+
+    <script src="phitron-script.js"></script>
+</body>
+
+</html>
