@@ -12,16 +12,16 @@ const Gallary = ({ photos = [] }) => {
 
     // Loading images from local public assets
     const localImages = [
-        '/img/gallery-1.webp', '/img/gallery-2.webp', '/img/gallery-3.webp', '/img/gallery-4.webp', '/img/gallery-5.webp',
-        '/img/about.webp', '/img/entrance.webp', '/img/jason-1.webp', '/img/jason-2.webp', '/img/jason-3.webp',
-        '/img/contact-1.webp', '/img/contact-2.webp', '/img/gta_hero.webp', '/img/stones.webp', '/img/swordman.webp',
-        '/img/gallery-1.webp', '/img/gallery-2.webp', '/img/gallery-3.webp', '/img/gallery-4.webp', '/img/gallery-5.webp' // Cycle back to fill 20
+        '/img/gallery/booth.jpg', '/img/gallery/commitee.jpg', '/img/gallery/fest 2.jpg', '/img/gallery/fest 3.jpg',
+        '/img/gallery/fest 4.jpg', '/img/gallery/fest 6.jpg', '/img/gallery/fest.jpg', '/img/gallery/it 6.jpg',
+        '/img/gallery/it fest 5.jpg', '/img/gallery/itfest 33.jpg', '/img/gallery/itfest 343.jpg', '/img/gallery/photo_1563171920366323.jpg',
+        '/img/gallery/photo_1563172457032936.jpg', '/img/gallery/photo_1619957404687774.jpg', '/img/gallery/photo_1656855310997983.jpg',
+        '/img/gallery/photo_1668235656526615.jpg', '/img/gallery/photo_1688388211178026.jpg', '/img/gallery/ucb.jpg'
     ];
 
     const displayPhotos = photos.length > 0 ? photos : localImages.map((url, i) => ({
         id: i,
-        url: url,
-        title: `Project ${i + 1}`
+        url: url
     }));
 
     useGSAP(() => {
@@ -103,8 +103,8 @@ const Gallary = ({ photos = [] }) => {
                         style={{ transformStyle: 'preserve-3d' }}
                     >
                         {displayPhotos.map((photo, index) => {
-                            // Math for a dense ribbon: 18 items per circle
-                            const rotationStep = 20;
+                            // Math for a dense ribbon: adjusted to prevent overlap
+                            const rotationStep = 32;
                             const rotation = index * rotationStep;
                             const verticalStep = 60;
                             const verticalTranslation = index * verticalStep - (displayPhotos.length * verticalStep / 2);
@@ -124,14 +124,12 @@ const Gallary = ({ photos = [] }) => {
                                 >
                                     <img
                                         src={photo.url}
-                                        alt={photo.title}
+                                        alt={`Gallery Image ${index + 1}`}
                                         className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
                                         loading="lazy"
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-                                        <p className="text-white font-mono text-[10px] tracking-[0.2em] uppercase">
-                                            {photo.title}
-                                        </p>
+
                                     </div>
                                 </div>
                             );
