@@ -1,6 +1,72 @@
     <svg class="banner-img" width="1433" height="257" viewBox="0 0 1433 257" fill="none"
         xmlns="http://www.w3.org/2000/svg">
-        <rect width="1433" height="257" fill="white" />
+        
+    <defs>
+        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <rect width="40" height="40" fill="white" />
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+            <path d="M 0 40 L 40 40" fill="none" stroke="#f0f0f0" stroke-width="1"/>
+        </pattern>
+    
+    
+
+    
+    
+
+    
+    
+
+    <style>
+        /* Chips Styles */
+        @keyframes float-chip {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-12px) rotate(1deg); }
+        }
+        .float-chip-1 { animation: float-chip 8s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+        .float-chip-2 { animation: float-chip 7s ease-in-out infinite 2s; transform-origin: center; transform-box: fill-box; }
+        .float-chip-3 { animation: float-chip 9s ease-in-out infinite 1s; transform-origin: center; transform-box: fill-box; }
+        .float-chip-4 { animation: float-chip 8s ease-in-out infinite 3s; transform-origin: center; transform-box: fill-box; }
+        .float-chip-5 { animation: float-chip 6s ease-in-out infinite 0.5s; transform-origin: center; transform-box: fill-box; }
+        .float-chip-6 { animation: float-chip 10s ease-in-out infinite 4s; transform-origin: center; transform-box: fill-box; }
+        
+        .chip-group rect {
+            fill: rgba(0, 192, 102, 0.05);
+            stroke: rgba(0, 192, 102, 0.2);
+            stroke-width: 1.5;
+            transition: all 0.3s ease;
+        }
+        .chip-group:hover rect {
+            fill: rgba(0, 192, 102, 0.15);
+            stroke: rgba(0, 192, 102, 0.5);
+        }
+        .chip-group text {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            fill: #00C066; 
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+
+        @keyframes typing-effect {
+            0% { opacity: 0; clip-path: inset(0 100% 0 0); }
+            5%, 20% { opacity: 1; clip-path: inset(0 0 0 0); }
+            25%, 100% { opacity: 0; clip-path: inset(0 0 0 0); }
+        }
+        .text-typing { 
+            opacity: 0; 
+            animation: typing-effect 16s ease-out infinite; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            font-weight: 700; 
+            font-size: 28px; 
+            text-anchor: middle; 
+            fill: #00C066; 
+        }
+    </style>
+</defs>
+    <rect width="1433" height="257" fill="url(#grid)" />
+
         <path d="M839.112 147.392H823.547V157.346H839.112V147.392Z" fill="#00C066" />
         <path d="M814.86 162.957H799.295V172.911H814.86V162.957Z" fill="#00C066" />
         <path
@@ -1153,83 +1219,46 @@
             <clipPath id="clip8_28_850">
                 <rect width="134" height="87" fill="white" transform="translate(1095 163)" />
             </clipPath>
-            <style>
-                @keyframes cloud-drift-1 { 0% { transform: translateX(0); } 50% { transform: translateX(50px); } 100% { transform: translateX(0); } }
-                @keyframes cloud-drift-2 { 0% { transform: translateX(0); } 50% { transform: translateX(-40px); } 100% { transform: translateX(0); } }
-                @keyframes cloud-drift-3 { 0% { transform: translateX(0); } 50% { transform: translateX(35px); } 100% { transform: translateX(0); } }
-                @keyframes cloud-drift-4 { 0% { transform: translateX(0); } 50% { transform: translateX(-55px); } 100% { transform: translateX(0); } }
-                .cloud-1 { animation: cloud-drift-1 8s ease-in-out infinite; }
-                .cloud-2 { animation: cloud-drift-2 10s ease-in-out infinite; }
-                .cloud-3 { animation: cloud-drift-3 12s ease-in-out infinite; }
-                .cloud-4 { animation: cloud-drift-4 9s ease-in-out infinite; }
-                .cloud-5 { animation: cloud-drift-1 11s ease-in-out infinite; }
-                .cloud-6 { animation: cloud-drift-2 8.5s ease-in-out infinite; }
-                .cloud-7 { animation: cloud-drift-3 10.5s ease-in-out infinite; }
+            
+        
+    
 
-                .cloud-7 { animation: cloud-drift-3 10.5s ease-in-out infinite; }
+    
+    
 
-                /* Slogan Styles */
-                .banner-slogan {
-                    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-                    font-weight: 500;
-                    fill: #00C066;
-                    font-size: 24px;
-                    text-anchor: middle;
-                }
-                
-                /* Typing Animation */
-                @keyframes typing {
-                    0%, 10% { clip-path: inset(0 100% 0 0); }
-                    60%, 90% { clip-path: inset(0 0 0 0); }
-                    100% { clip-path: inset(0 100% 0 0); }
-                }
-                .typing-text {
-                    animation: typing 5s steps(30) infinite;
-                }
-            </style>
-        </defs>
+    </defs>
 
-        <!-- Banner Slogan Only -->
-        <g class="typing-text">
-            <text x="716" y="100" class="banner-slogan">Tech | Reck | Make</text>
-        </g>
+    <!-- Main Slogan with Typing Animation -->
+    <g class="typing-text-group" transform="translate(716, 120)">
+        <text class="text-typing" style="animation-delay: 0s;">Barishal University IT Society</text>
+        <text class="text-typing" style="animation-delay: 4s;">Innovation | Community</text>
+        <text class="text-typing" style="animation-delay: 8s;">Tech | Leadership | Robotics</text>
+        <text class="text-typing" style="animation-delay: 12s;">Design | Build | Scale</text>
+    </g>
 
-
-
-        <!-- Animated Clouds -->
-        <g class="cloud-1" opacity="0.6">
-            <g transform="translate(-30, 30) scale(0.28)">
-                <path fill="#c8ddf0" d="M259.83,140.14l-30.51,19.41l18.51-33.65c-5.24-4.19-11.73-6.51-18.44-6.59h-0.48 c-2.12,0.03-4.24-0.13-6.34-0.48l-10.34,6.55l4.43-8.05c-7.32-2.56-13.65-7.37-18.08-13.73l-18.49,11.73l11.69-21.26 c-10.82-13-25.38-20.97-41.4-20.97c-19.24,0-36.38,11.45-47.44,29.27c-3.27,5.34-7.89,9.72-13.4,12.69 c-5.51,2.97-11.71,4.43-17.96,4.23h-1.03c-21.23,0-38.46,24.09-38.46,53.81c0,29.72,17.23,53.81,38.46,53.81 c4.67-0.02,9.26-1.17,13.39-3.37c13.87-7.12,32.04-7.34,46.55-0.91c6.22,2.8,12.96,4.26,19.78,4.27c6.82,0.02,13.57-1.41,19.8-4.18 c14.38-6.3,32.38-6.16,46.14,0.89c4.08,2.15,8.63,3.28,13.24,3.29c21.24,0,38.46-24.09,38.46-53.81 C268.03,161.6,265.25,150.27,259.83,140.14z" />
-            </g>
-        </g>
-        <g class="cloud-2" opacity="0.5">
-            <g transform="translate(350, 50) scale(0.22)">
-                <path fill="#c8ddf0" d="M259.83,140.14l-30.51,19.41l18.51-33.65c-5.24-4.19-11.73-6.51-18.44-6.59h-0.48 c-2.12,0.03-4.24-0.13-6.34-0.48l-10.34,6.55l4.43-8.05c-7.32-2.56-13.65-7.37-18.08-13.73l-18.49,11.73l11.69-21.26 c-10.82-13-25.38-20.97-41.4-20.97c-19.24,0-36.38,11.45-47.44,29.27c-3.27,5.34-7.89,9.72-13.4,12.69 c-5.51,2.97-11.71,4.43-17.96,4.23h-1.03c-21.23,0-38.46,24.09-38.46,53.81c0,29.72,17.23,53.81,38.46,53.81 c4.67-0.02,9.26-1.17,13.39-3.37c13.87-7.12,32.04-7.34,46.55-0.91c6.22,2.8,12.96,4.26,19.78,4.27c6.82,0.02,13.57-1.41,19.8-4.18 c14.38-6.3,32.38-6.16,46.14,0.89c4.08,2.15,8.63,3.28,13.24,3.29c21.24,0,38.46-24.09,38.46-53.81 C268.03,161.6,265.25,150.27,259.83,140.14z" />
-            </g>
-        </g>
-        <g class="cloud-3" opacity="0.45">
-            <g transform="translate(700, 20) scale(0.25)">
-                <path fill="#c8ddf0" d="M259.83,140.14l-30.51,19.41l18.51-33.65c-5.24-4.19-11.73-6.51-18.44-6.59h-0.48 c-2.12,0.03-4.24-0.13-6.34-0.48l-10.34,6.55l4.43-8.05c-7.32-2.56-13.65-7.37-18.08-13.73l-18.49,11.73l11.69-21.26 c-10.82-13-25.38-20.97-41.4-20.97c-19.24,0-36.38,11.45-47.44,29.27c-3.27,5.34-7.89,9.72-13.4,12.69 c-5.51,2.97-11.71,4.43-17.96,4.23h-1.03c-21.23,0-38.46,24.09-38.46,53.81c0,29.72,17.23,53.81,38.46,53.81 c4.67-0.02,9.26-1.17,13.39-3.37c13.87-7.12,32.04-7.34,46.55-0.91c6.22,2.8,12.96,4.26,19.78,4.27c6.82,0.02,13.57-1.41,19.8-4.18 c14.38-6.3,32.38-6.16,46.14,0.89c4.08,2.15,8.63,3.28,13.24,3.29c21.24,0,38.46-24.09,38.46-53.81 C268.03,161.6,265.25,150.27,259.83,140.14z" />
-            </g>
-        </g>
-        <g class="cloud-4" opacity="0.55">
-            <g transform="translate(1050, 40) scale(0.2)">
-                <path fill="#c8ddf0" d="M259.83,140.14l-30.51,19.41l18.51-33.65c-5.24-4.19-11.73-6.51-18.44-6.59h-0.48 c-2.12,0.03-4.24-0.13-6.34-0.48l-10.34,6.55l4.43-8.05c-7.32-2.56-13.65-7.37-18.08-13.73l-18.49,11.73l11.69-21.26 c-10.82-13-25.38-20.97-41.4-20.97c-19.24,0-36.38,11.45-47.44,29.27c-3.27,5.34-7.89,9.72-13.4,12.69 c-5.51,2.97-11.71,4.43-17.96,4.23h-1.03c-21.23,0-38.46,24.09-38.46,53.81c0,29.72,17.23,53.81,38.46,53.81 c4.67-0.02,9.26-1.17,13.39-3.37c13.87-7.12,32.04-7.34,46.55-0.91c6.22,2.8,12.96,4.26,19.78,4.27c6.82,0.02,13.57-1.41,19.8-4.18 c14.38-6.3,32.38-6.16,46.14,0.89c4.08,2.15,8.63,3.28,13.24,3.29c21.24,0,38.46-24.09,38.46-53.81 C268.03,161.6,265.25,150.27,259.83,140.14z" />
-            </g>
-        </g>
-        <g class="cloud-5" opacity="0.4">
-            <g transform="translate(200, 60) scale(0.18)">
-                <path fill="#c8ddf0" d="M259.83,140.14l-30.51,19.41l18.51-33.65c-5.24-4.19-11.73-6.51-18.44-6.59h-0.48 c-2.12,0.03-4.24-0.13-6.34-0.48l-10.34,6.55l4.43-8.05c-7.32-2.56-13.65-7.37-18.08-13.73l-18.49,11.73l11.69-21.26 c-10.82-13-25.38-20.97-41.4-20.97c-19.24,0-36.38,11.45-47.44,29.27c-3.27,5.34-7.89,9.72-13.4,12.69 c-5.51,2.97-11.71,4.43-17.96,4.23h-1.03c-21.23,0-38.46,24.09-38.46,53.81c0,29.72,17.23,53.81,38.46,53.81 c4.67-0.02,9.26-1.17,13.39-3.37c13.87-7.12,32.04-7.34,46.55-0.91c6.22,2.8,12.96,4.26,19.78,4.27c6.82,0.02,13.57-1.41,19.8-4.18 c14.38-6.3,32.38-6.16,46.14,0.89c4.08,2.15,8.63,3.28,13.24,3.29c21.24,0,38.46-24.09,38.46-53.81 C268.03,161.6,265.25,150.27,259.83,140.14z" />
-            </g>
-        </g>
-        <g class="cloud-6" opacity="0.35">
-            <g transform="translate(550, 70) scale(0.16)">
-                <path fill="#c8ddf0" d="M259.83,140.14l-30.51,19.41l18.51-33.65c-5.24-4.19-11.73-6.51-18.44-6.59h-0.48 c-2.12,0.03-4.24-0.13-6.34-0.48l-10.34,6.55l4.43-8.05c-7.32-2.56-13.65-7.37-18.08-13.73l-18.49,11.73l11.69-21.26 c-10.82-13-25.38-20.97-41.4-20.97c-19.24,0-36.38,11.45-47.44,29.27c-3.27,5.34-7.89,9.72-13.4,12.69 c-5.51,2.97-11.71,4.43-17.96,4.23h-1.03c-21.23,0-38.46,24.09-38.46,53.81c0,29.72,17.23,53.81,38.46,53.81 c4.67-0.02,9.26-1.17,13.39-3.37c13.87-7.12,32.04-7.34,46.55-0.91c6.22,2.8,12.96,4.26,19.78,4.27c6.82,0.02,13.57-1.41,19.8-4.18 c14.38-6.3,32.38-6.16,46.14,0.89c4.08,2.15,8.63,3.28,13.24,3.29c21.24,0,38.46-24.09,38.46-53.81 C268.03,161.6,265.25,150.27,259.83,140.14z" />
-            </g>
-        </g>
-        <g class="cloud-7" opacity="0.5">
-            <g transform="translate(1300, 35) scale(0.24)">
-                <path fill="#c8ddf0" d="M259.83,140.14l-30.51,19.41l18.51-33.65c-5.24-4.19-11.73-6.51-18.44-6.59h-0.48 c-2.12,0.03-4.24-0.13-6.34-0.48l-10.34,6.55l4.43-8.05c-7.32-2.56-13.65-7.37-18.08-13.73l-18.49,11.73l11.69-21.26 c-10.82-13-25.38-20.97-41.4-20.97c-19.24,0-36.38,11.45-47.44,29.27c-3.27,5.34-7.89,9.72-13.4,12.69 c-5.51,2.97-11.71,4.43-17.96,4.23h-1.03c-21.23,0-38.46,24.09-38.46,53.81c0,29.72,17.23,53.81,38.46,53.81 c4.67-0.02,9.26-1.17,13.39-3.37c13.87-7.12,32.04-7.34,46.55-0.91c6.22,2.8,12.96,4.26,19.78,4.27c6.82,0.02,13.57-1.41,19.8-4.18 c14.38-6.3,32.38-6.16,46.14,0.89c4.08,2.15,8.63,3.28,13.24,3.29c21.24,0,38.46-24.09,38.46-53.81 C268.03,161.6,265.25,150.27,259.83,140.14z" />
-            </g>
-        </g>
-    </svg>
+    <!-- Floating Code Chips -->
+    <g class="float-chip-1 chip-group">
+        <rect x="450" y="40" width="120" height="36" rx="18" />
+        <text x="510" y="58">UI/UXxx Design</text>
+    </g>
+    <g class="float-chip-2 chip-group">
+        <rect x="850" y="30" width="120" height="36" rx="18" />
+        <text x="910" y="48">Robotics</text>
+    </g>
+    <g class="float-chip-3 chip-group">
+        <rect x="380" y="110" width="130" height="36" rx="18" />
+        <text x="445" y="128">Leadership</text>
+    </g>
+    <g class="float-chip-4 chip-group">
+        <rect x="980" y="100" width="140" height="36" rx="18" />
+        <text x="1050" y="118">Community</text>
+    </g>
+    <g class="float-chip-5 chip-group">
+        <rect x="420" y="180" width="130" height="36" rx="18" />
+        <text x="485" y="198">Event Mgmt.</text>
+    </g>
+    <g class="float-chip-6 chip-group">
+        <rect x="880" y="190" width="120" height="36" rx="18" />
+        <text x="940" y="208">Content HQ</text>
+    </g>
+</svg>
