@@ -1,10 +1,10 @@
-<svg class="banner-img" width="100%" height="257" viewBox="310 0 820 257" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg class="banner-img" width="100%" height="257" viewBox="166 0 1100 257" fill="none" xmlns="http://www.w3.org/2000/svg">
 
     <defs>
-        <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-            <rect width="40" height="40" fill="white" />
-            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#f0f0f0" stroke-width="1" />
-            <path d="M 0 40 L 40 40" fill="none" stroke="#f0f0f0" stroke-width="1" />
+        <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+            <rect width="10" height="10" fill="white" />
+            <path d="M 10 0 L 0 0 0 10" fill="none" stroke="#f0f0f0" stroke-width="1" />
+            <path d="M 0 10 L 10 10" fill="none" stroke="#f0f0f0" stroke-width="1" />
         </pattern>
 
 
@@ -15,108 +15,66 @@
 
 
 
-        <style>
-            /* Chips Styles */
-            @keyframes float-chip {
+        
+    
+    <style>
+        /* Chips Styles */
+        @keyframes float-chip {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-3px); }
+        }
+        .float-chip-1 { animation: float-chip 8s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+        .float-chip-2 { animation: float-chip 7s ease-in-out infinite 2s; transform-origin: center; transform-box: fill-box; }
+        .float-chip-3 { animation: float-chip 9s ease-in-out infinite 1s; transform-origin: center; transform-box: fill-box; }
+        .float-chip-4 { animation: float-chip 10s ease-in-out infinite 3s; transform-origin: center; transform-box: fill-box; }
+        .float-chip-5 { animation: float-chip 11s ease-in-out infinite 0.5s; transform-origin: center; transform-box: fill-box; }
+        .float-chip-6 { animation: float-chip 6s ease-in-out infinite 4s; transform-origin: center; transform-box: fill-box; }
+        .float-chip-7 { animation: float-chip 9s ease-in-out infinite 1.5s; transform-origin: center; transform-box: fill-box; }
+        .float-chip-8 { animation: float-chip 8.5s ease-in-out infinite 2.5s; transform-origin: center; transform-box: fill-box; }
+        
+        .chip-group rect {
+            fill: none;
+            stroke: none;
+            transition: all 0.3s ease;
+        }
+        .chip-group text {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            font-size: 6px;
+            font-weight: 600;
+            fill: #00C066; 
+            text-anchor: middle;
+            dominant-baseline: middle;
+            pointer-events: none;
+        }
+        .comment-text {
+            font-size: 5.5px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            fill: #9CA3AF;
+        }
+        .chip-group:hover .comment-text {
+            opacity: 0.9;
+        }
+        .chip-group:hover text {
+            fill: #00d66c;
+        }
 
-                0%,
-                100% {
-                    transform: translateY(0px) rotate(0deg);
-                }
-
-                50% {
-                    transform: translateY(-12px) rotate(1deg);
-                }
-            }
-
-            .float-chip-1 {
-                animation: float-chip 8s ease-in-out infinite;
-                transform-origin: center;
-                transform-box: fill-box;
-            }
-
-            .float-chip-2 {
-                animation: float-chip 7s ease-in-out infinite 2s;
-                transform-origin: center;
-                transform-box: fill-box;
-            }
-
-            .float-chip-3 {
-                animation: float-chip 9s ease-in-out infinite 1s;
-                transform-origin: center;
-                transform-box: fill-box;
-            }
-
-            .float-chip-4 {
-                animation: float-chip 8s ease-in-out infinite 3s;
-                transform-origin: center;
-                transform-box: fill-box;
-            }
-
-            .float-chip-5 {
-                animation: float-chip 6s ease-in-out infinite 0.5s;
-                transform-origin: center;
-                transform-box: fill-box;
-            }
-
-            .float-chip-6 {
-                animation: float-chip 10s ease-in-out infinite 4s;
-                transform-origin: center;
-                transform-box: fill-box;
-            }
-
-            .chip-group rect {
-                fill: rgba(0, 192, 102, 0.05);
-                stroke: rgba(0, 192, 102, 0.2);
-                stroke-width: 1.5;
-                transition: all 0.3s ease;
-            }
-
-            .chip-group:hover rect {
-                fill: rgba(0, 192, 102, 0.15);
-                stroke: rgba(0, 192, 102, 0.5);
-            }
-
-            .chip-group text {
-                font-family: 'Inter', system-ui, -apple-system, sans-serif;
-                font-size: 13px;
-                font-weight: 600;
-                fill: #00C066;
-                text-anchor: middle;
-                dominant-baseline: middle;
-                pointer-events: none;
-            }
-
-            @keyframes typing-effect {
-                0% {
-                    opacity: 0;
-                    clip-path: inset(0 100% 0 0);
-                }
-
-                5%,
-                20% {
-                    opacity: 1;
-                    clip-path: inset(0 0 0 0);
-                }
-
-                25%,
-                100% {
-                    opacity: 0;
-                    clip-path: inset(0 0 0 0);
-                }
-            }
-
-            .text-typing {
-                opacity: 0;
-                animation: typing-effect 16s ease-out infinite;
-                font-family: 'Inter', system-ui, -apple-system, sans-serif;
-                font-weight: 700;
-                font-size: 28px;
-                text-anchor: middle;
-                fill: #00C066;
-            }
-        </style>
-    </defs>
+        @keyframes typing-effect {
+            0% { opacity: 0; clip-path: inset(0 100% 0 0); }
+            5%, 20% { opacity: 1; clip-path: inset(0 0 0 0); }
+            25%, 100% { opacity: 0; clip-path: inset(0 0 0 0); }
+        }
+        .text-typing { 
+            opacity: 0; 
+            animation: typing-effect 16s ease-out infinite; 
+            font-family: 'Inter', system-ui, -apple-system, sans-serif; 
+            font-weight: 700; 
+            font-size: 20px; 
+            text-anchor: middle; 
+            fill: #00C066; 
+        }
+    </style>
+</defs>
     <rect width="1433" height="257" fill="url(#grid)" />
 
     <path d="M839.112 147.392H823.547V157.346H839.112V147.392Z" fill="#00C066" />
@@ -591,29 +549,61 @@
         <text class="text-typing" style="animation-delay: 12s;">Design | Build | Scale</text>
     </g>
 
-    <!-- Floating Code Chips -->
-    <g class="float-chip-1 chip-group">
-        <rect x="450" y="40" width="120" height="36" rx="18" />
-        <text x="510" y="58">UI/UXxx Design</text>
-    </g>
-    <g class="float-chip-2 chip-group">
-        <rect x="850" y="30" width="120" height="36" rx="18" />
-        <text x="910" y="48">Robotics</text>
-    </g>
-    <g class="float-chip-3 chip-group">
-        <rect x="380" y="110" width="130" height="36" rx="18" />
-        <text x="445" y="128">Leadership</text>
-    </g>
-    <g class="float-chip-4 chip-group">
-        <rect x="980" y="100" width="140" height="36" rx="18" />
-        <text x="1050" y="118">Community</text>
-    </g>
+    <!-- 8 Floating Code Chips (Tightly Orbital Clustering) -->
+    
+    <!-- Top Left of Cluster -->
     <g class="float-chip-5 chip-group">
-        <rect x="420" y="180" width="130" height="36" rx="18" />
-        <text x="485" y="198">Event Mgmt.</text>
+        <rect x="380" y="55" width="140" height="18" />
+        <text x="420" y="64">[student for student in campus if creative]</text>
+        <text x="420" y="70" class="comment-text">// Find the innovators</text>
     </g>
+
+    <!-- Top Center -->
+    <g class="float-chip-7 chip-group">
+        <rect x="650" y="35" width="110" height="18" />
+        <text x="705" y="44">git commit -m "innovation"</text>
+        <text x="705" y="50" class="comment-text">// Share the spark</text>
+    </g>
+
+    <!-- Top Right of Cluster -->
+    <g class="float-chip-2 chip-group">
+        <rect x="850" y="60" width="100" height="18" />
+        <text x="900" y="69">torch.nn.Society()</text>
+        <text x="900" y="75" class="comment-text">// The collective network</text>
+    </g>
+
+    <!-- Center Left -->
+    <g class="float-chip-1 chip-group">
+        <rect x="420" y="110" width="80" height="18" />
+        <text x="460" y="119">build(future);</text>
+        <text x="460" y="125" class="comment-text">// Shape tomorrow</text>
+    </g>
+
+    <!-- Center Right -->
+    <g class="float-chip-8 chip-group">
+        <rect x="950" y="120" width="110" height="18" />
+        <text x="1005" y="129">docker run society</text>
+        <text x="1005" y="135" class="comment-text">// Orchestrating growth</text>
+    </g>
+
+    <!-- Bottom Left -->
+    <g class="float-chip-3 chip-group">
+        <rect x="450" y="180" width="90" height="18" />
+        <text x="495" y="189">await Tech(unlock)</text>
+        <text x="495" y="195" class="comment-text">// Unlock potential</text>
+    </g>
+
+    <!-- Bottom Center -->
+    <g class="float-chip-4 chip-group">
+        <rect x="710" y="210" width="90" height="18" />
+        <text x="755" y="219">Arrays.asList("learn")</text>
+        <text x="755" y="225" class="comment-text">// Never stop growing</text>
+    </g>
+
+    <!-- Bottom Right -->
     <g class="float-chip-6 chip-group">
-        <rect x="880" y="190" width="120" height="36" rx="18" />
-        <text x="940" y="208">Content HQ</text>
+        <rect x="920" y="190" width="100" height="18" />
+        <text x="970" y="199">chmod +x curiosity.sh</text>
+        <text x="970" y="205" class="comment-text">// Permission to explore</text>
     </g>
 </svg>
