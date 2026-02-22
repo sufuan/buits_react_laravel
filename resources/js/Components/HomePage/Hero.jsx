@@ -1,6 +1,5 @@
 import React, { useLayoutEffect, useRef } from "react";
 import { Head } from '@inertiajs/react';
-import NavBar from '../../Components/HomePage/Navbar';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import '../../../css/about_page_style.css';
@@ -9,7 +8,6 @@ gsap.registerPlugin(ScrollTrigger);
 
 export default function GTA() {
   const scope = useRef(null);
-  // Removed auto-start audio functionality to prevent interference with navbar toggle
 
   useLayoutEffect(() => {
     const ctx = gsap.context(() => {
@@ -118,7 +116,7 @@ export default function GTA() {
         "<1.2"
       );
 
-      // Make sure ScrollTrigger recalculates after everything
+      // Make sure ScrollTrigger refresh logic is sound
       ScrollTrigger.refresh();
     }, scope);
 
@@ -131,13 +129,11 @@ export default function GTA() {
   return (
     <>
       <Head title="Barishal University IT Society" />
-      <NavBar />
       <div ref={scope} className="container">
         <div className="overlay"></div>
 
         <div className="hero-1-container">
           <div className="hero-main-container">
-            {/* <img className="hero-main-logo" draggable="false" src="/img/gta_logo_cut.webp" alt="gta logo" /> */}
             <img className="hero-main-image" draggable="false" src="/img/ultra_hero.svg" alt="gta hero" />
           </div>
 
@@ -146,7 +142,9 @@ export default function GTA() {
             <div>
               <h3 className="hero-text">Tech  <br /> Reck <br /> Make</h3>
             </div>
+
           </div>
+
         </div>
 
         <div className="hero-2-container">
@@ -155,7 +153,7 @@ export default function GTA() {
         </div>
 
         <div className="scroll-indicator" aria-hidden="true">
-          {/* svg here */}
+          {/* svg placeholder if needed */}
         </div>
       </div>
     </>

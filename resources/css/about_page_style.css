@@ -5,30 +5,31 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 
-html, body {
+html,
+body {
   /* Prevent any horizontal overflow created by transforms or 100vw quirks on mobile */
   overflow-x: hidden;
 }
 
 body {
-  width: 100%; /* avoid the 100vw bug on mobile which can include scrollbars */
+  width: 100%;
+  /* avoid the 100vw bug on mobile which can include scrollbars */
   min-height: 100svh;
-  overflow: hidden; /* prevent horizontal scrolling initially */
+  overflow: hidden;
+  /* prevent horizontal scrolling initially */
 }
 
 .container {
   min-height: 100svh;
   position: relative;
-  background: linear-gradient(
-    223.17deg,
-    rgb(28, 24, 41) 0%,
-    rgb(27, 24, 40) 8.61%,
-    rgb(25, 23, 36) 17.21%,
-    rgb(22, 21, 32) 25.82%,
-    rgb(20, 19, 28) 34.42%,
-    rgb(18, 18, 24) 43.03%,
-    rgb(17, 17, 23) 51.63%
-  );
+  background: linear-gradient(223.17deg,
+      rgb(28, 24, 41) 0%,
+      rgb(27, 24, 40) 8.61%,
+      rgb(25, 23, 36) 17.21%,
+      rgb(22, 21, 32) 25.82%,
+      rgb(20, 19, 28) 34.42%,
+      rgb(18, 18, 24) 43.03%,
+      rgb(17, 17, 23) 51.63%);
 }
 
 /* Defensive: ensure container always spans viewport and doesn't allow horizontal gaps */
@@ -56,8 +57,9 @@ body {
   height: 100vh;
   position: relative;
   transform: scale(1.25);
-  overflow: hidden; /* clip scaled content so it doesn't create horizontal gaps */
-background-image: url("/img/logo_white.svg");
+  overflow: hidden;
+  /* clip scaled content so it doesn't create horizontal gaps */
+  background-image: url("/img/logo_white.svg");
   background-size: 1000vh;
   background-position: 50% 41.7%;
   background-repeat: no-repeat;
@@ -158,13 +160,11 @@ background-image: url("/img/logo_white.svg");
   color: #ffb0c4;
   text-align: center;
   text-transform: uppercase;
-  background-image: radial-gradient(
-    circle at 50% 200vh,
-    rgba(255, 214, 135, 0) 0,
-    rgba(157, 47, 106, 0.5) 90vh,
-    rgba(157, 47, 106, 0.8) 120vh,
-    rgba(32, 31, 66, 0) 150vh
-  );
+  background-image: radial-gradient(circle at 50% 200vh,
+      rgba(255, 214, 135, 0) 0,
+      rgba(157, 47, 106, 0.5) 90vh,
+      rgba(157, 47, 106, 0.8) 120vh,
+      rgba(32, 31, 66, 0) 150vh);
   -webkit-text-fill-color: transparent;
   font-size: 4.5rem;
   background-clip: text;
@@ -181,13 +181,11 @@ background-image: url("/img/logo_white.svg");
   /* z-index: -1; */
   opacity: 0;
   object-fit: cover;
-  background-image: radial-gradient(
-    circle at 50% 200vh,
-    rgba(255, 214, 135, 0) 0,
-    rgba(157, 47, 106, 0.5) 90vh,
-    rgba(157, 47, 106, 0.8) 120vh,
-    rgba(32, 31, 66, 0) 150vh
-  );
+  background-image: radial-gradient(circle at 50% 200vh,
+      rgba(255, 214, 135, 0) 0,
+      rgba(157, 47, 106, 0.5) 90vh,
+      rgba(157, 47, 106, 0.8) 120vh,
+      rgba(32, 31, 66, 0) 150vh);
   -webkit-text-fill-color: transparent;
   font-size: 6rem;
   background-clip: text;
@@ -197,7 +195,8 @@ background-image: url("/img/logo_white.svg");
   justify-content: center;
   align-items: flex-start;
   text-align: left;
-  padding: 0 2rem; /* mobile */
+  padding: 0 2rem;
+  /* mobile */
   visibility: hidden;
 }
 
@@ -240,6 +239,7 @@ background-image: url("/img/logo_white.svg");
   .hero-main-container {
     transform: scale(1) !important;
   }
+
   .hero-main-image {
     position: absolute;
     left: 0;

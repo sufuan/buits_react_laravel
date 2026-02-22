@@ -37,36 +37,51 @@ const NavBar = () => {
   const navContainerRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const menuItemsRef = useRef([]);
+  const blocksRef = useRef([]);
+
+  const rows = 10;
+  const cols = 7;
 
   const { y: currentScrollY } = useWindowScroll();
   const [isNavVisible, setIsNavVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
+  const [isAtTop, setIsAtTop] = useState(true);
 
   // Toggle mobile menu with animations
   const toggleMobileMenu = (e) => {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
     if (!isMobileMenuOpen) {
       // Open menu
       setIsMobileMenuOpen(true);
       document.body.classList.add("menu-open");
 
-      // Animate overlay
+      // Animate blocks first
       gsap.fromTo(
-        mobileMenuRef.current,
-        { y: "-100%", opacity: 0 },
-        { y: "0%", opacity: 1, duration: 0.5, ease: "power2.out" }
+        blocksRef.current,
+        { scale: 0, opacity: 0 },
+        {
+          scale: 1,
+          opacity: 1,
+          duration: 0.3,
+          stagger: {
+            amount: 0.4,
+            grid: [rows, cols],
+            from: "random",
+          },
+          ease: "power2.out",
+        }
       );
 
       // Staggered animation for menu items
       gsap.fromTo(
         menuItemsRef.current,
-        { y: 50, opacity: 0 },
+        { y: 30, opacity: 0 },
         {
           y: 0,
           opacity: 1,
-          duration: 0.6,
+          duration: 0.4,
           stagger: 0.1,
-          delay: 0.2,
+          delay: 0.3,
           ease: "power2.out",
         }
       );
@@ -74,13 +89,26 @@ const NavBar = () => {
       // Close menu
       document.body.classList.remove("menu-open");
 
-      // Animate overlay out
-      gsap.to(mobileMenuRef.current, {
-        y: "-100%",
+      // Animate blocks out
+      gsap.to(blocksRef.current, {
+        scale: 0,
         opacity: 0,
-        duration: 0.4,
-        ease: "power2.out",
+        duration: 0.3,
+        stagger: {
+          amount: 0.3,
+          grid: [rows, cols],
+          from: "random",
+        },
+        ease: "power2.in",
         onComplete: () => setIsMobileMenuOpen(false),
+      });
+
+      // Animate menu items out
+      gsap.to(menuItemsRef.current, {
+        y: -20,
+        opacity: 0,
+        duration: 0.2,
+        ease: "power2.in",
       });
     }
   };
@@ -92,13 +120,17 @@ const NavBar = () => {
   useEffect(() => {
     if (currentScrollY === 0) {
       setIsNavVisible(true);
+      setIsAtTop(true);
       navContainerRef.current?.classList.remove("floating-nav");
-    } else if (currentScrollY > lastScrollY) {
-      setIsNavVisible(false);
-      navContainerRef.current?.classList.add("floating-nav");
-    } else if (currentScrollY < lastScrollY) {
-      setIsNavVisible(true);
-      navContainerRef.current?.classList.add("floating-nav");
+    } else {
+      setIsAtTop(false);
+      if (currentScrollY > lastScrollY) {
+        setIsNavVisible(false);
+        navContainerRef.current?.classList.add("floating-nav");
+      } else if (currentScrollY < lastScrollY) {
+        setIsNavVisible(true);
+        navContainerRef.current?.classList.add("floating-nav");
+      }
     }
     setLastScrollY(currentScrollY);
   }, [currentScrollY, lastScrollY]);
@@ -148,12 +180,15 @@ const NavBar = () => {
           <nav className="flex size-full items-center justify-between p-4">
             {/* Logo and Product button */}
             <div className="flex items-center gap-7">
-              <img src="/img/logo.png" alt="logo" className="w-14" />
+              <img src={isAtTop ? "/img/logo.png" : "/img/logo_white.svg"} alt="logo" className="w-14" />
               <Button
                 id="product-button"
                 title="BUITS"
                 rightIcon={<TiLocationArrow />}
-                containerClass="bg-blue-50 md:flex hidden items-center justify-center gap-1"
+                containerClass={clsx("md:flex hidden items-center justify-center gap-1", {
+                  "bg-black text-white": isAtTop,
+                  "bg-blue-50": !isAtTop,
+                })}
               />
             </div>
 
@@ -165,7 +200,9 @@ const NavBar = () => {
                   <Link
                     key={index}
                     href={item.href}
-                    className="nav-hover-btn"
+                    className={clsx("nav-hover-btn", {
+                      "hero-style": isAtTop,
+                    })}
                   >
                     {item.name}
                   </Link>
@@ -182,6 +219,7 @@ const NavBar = () => {
                     key={bar}
                     className={clsx("indicator-line", {
                       active: isIndicatorActive,
+                      "hero-style": isAtTop,
                     })}
                     style={{
                       animationDelay: `${bar * 0.1}s`,
@@ -207,6 +245,7 @@ const NavBar = () => {
             key={bar}
             className={clsx("indicator-line", {
               active: isIndicatorActive,
+              "hero-style": isAtTop,
             })}
             style={{
               animationDelay: `${bar * 0.1}s`,
@@ -241,9 +280,9 @@ const NavBar = () => {
           </>
         ) : (
           <>
-            <div className="w-6 h-0.5 bg-white transition-all duration-300" />
-            <div className="w-6 h-0.5 bg-white transition-all duration-300" />
-            <div className="w-6 h-0.5 bg-white transition-all duration-300" />
+            <div className={clsx("w-6 h-0.5 transition-all duration-300", isAtTop ? "bg-black" : "bg-white")} />
+            <div className={clsx("w-6 h-0.5 transition-all duration-300", isAtTop ? "bg-black" : "bg-white")} />
+            <div className={clsx("w-6 h-0.5 transition-all duration-300", isAtTop ? "bg-black" : "bg-white")} />
           </>
         )}
       </button>
@@ -252,25 +291,35 @@ const NavBar = () => {
       <div
         ref={mobileMenuRef}
         className={clsx(
-          "fixed z-[100000] flex flex-col items-center justify-center md:hidden mobile-menu-overlay",
+          "fixed z-[100000] md:hidden mobile-menu-overlay overflow-hidden",
           { hidden: !isMobileMenuOpen }
         )}
         style={{
-          backgroundColor: "#CCFF00",
           height: "100vh",
           width: "100%",
           top: 0,
           left: 0,
-          right: 0,
-          bottom: 0,
-          margin: 0,
-          padding: 0,
           zIndex: 9998,
         }}
         onClick={toggleMobileMenu}
       >
+        {/* Pixel Grid Background */}
+        <div className="absolute inset-0 grid overflow-hidden pointer-events-none" style={{ gridTemplateColumns: `repeat(${cols}, 1fr)`, gridTemplateRows: `repeat(${rows}, 1fr)` }}>
+          {Array.from({ length: rows * cols }).map((_, i) => (
+            <div
+              key={i}
+              ref={(el) => (blocksRef.current[i] = el)}
+              className="bg-[#CCFF00]"
+              style={{
+                opacity: 0,
+                transform: 'scale(1.05)' // Slight overlap to prevent sub-pixel gaps
+              }}
+            />
+          ))}
+        </div>
+
         {/* Mobile Navigation Items */}
-        <div className="flex flex-col items-start justify-center space-y-6 px-8 w-full max-w-md">
+        <div className="relative z-10 flex flex-col items-start justify-center h-full space-y-6 px-8 w-full max-w-md">
           {dynamicNavItems.map((item, index) => (
             <div
               key={index}
@@ -283,10 +332,10 @@ const NavBar = () => {
               <Link
                 href={item.href}
                 onClick={toggleMobileMenu}
-                className="text-black text-7xl font-black uppercase tracking-tight mobile-menu-item hover:text-gray-800 transition-colors duration-300"
+                className="text-black text-4xl font-black uppercase tracking-tight mobile-menu-item hover:text-gray-800 transition-colors duration-300"
                 style={{
                   fontFamily: "Bebas Neue, sans-serif",
-                  lineHeight: "0.9",
+                  lineHeight: "1.1",
                   fontWeight: "900",
                 }}
               >

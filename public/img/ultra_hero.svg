@@ -1165,8 +1165,36 @@
                 .cloud-5 { animation: cloud-drift-1 11s ease-in-out infinite; }
                 .cloud-6 { animation: cloud-drift-2 8.5s ease-in-out infinite; }
                 .cloud-7 { animation: cloud-drift-3 10.5s ease-in-out infinite; }
+
+                .cloud-7 { animation: cloud-drift-3 10.5s ease-in-out infinite; }
+
+                /* Slogan Styles */
+                .banner-slogan {
+                    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+                    font-weight: 500;
+                    fill: #00C066;
+                    font-size: 24px;
+                    text-anchor: middle;
+                }
+                
+                /* Typing Animation */
+                @keyframes typing {
+                    0%, 10% { clip-path: inset(0 100% 0 0); }
+                    60%, 90% { clip-path: inset(0 0 0 0); }
+                    100% { clip-path: inset(0 100% 0 0); }
+                }
+                .typing-text {
+                    animation: typing 5s steps(30) infinite;
+                }
             </style>
         </defs>
+
+        <!-- Banner Slogan Only -->
+        <g class="typing-text">
+            <text x="716" y="100" class="banner-slogan">Tech | Reck | Make</text>
+        </g>
+
+
 
         <!-- Animated Clouds -->
         <g class="cloud-1" opacity="0.6">
