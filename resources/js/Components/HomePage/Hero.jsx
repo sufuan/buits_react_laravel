@@ -58,10 +58,10 @@ export default function Hero() {
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: containerRef.current,
-          scrub: 2,
+          scrub: 1,
           pin: true,
           start: "top top",
-          end: "+=2000",
+          end: "+=1600",
           ease: "none",
         },
       })
@@ -158,6 +158,19 @@ export default function Hero() {
         duration: 1.2,
         ease: "power4.out"
       }, "<0.8")
+
+      // Exit animation to blend with next section (Features - Black)
+      tl.to(gsap.utils.selector(hero2Ref.current)(".mesh-gradient-bg"), {
+        opacity: 0,
+        duration: 0.7,
+        ease: "power2.inOut"
+      })
+
+      tl.to(gsap.utils.selector(hero2Ref.current)(".buits-container-fixed"), {
+        opacity: 0,
+        duration: 0.5,
+        ease: "power2.inOut"
+      }, "<")
     }, containerRef)
 
     return () => ctx.revert()
