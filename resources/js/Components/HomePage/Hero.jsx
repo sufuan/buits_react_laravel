@@ -1,8 +1,9 @@
 import React, { useLayoutEffect, useRef } from "react";
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import '../../../css/about_page_style.css';
+import '../../../css/hero.css';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,6 +16,8 @@ export default function Hero() {
   const heroTextLogoRef = useRef(null)
   const heroTextRef = useRef(null)
   const hero2Ref = useRef(null)
+  const hero2ContentRef = useRef(null)
+  const hero2StatsRef = useRef(null)
   const scrollIndicatorRef = useRef(null)
   const overlayRef = useRef(null)
 
@@ -138,27 +141,23 @@ export default function Hero() {
       tl.set(hero1Ref.current, { opacity: 0 })
       tl.set(hero2Ref.current, { visibility: "visible" })
 
-      tl.to(hero2Ref.current, { opacity: 1, duration: 3 }, "<+=0.2")
+      tl.to(hero2Ref.current, { opacity: 1, visibility: "visible", duration: 1 }, "<+=0.1")
 
-      tl.fromTo(hero2Ref.current,
-        {
-          backgroundImage: `radial-gradient(
-            circle at 50% 200vh,
-            rgba(255, 214, 135, 0) 0,
-            rgba(157, 47, 106, 0.5) 90vh,
-            rgba(157, 47, 106, 0.8) 120vh,
-            rgba(32, 31, 66, 0) 150vh
-          )`,
-        },
-        {
-          backgroundImage: `radial-gradient(circle at 50% 3.9575vh, rgb(255, 213, 133) 0vh,
-            rgb(247, 77, 82) 50.011vh,
-            rgb(145, 42, 105) 90.0183vh,
-            rgba(32, 31, 66, 0) 140.599vh)`,
-          duration: 3,
-        },
-        "<1.2"
-      )
+      // Color transition: Black -> Mesh Gradient (2s duration)
+      tl.to(gsap.utils.selector(hero2Ref.current)(".mesh-gradient-bg"), {
+        opacity: 1,
+        duration: 2,
+        ease: "power2.inOut"
+      }, "<")
+
+      // Entrance animation for content items (Starts at 40% of 2s = 0.8s)
+      tl.from(gsap.utils.selector(hero2Ref.current)(".buits-container-fixed > *"), {
+        y: 50,
+        opacity: 0,
+        stagger: 0.2,
+        duration: 1.2,
+        ease: "power4.out"
+      }, "<0.8")
     }, containerRef)
 
     return () => ctx.revert()
@@ -184,25 +183,56 @@ export default function Hero() {
               </h3>
             </div>
           </div>
+          <div className="buits-mouse-fixed"></div>
         </div>
-        <div className="hero-2-container" ref={hero2Ref}>
-          <h3>Vice City, USA.</h3>
-          <p>
-            Jason and Lucia have always known the deck is stacked against them.
-            But when an easy score goes wrong, they find themselves on the darkest
-            side of the sunniest place in America, in the middle of a criminal
-            conspiracy stretching across the state of Leonida — forced to rely on
-            each other more than ever if they want to make it out alive.
-          </p>
-        </div>
-        {/* Scroll Indicator */}
-        <div className="scroll-indicator" ref={scrollIndicatorRef}>
-          <svg width="34" height="14" viewBox="0 0 34 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-            className="_1smfa210" focusable="false">
-            <path fillRule="evenodd" clip-rule="evenodd"
-              d="M33.5609 1.54346C34.0381 2.5875 33.6881 3.87821 32.7791 4.42633L17.0387 13.9181L1.48663 4.42115C0.580153 3.86761 0.235986 2.57483 0.717909 1.53365C1.19983 0.492464 2.32535 0.097152 3.23182 0.650692L17.0497 9.08858L31.051 0.64551C31.96 0.0973872 33.0837 0.499411 33.5609 1.54346Z"
-              fill="currentColor"></path>
-          </svg>
+        <div className="hero-2-container buits-theme" ref={hero2Ref}>
+          <div className="mesh-gradient-bg"></div>
+
+          <div className="buits-container-fixed">
+            <div className="buits-badges">
+              <div className="buits-badge-fixed">⚡ TECH</div>
+              <div className="buits-badge-fixed">🔬 RESEARCH</div>
+              <div className="buits-badge-fixed">🛠 BUILD</div>
+            </div>
+
+            <h1>
+              <span className="buits-highlight">Barishal University</span><br />
+              IT Society
+            </h1>
+
+            <p className="buits-subtext-fixed">
+              Where technology meets creativity. Build, innovate, and lead with the brightest minds in Barishal.
+            </p>
+
+            <div className="buits-buttons-fixed">
+              <Link href="/register" className="buits-btn-fixed buits-btn-primary">
+                Join the Community →
+              </Link>
+              <Link href="/events" className="buits-btn-fixed buits-btn-outline">
+                Explore Events
+              </Link>
+            </div>
+
+            <div className="buits-stats-fixed">
+              <div className="buits-stat-fixed">
+                <h2>500+</h2>
+                <p>MEMBERS</p>
+              </div>
+              <div className="buits-stat-fixed">
+                <h2>60+</h2>
+                <p>EVENTS HELD</p>
+              </div>
+              <div className="buits-stat-fixed">
+                <h2>5+</h2>
+                <p>YEARS ACTIVE</p>
+              </div>
+              <div className="buits-stat-fixed">
+                <h2>30+</h2>
+                <p>PROJECTS</p>
+              </div>
+
+            </div>
+          </div>
         </div>
       </div>
     </>

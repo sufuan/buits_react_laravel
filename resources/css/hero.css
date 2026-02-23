@@ -1,0 +1,205 @@
+/* BUITS Theme Stage 2 - User Provided Template */
+
+.buits-theme {
+    min-height: 100vh;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    background: #000000;
+    /* Initial color for GSAP transition */
+    color: white;
+    overflow: hidden;
+    position: absolute;
+    inset: 0;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    z-index: 5;
+    visibility: hidden;
+    opacity: 0;
+    -webkit-text-fill-color: initial !important;
+}
+
+/* Base Mesh Gradient (Targets for GSAP) */
+.mesh-gradient-bg {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 20% 20%, rgba(255, 120, 120, 0.4), transparent 40%),
+        linear-gradient(135deg, #5b1a6e 0%, #c93b66 35%, #ff6a4d 65%, #7a1e6c 100%);
+    opacity: 0;
+    /* Controlled by GSAP */
+    z-index: -1;
+}
+
+/* subtle grid overlay */
+.mesh-gradient-bg::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+    background-size: 80px 80px;
+    pointer-events: none;
+}
+
+.buits-container-fixed {
+    width: 90%;
+    max-width: 1200px;
+    margin: auto;
+    position: relative;
+    z-index: 2;
+    text-align: left;
+}
+
+.buits-badges {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 30px;
+}
+
+.buits-badge-fixed {
+    padding: 8px 16px;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    font-size: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: white;
+}
+
+.buits-container-fixed h1 {
+    font-size: clamp(40px, 8vw, 80px);
+    line-height: 1;
+    font-weight: 800;
+    margin-bottom: 0;
+    color: white;
+}
+
+.buits-highlight {
+    background: linear-gradient(90deg, #ffcc70, #ff7f7f);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.buits-subtext-fixed {
+    margin-top: 25px;
+    max-width: 550px;
+    font-size: clamp(16px, 2vw, 20px);
+    color: rgba(255, 255, 255, 0.85);
+    line-height: 1.6;
+}
+
+.buits-buttons-fixed {
+    margin-top: 40px;
+    display: flex;
+    gap: 20px;
+}
+
+.buits-btn-fixed {
+    padding: 16px 28px;
+    border-radius: 40px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: 0.3s ease;
+    text-decoration: none;
+    display: inline-block;
+}
+
+.buits-btn-primary {
+    background: linear-gradient(90deg, #ff5e62, #ff9966);
+    color: white;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.buits-btn-primary:hover {
+    transform: translateY(-3px);
+}
+
+.buits-btn-outline {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    color: white;
+}
+
+.buits-btn-outline:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.buits-stats-fixed {
+    margin-top: 80px;
+    display: flex;
+    gap: 80px;
+}
+
+.buits-stat-fixed h2 {
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 800;
+    color: white;
+}
+
+.buits-stat-fixed p {
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 5px;
+}
+
+/* Dual-Section Mouse Scroll Indicator */
+.buits-mouse-fixed {
+    position: absolute;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 30px;
+    height: 50px;
+    border: 2px solid rgba(255, 255, 255, 0.5);
+    border-radius: 20px;
+    z-index: 10;
+}
+
+/* Adjust colors for Section 1 (White Background) */
+.hero-1-container .buits-mouse-fixed {
+    border-color: rgba(0, 0, 0, 0.4);
+}
+
+.hero-1-container .buits-mouse-fixed::after {
+    background: rgba(0, 0, 0, 0.6);
+}
+
+.buits-mouse-fixed::after {
+    content: '';
+    width: 6px;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.6);
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    border-radius: 3px;
+    animation: buits-scroll 1.5s infinite;
+}
+
+@keyframes buits-scroll {
+    0% {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translate(-50%, 15px);
+    }
+}
+
+@media (max-width: 900px) {
+    .buits-stats-fixed {
+        flex-direction: column;
+        gap: 30px;
+    }
+}
