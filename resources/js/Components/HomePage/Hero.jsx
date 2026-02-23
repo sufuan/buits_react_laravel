@@ -171,16 +171,16 @@ export default function Hero() {
         <div className="overlay" ref={overlayRef}></div>
         <div className="hero-1-container" ref={hero1Ref}>
           <div className="hero-main-container" ref={heroMainContainerRef}>
-            <img className="hero-main-logo" draggable="false" src="/img/gta_logo_cut.webp" alt="gta logo" ref={heroMainLogoRef} />
+
             <img className="hero-main-image" draggable="false" src="/img/ultra_hero.svg" alt="gta logo" ref={heroMainImageRef} />
           </div>
           <div className="hero-text-logo-container">
             <div className="hero-text-logo" ref={heroTextLogoRef}></div>
             <div>
               <h3 className="hero-text" ref={heroTextRef}>
-                Coming<br />
-                May 26<br />
-                2026
+                Tech<br />
+                Reck<br />
+                Make
               </h3>
             </div>
           </div>
