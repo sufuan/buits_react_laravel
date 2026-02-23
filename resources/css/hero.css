@@ -199,7 +199,17 @@
 
 @media (max-width: 900px) {
     .buits-stats-fixed {
-        flex-direction: column;
-        gap: 30px;
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 30px 40px;
+    }
+
+    .buits-btn-fixed {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    .buits-subtext-fixed {
+        font-size: 16px;
     }
 }
