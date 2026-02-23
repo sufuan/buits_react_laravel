@@ -5,21 +5,13 @@
   font-family: Arial, Helvetica, sans-serif;
 }
 
-html,
 body {
-  /* Prevent any horizontal overflow created by transforms or 100vw quirks on mobile */
+  width: 100vw;
+  min-height: 100svh;
   overflow-x: hidden;
 }
 
-body {
-  width: 100%;
-  /* avoid the 100vw bug on mobile which can include scrollbars */
-  min-height: 100svh;
-  overflow: hidden;
-  /* prevent horizontal scrolling initially */
-}
-
-.container {
+.hero-main-wrapper {
   min-height: 100svh;
   position: relative;
   background: linear-gradient(223.17deg,
@@ -32,15 +24,6 @@ body {
       rgb(17, 17, 23) 51.63%);
 }
 
-/* Defensive: ensure container always spans viewport and doesn't allow horizontal gaps */
-.container {
-  width: 100%;
-  left: 0;
-  right: 0;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
 .overlay {
   position: fixed;
   top: 0;
@@ -48,7 +31,7 @@ body {
   right: 0;
   bottom: 0;
   background-color: black;
-  z-index: 1;
+  z-index: 1000;
   pointer-events: none;
 }
 
@@ -57,45 +40,20 @@ body {
   height: 100vh;
   position: relative;
   transform: scale(1.25);
-  overflow: hidden;
-  /* clip scaled content so it doesn't create horizontal gaps */
   background-image: url("/img/logo_white.svg");
   background-size: 1000vh;
   background-position: 50% 41.7%;
   background-repeat: no-repeat;
   background-origin: content-box;
   padding-bottom: 200px;
-  transform-origin: 50% 0%;
-}
-
-/* Ensure hero wrapper itself fills and is pinned correctly when GSAP pins it */
-.hero-1-container {
-  width: 100%;
-  max-width: 100%;
-  left: 0;
-  right: 0;
-  position: relative;
-  overflow: hidden;
-}
-
-/* Prevent images from contributing whitespace */
-.hero-main-image,
-.hero-main-logo,
-.hero-text-logo {
-  display: block;
-  left: 0;
-  right: 0;
-  max-width: 100%;
 }
 
 .hero-main-image {
   width: 100%;
   height: 100vh;
-  /* transform: scale(1.25); */
   position: absolute;
   inset: 0;
   object-fit: cover;
-  transform-origin: 50% 0%;
 }
 
 .hero-main-logo {
@@ -114,7 +72,7 @@ body {
   inset: 0;
   z-index: -1;
   object-fit: cover;
-  background-color: transparent;
+  background_color: transparent;
   display: flex;
   flex-direction: column;
   gap: 4rem;
@@ -127,7 +85,7 @@ body {
   align-items: center;
   justify-content: center;
   width: 100%;
-  background-image: url("/gta_logo_purple.webp");
+  background-image: url("/img/gta_logo_purple.webp");
   background-repeat: no-repeat;
   background-position: 50% 41.7%;
   background-size: 28vh;
@@ -178,7 +136,6 @@ body {
   height: 100vh;
   position: absolute;
   inset: 0;
-  /* z-index: -1; */
   opacity: 0;
   object-fit: cover;
   background-image: radial-gradient(circle at 50% 200vh,
@@ -196,7 +153,6 @@ body {
   align-items: flex-start;
   text-align: left;
   padding: 0 2rem;
-  /* mobile */
   visibility: hidden;
 }
 
@@ -231,19 +187,5 @@ body {
 
   .hero-2-container h3 {
     font-size: 3.5rem;
-  }
-}
-
-/* On small screens, avoid pre-scaling the hero which can cause horizontal overflow */
-@media (max-width: 1023px) {
-  .hero-main-container {
-    transform: scale(1) !important;
-  }
-
-  .hero-main-image {
-    position: absolute;
-    left: 0;
-    right: 0;
-    transform: none !important;
   }
 }
