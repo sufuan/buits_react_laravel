@@ -1,4 +1,4 @@
-import React, { useLayoutEffect, useRef } from 'react';
+import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useGSAP } from '@gsap/react';
@@ -9,6 +9,13 @@ const Gallary = ({ photos = [] }) => {
     const containerRef = useRef(null);
     const spiralRef = useRef(null);
     const itemsRef = useRef([]);
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Loading images from local public assets
     const localImages = [
@@ -28,56 +35,74 @@ const Gallary = ({ photos = [] }) => {
         if (!spiralRef.current) return;
 
         // GSAP ScrollTrigger for 3D Rotation and subtle drifting
-        gsap.to(spiralRef.current, {
-            rotateY: 360, // One full rotation
-            y: -400,
+        const mainRotation = gsap.to(spiralRef.current, {
+            rotateY: 720, // Reduced from 1080 to slow it down
+            y: isMobile ? -600 : -800,
             ease: "none",
             scrollTrigger: {
                 trigger: containerRef.current,
                 start: "top top",
                 end: "bottom bottom",
-                scrub: 1.5,
+                scrub: 1, // Weighted catch-up for smooth motion during fast scrolls
+                invalidateOnRefresh: true,
+                overwrite: 'auto'
             }
         });
 
-        // Hover Effect using GSAP
-        itemsRef.current.forEach((item) => {
-            if (!item) return;
+        // Use matchMedia to handle responsive hover logic
+        const mm = gsap.matchMedia();
 
-            const tl = gsap.timeline({ paused: true });
-            tl.to(item, {
-                scale: 1.15,
-                z: 150, // More focus zoom
-                duration: 0.4,
-                ease: "power3.out",
-                transformOrigin: "center center"
-            });
+        mm.add("(min-width: 768px)", () => {
+            // Deskstop-only hover effects
+            itemsRef.current.forEach((item) => {
+                if (!item) return;
 
-            item.addEventListener('mouseenter', () => {
-                tl.play();
-                gsap.to(itemsRef.current.filter(i => i && i !== item), {
-                    opacity: 0.2,
-                    filter: "blur(8px)",
-                    duration: 0.4
+                const tl = gsap.timeline({ paused: true });
+                tl.to(item, {
+                    scale: 1.15,
+                    z: 150,
+                    duration: 0.4,
+                    ease: "power3.out",
+                    transformOrigin: "center center"
                 });
-            });
 
-            item.addEventListener('mouseleave', () => {
-                tl.reverse();
-                gsap.to(itemsRef.current, {
-                    opacity: 1,
-                    filter: "blur(0px)",
-                    duration: 0.4
-                });
+                const onMouseEnter = () => {
+                    // Disable hover zoom if we're actively scrolling to keep it smooth
+                    if (ScrollTrigger.isScrolling()) return;
+
+                    tl.play();
+                    gsap.to(itemsRef.current.filter(i => i && i !== item), {
+                        opacity: 0.2,
+                        filter: "blur(8px)",
+                        duration: 0.4
+                    });
+                };
+
+                const onMouseLeave = () => {
+                    tl.reverse();
+                    gsap.to(itemsRef.current, {
+                        opacity: 1,
+                        filter: "blur(0px)",
+                        duration: 0.4
+                    });
+                };
+
+                item.addEventListener('mouseenter', onMouseEnter);
+                item.addEventListener('mouseleave', onMouseLeave);
+
+                return () => {
+                    item.removeEventListener('mouseenter', onMouseEnter);
+                    item.removeEventListener('mouseleave', onMouseLeave);
+                };
             });
         });
 
-    }, { scope: containerRef });
+    }, { scope: containerRef, dependencies: [isMobile] });
 
     return (
         <section
             ref={containerRef}
-            className="relative w-full h-[300vh] overflow-hidden pt-32" style={{ backgroundColor: '#111117' }}
+            className="relative w-full h-[300vh] overflow-hidden" style={{ backgroundColor: '#111117' }}
             id="gallery-section"
         >
             {/* Sticky Background Text - Signature Studio Dialect look */}
@@ -103,19 +128,26 @@ const Gallary = ({ photos = [] }) => {
                         style={{ transformStyle: 'preserve-3d' }}
                     >
                         {displayPhotos.map((photo, index) => {
-                            // Math for a dense ribbon: adjusted to prevent overlap
-                            const rotationStep = 32;
+                            // Responsive constants
+                            const rotationStep = isMobile ? 45 : 32;
+                            const verticalStep = isMobile ? 50 : 60;
+                            const depth = isMobile ? 250 : 400;
+                            const imgWidth = isMobile ? 160 : 220;
+                            const imgHeight = isMobile ? 220 : 300;
+
                             const rotation = index * rotationStep;
-                            const verticalStep = 60;
                             const verticalTranslation = index * verticalStep - (displayPhotos.length * verticalStep / 2);
-                            const depth = 400; // Reduced Radius
 
                             return (
                                 <div
                                     key={photo.id}
                                     ref={el => itemsRef.current[index] = el}
-                                    className="absolute w-[220px] h-[300px] -left-[110px] -top-[150px] overflow-hidden rounded-sm shadow-2xl transition-all duration-300 group cursor-pointer"
+                                    className="absolute overflow-hidden rounded-sm shadow-2xl transition-all duration-300 group cursor-pointer"
                                     style={{
+                                        width: `${imgWidth}px`,
+                                        height: `${imgHeight}px`,
+                                        left: `-${imgWidth / 2}px`,
+                                        top: `-${imgHeight / 2}px`,
                                         transform: `rotateY(${rotation}deg) translateY(${verticalTranslation}px) translateZ(${depth}px)`,
                                         backfaceVisibility: 'visible',
                                         transformStyle: 'preserve-3d',

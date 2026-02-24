@@ -118,12 +118,13 @@ const Features = () => (
     <div className="container mx-auto px-3 md:px-10">
       <div className="pt-10 pb-32 px-5 text-center md:text-left">
         <p className="font-circular-web text-lg text-blue-50">
-          Beyond the Silicon Layer
+          Beyond the Digital Frontier
         </p>
         <p className="max-max-w-lg font-circular-web text-lg text-blue-50 opacity-50">
-          Empowering every student at Barishal University through technology,
-          creativity, and shared knowledge. Our society is built for everyone,
-          regardless of department.
+          Empowering every student at Barishal University to innovate,
+          collaborate, and lead in the ever-evolving world of technology.
+          BUITS is an inclusive hub where passion meets purpose,
+          welcoming dreamers from every department to build the future together.
         </p>
       </div>
 
