@@ -27,33 +27,40 @@ const Gallary = () => {
   const swiperContainerRef = useRef(null);
 
   useEffect(() => {
-    if (swiperContainerRef.current && !swiperRef.current) {
-      swiperRef.current = new Swiper(swiperContainerRef.current, {
-        modules: [EffectCoverflow, Autoplay, Pagination],
-        effect: 'coverflow',
-        grabCursor: true,
-        centeredSlides: true,
-        loop: true,
-        slidesPerView: 'auto',
-        coverflowEffect: {
-          rotate: 0,
-          stretch: 0,
-          depth: 150,
-          modifier: 2.5,
-          slideShadows: true,
-        },
-        autoplay: {
-          delay: 3000,
-          disableOnInteraction: false,
-        },
-        pagination: {
-          el: '.swiper-pagination',
-          clickable: true,
-        },
-      });
-    }
+    // Small delay to ensure DOM is fully rendered
+    const timer = setTimeout(() => {
+      if (swiperContainerRef.current && !swiperRef.current) {
+        swiperRef.current = new Swiper(swiperContainerRef.current, {
+          modules: [EffectCoverflow, Autoplay, Pagination],
+          effect: 'coverflow',
+          grabCursor: true,
+          centeredSlides: true,
+          loop: true,
+          slidesPerView: 'auto',
+          coverflowEffect: {
+            rotate: 0,
+            stretch: 0,
+            depth: 150,
+            modifier: 2.5,
+            slideShadows: true,
+          },
+          autoplay: {
+            delay: 3000,
+            disableOnInteraction: false,
+            pauseOnMouseEnter: true,
+          },
+          pagination: {
+            el: '.swiper-pagination',
+            clickable: true,
+          },
+          observer: true,
+          observeParents: true,
+        });
+      }
+    }, 100);
 
     return () => {
+      clearTimeout(timer);
       if (swiperRef.current) {
         swiperRef.current.destroy(true, true);
         swiperRef.current = null;

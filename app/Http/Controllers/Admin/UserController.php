@@ -556,7 +556,16 @@ class UserController extends Controller
             
             // Validate all rows before import
             $errors = $importService->validateRows($request->rows);
-            if (!empty($errors)) {
+            
+            // Only block on actual errors, not warnings
+            $blockingErrors = array_filter($errors, function($error) {
+                if ($error instanceof ValidationErrorDTO) {
+                    return $error->severity === 'error';
+                }
+                return isset($error['severity']) && $error['severity'] === 'error';
+            });
+            
+            if (!empty($blockingErrors)) {
                 return response()->json([
                     'success' => false,
                     'message' => 'Validation errors found. Please fix them before importing.',

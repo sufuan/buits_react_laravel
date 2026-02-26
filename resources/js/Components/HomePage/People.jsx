@@ -1,27 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from '@inertiajs/react';
 
-const membersDataold = [
-    { id: 1, name: "Md. Samiul Islam Soumik", batch: "Batch - 5", rating: "2 star (Max Rating - 1587)", cf: "Soumik_SHU", cc: "soumik_prime", img: "https://i.pravatar.cc/150?u=1" },
-    { id: 2, name: "Fiaze Ahamed", batch: "Batch - 4", rating: "3 star (Max Rating - 1650)", cf: "fiaze_code", cc: "fiaze_master", img: "https://i.pravatar.cc/150?u=2" },
-    { id: 3, name: "MD. Tanbir Hasan", batch: "Batch - 5", rating: "2 star (Max Rating - 1490)", cf: "tanbir_dev", cc: "tanbir_pro", img: "https://i.pravatar.cc/150?u=3" },
-    { id: 4, name: "MD Rayhan", batch: "Batch - 3", rating: "4 star (Max Rating - 1720)", cf: "rayhan_algo", cc: "rayhan_boss", img: "https://i.pravatar.cc/150?u=4" },
-    { id: 5, name: "Md Murad Hossain", batch: "Batch - 5", rating: "2 star (Max Rating - 1510)", cf: "murad_h", cc: "murad_dev", img: "https://i.pravatar.cc/150?u=5" },
-    { id: 6, name: "Sharif Ahmed", batch: "Batch - 4", rating: "2 star (Max Rating - 1555)", cf: "sharif_code", cc: "sharif_x", img: "https://i.pravatar.cc/150?u=6" },
-    { id: 7, name: "Sakib Al Hasan", batch: "Batch - 5", rating: "2 star (Max Rating - 1480)", cf: "sakib_75", cc: "sakib_pro", img: "https://i.pravatar.cc/150?u=7" },
-    { id: 8, name: "Nusrat Jahan", batch: "Batch - 4", rating: "3 star (Max Rating - 1605)", cf: "nusrat_j", cc: "nusrat_dev", img: "https://i.pravatar.cc/150?u=8" },
-    { id: 9, name: "Kamrul Hasan", batch: "Batch - 3", rating: "4 star (Max Rating - 1750)", cf: "kamrul_h", cc: "kamrul_master", img: "https://i.pravatar.cc/150?u=9" },
-    { id: 10, name: "Rahim Uddin", batch: "Batch - 5", rating: "2 star (Max Rating - 1530)", cf: "rahim_u", cc: "rahim_code", img: "https://i.pravatar.cc/150?u=10" },
-    { id: 11, name: "Karim Islam", batch: "Batch - 4", rating: "3 star (Max Rating - 1620)", cf: "karim_i", cc: "karim_dev", img: "https://i.pravatar.cc/150?u=11" },
-    { id: 12, name: "Lina Akter", batch: "Batch - 5", rating: "2 star (Max Rating - 1470)", cf: "lina_a", cc: "lina_pro", img: "https://i.pravatar.cc/150?u=12" }
-];
-
 
 
 
 const membersData = [
-    { id: 1, name: "Mazharul Islam Rifat", batch: "", status: "alumni", cf: "Founding Member", img: "/img/people/male-placeholder-image.jpeg" },
-    { id: 2, name: "Md Jawadur Rahman", batch: "", status: "alumni", cf: "Founding Member", img: "/img/people/male-placeholder-image.jpeg" },
+    { id: 1, name: "Mazharul Islam Rifat", batch: "executive member 6", status: "alumni", cf: "Founding Member", img: "/img/people/male-placeholder-image.jpeg" },
+    { id: 2, name: "Md Jawadur Rahman", batch: "executive member 6", status: "alumni", cf: "Founding Member", img: "/img/people/male-placeholder-image.jpeg" },
     { id: 3, name: "Abu Ubaida", batch: "", status: "alumni", note: "", img: "/img/people/Abu Ubaida.jpg" },
     { id: 4, name: "Ashik Hossain", batch: "", status: "alumni", note: "", img: "/img/people/Ashik Hossain.jpg" },
     { id: 5, name: "Dipan Nandi", batch: "", status: "alumni", note: "", img: "/img/people/Dipan Nandi.jpg" },
@@ -140,8 +125,8 @@ function CoderCard({ coder, isActive, onMouseEnter, onMouseLeave, filledAnim, co
                     <span className="tooltip-name">{coder.name}</span>
                 </div>
                 <div className="tooltip-handles">
-                    <div>Codeforces Handle: {coder.cf}</div>
-                    <div>CodeChef Handle: {coder.cc}</div>
+                    <div>{coder.cf}</div>
+                  
                 </div>
             </div>
         </div>

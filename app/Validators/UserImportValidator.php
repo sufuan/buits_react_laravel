@@ -402,46 +402,40 @@ class UserImportValidator
     }
 
     /**
-     * Validate date of birth
+     * Validate date of birth (optional field)
      */
     protected function validateDateOfBirth($date, int $rowNumber): array
     {
         $errors = [];
         
+        // Skip validation if date is empty or invalid
+        if (empty($date) || (is_string($date) && trim($date) === '')) {
+            return $errors;
+        }
+        
+        // Skip Excel zero dates
+        if (is_numeric($date) && $date <= 2) {
+            return $errors;
+        }
+        
         try {
             if (is_string($date)) {
+                if (in_array(strtolower(trim($date)), ['', '0', 'null', 'n/a', 'na', '-'])) {
+                    return $errors;
+                }
                 $parsedDate = Carbon::parse($date);
             } elseif (is_numeric($date)) {
-                // Excel date format
                 $parsedDate = Carbon::createFromDate(1900, 1, 1)->addDays($date - 2);
             } else {
-                throw new \Exception('Invalid date format');
+                return $errors;
             }
             
-            // Check if date is reasonable
-            $minAge = 15;
-            $maxAge = 100;
-            $age = $parsedDate->age;
-            
-            if ($age < $minAge) {
-                $errors[] = new ValidationErrorDTO(
-                    $rowNumber,
-                    'date_of_birth',
-                    "Age must be at least {$minAge} years",
-                    'warning'
-                );
+            // Skip invalid old dates
+            if ($parsedDate->year < 1900) {
+                return $errors;
             }
             
-            if ($age > $maxAge) {
-                $errors[] = new ValidationErrorDTO(
-                    $rowNumber,
-                    'date_of_birth',
-                    "Age cannot exceed {$maxAge} years",
-                    'warning'
-                );
-            }
-            
-            // Check if date is in the future
+            // Only error if date is in the future
             if ($parsedDate->isFuture()) {
                 $errors[] = new ValidationErrorDTO(
                     $rowNumber,
@@ -452,12 +446,8 @@ class UserImportValidator
             }
             
         } catch (\Exception $e) {
-            $errors[] = new ValidationErrorDTO(
-                $rowNumber,
-                'date_of_birth',
-                'Invalid date format. Use format: YYYY-MM-DD',
-                'error'
-            );
+            // Date parsing failed - since field is optional, skip
+            return $errors;
         }
 
         return $errors;

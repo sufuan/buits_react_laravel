@@ -12,6 +12,7 @@ export default function ExcelModal({
     const [validationErrors, setValidationErrors] = useState({});
     const [isLoading, setIsLoading] = useState(false);
     const [hasErrors, setHasErrors] = useState(false);
+    const [importProgress, setImportProgress] = useState({ isImporting: false, current: 0, total: 0, percentage: 0 });
     const modalRef = useRef(null);
     const validationTimeoutRef = useRef(null);
 
@@ -178,53 +179,94 @@ export default function ExcelModal({
             return;
         }
 
+        const totalRows = previewData.rows.length;
+        const chunkSize = 25;
+        const chunks = [];
+        
+        // Split rows into chunks
+        for (let i = 0; i < totalRows; i += chunkSize) {
+            chunks.push(previewData.rows.slice(i, i + chunkSize));
+        }
+
+        setImportProgress({ isImporting: true, current: 0, total: totalRows, percentage: 0 });
         setIsLoading(true);
 
+        let totalImported = 0;
+        let totalFailed = 0;
+        const allFailedRows = [];
+
         try {
-            // Prepare rows data for import
-            const rowsForImport = previewData.rows.map((row, index) => {
-                // Remove row_id and other UI-specific fields, keep only data fields
-                const { row_id, ...dataFields } = row;
+            for (let chunkIndex = 0; chunkIndex < chunks.length; chunkIndex++) {
+                const chunk = chunks[chunkIndex];
                 
-                // Ensure row_number is properly set for backend validation
-                return {
-                    ...dataFields,
-                    row_number: index + 1 // Backend expects 1-based row numbers
-                };
-            });
+                // Prepare rows data for import
+                const rowsForImport = chunk.map((row, index) => {
+                    const { row_id, ...dataFields } = row;
+                    return {
+                        ...dataFields,
+                        row_number: (chunkIndex * chunkSize) + index + 1
+                    };
+                });
 
-            const response = await fetch(route('admin.users.import.batch'), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                    'Accept': 'application/json',
-                },
-                body: JSON.stringify({
-                    rows: rowsForImport,
-                    chunk_size: 50,
-                    session_id: previewData.session_id
-                })
-            });
+                const response = await fetch(route('admin.users.import.batch'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        rows: rowsForImport,
+                        chunk_size: chunkSize,
+                        session_id: previewData.session_id
+                    })
+                });
 
-            if (!response.ok) {
-                const errorText = await response.text();
-                console.error('Import response error:', errorText);
-                throw new Error(`HTTP ${response.status}: ${errorText}`);
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Import chunk error:', errorText);
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
+                }
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    totalImported += result.imported || 0;
+                    totalFailed += result.failed || 0;
+                    if (result.failed_rows) {
+                        allFailedRows.push(...result.failed_rows);
+                    }
+                } else {
+                    throw new Error(result.message || 'Chunk import failed');
+                }
+
+                // Update progress
+                const processedRows = Math.min((chunkIndex + 1) * chunkSize, totalRows);
+                const percentage = Math.round((processedRows / totalRows) * 100);
+                setImportProgress({ 
+                    isImporting: true, 
+                    current: processedRows, 
+                    total: totalRows, 
+                    percentage 
+                });
             }
 
-            const result = await response.json();
+            // Import completed successfully
+            setImportProgress({ isImporting: false, current: totalRows, total: totalRows, percentage: 100 });
             
-            if (result.success) {
-                onImport(result);
-                onClose();
-            } else {
-                console.error('Import failed:', result);
-                alert(result.message || 'Import failed');
-            }
+            onImport({
+                success: true,
+                imported: totalImported,
+                failed: totalFailed,
+                failed_rows: allFailedRows,
+                message: `Successfully imported ${totalImported} user(s).`
+            });
+            onClose();
+            
         } catch (error) {
             console.error('Import error:', error);
             alert('Import failed: ' + error.message);
+            setImportProgress({ isImporting: false, current: 0, total: 0, percentage: 0 });
         } finally {
             setIsLoading(false);
         }
@@ -299,14 +341,22 @@ export default function ExcelModal({
                         {/* Import Button */}
                         <button
                             onClick={handleImport}
-                            disabled={hasErrors || isLoading || !previewData}
+                            disabled={hasErrors || isLoading || !previewData || importProgress.isImporting}
                             className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                                hasErrors || isLoading || !previewData
+                                hasErrors || isLoading || !previewData || importProgress.isImporting
                                     ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
                                     : 'bg-green-600 text-white hover:bg-green-700 shadow-lg hover:shadow-xl'
                             }`}
                         >
-                            {isLoading ? (
+                            {importProgress.isImporting ? (
+                                <div className="flex items-center space-x-2">
+                                    <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span>Importing {importProgress.percentage}%</span>
+                                </div>
+                            ) : isLoading ? (
                                 <div className="flex items-center space-x-2">
                                     <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
                                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -322,7 +372,12 @@ export default function ExcelModal({
                         {/* Close Button */}
                         <button
                             onClick={handleClose}
-                            className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                            disabled={importProgress.isImporting}
+                            className={`p-2 rounded-lg transition-colors ${
+                                importProgress.isImporting 
+                                    ? 'text-gray-300 cursor-not-allowed' 
+                                    : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
+                            }`}
                         >
                             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
@@ -332,7 +387,42 @@ export default function ExcelModal({
                 </div>
 
                 {/* Modal Content */}
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden relative">
+                    {/* Import Progress Overlay */}
+                    {importProgress.isImporting && (
+                        <div className="absolute inset-0 bg-white bg-opacity-95 z-50 flex items-center justify-center">
+                            <div className="text-center w-full max-w-md px-8">
+                                <div className="mb-6">
+                                    <svg className="animate-spin w-16 h-16 text-green-600 mx-auto" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                        <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </div>
+                                <h3 className="text-xl font-semibold text-gray-900 mb-2">Importing Users...</h3>
+                                <p className="text-gray-600 mb-6">Please wait while we import your data</p>
+                                
+                                {/* Progress Bar */}
+                                <div className="w-full bg-gray-200 rounded-full h-4 mb-3 overflow-hidden">
+                                    <div 
+                                        className="bg-gradient-to-r from-green-500 to-green-600 h-4 rounded-full transition-all duration-300 ease-out"
+                                        style={{ width: `${importProgress.percentage}%` }}
+                                    ></div>
+                                </div>
+                                
+                                {/* Progress Stats */}
+                                <div className="flex justify-between text-sm text-gray-600">
+                                    <span>{importProgress.current} of {importProgress.total} rows</span>
+                                    <span className="font-semibold text-green-600">{importProgress.percentage}%</span>
+                                </div>
+                                
+                                {/* Animated dots */}
+                                <p className="text-sm text-gray-500 mt-4">
+                                    Processing<span className="animate-pulse">...</span>
+                                </p>
+                            </div>
+                        </div>
+                    )}
+                    
                     {isLoading && !previewData ? (
                         <div className="flex items-center justify-center h-full">
                             <div className="text-center">
