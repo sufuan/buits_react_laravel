@@ -65,11 +65,11 @@ function CoderCard({ coder, isActive, onMouseEnter, onMouseLeave, filledAnim, co
 
     const tooltipStyle = {
         position: 'absolute',
-        width: '280px',
+        width: '160px',
         background: 'white',
-        boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-        borderRadius: '12px',
-        padding: '15px',
+        boxShadow: '0 6px 15px rgba(0,0,0,0.15)',
+        borderRadius: '8px',
+        padding: '8px',
         zIndex: 100,
         opacity: isActive ? 1 : 0,
         visibility: isActive ? 'visible' : 'hidden',
@@ -108,7 +108,7 @@ function CoderCard({ coder, isActive, onMouseEnter, onMouseLeave, filledAnim, co
             onMouseLeave={onMouseLeave}
         >
             <img src={coder.img} alt={coder.name} />
-            <div style={tooltipStyle}>
+            <div className="coder-tooltip" style={tooltipStyle}>
                 <div style={arrowStyle} />
                 <div className="tooltip-header">
                     <span className="badge-batch">{coder.batch}</span>
@@ -134,22 +134,24 @@ export default function People() {
     const isHovered = useRef(false);
     const recentMoves = useRef([]);
     const loopRef = useRef(null);
+    const marqueeWrapperRef = useRef(null);
     const marqueeTrackRef = useRef(null);
 
     const setActive = useCallback((coderId) => {
         setActiveCoderId(coderId);
-        // Scroll only the internal marquee track — NOT the page
-        if (marqueeTrackRef.current) {
-            const wrapper = marqueeTrackRef.current.parentElement;
+        // Scroll only the marquee wrapper — NOT the page
+        if (marqueeWrapperRef.current && marqueeTrackRef.current) {
+            const wrapper = marqueeWrapperRef.current;
             const items = marqueeTrackRef.current.querySelectorAll('.marquee-item');
-            items.forEach((item, i) => {
-                if (codersData[i]?.id === coderId && wrapper) {
-                    const itemLeft = item.offsetLeft;
-                    const itemWidth = item.offsetWidth;
-                    const wrapperWidth = wrapper.offsetWidth;
-                    wrapper.scrollLeft = itemLeft - wrapperWidth / 2 + itemWidth / 2;
-                }
-            });
+            const coderIndex = codersData.findIndex(c => c.id === coderId);
+            if (coderIndex >= 0 && items[coderIndex]) {
+                const item = items[coderIndex];
+                const itemLeft = item.offsetLeft;
+                const itemWidth = item.offsetWidth;
+                const wrapperWidth = wrapper.offsetWidth;
+                const targetScroll = itemLeft - (wrapperWidth / 2) + (itemWidth / 2);
+                wrapper.scrollTo({ left: targetScroll, behavior: 'smooth' });
+            }
         }
     }, []);
 
@@ -207,17 +209,25 @@ export default function People() {
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&display=swap');
 
+                .people-section * { box-sizing: border-box; }
+
                 .people-section {
                     width: 100%;
                     max-width: 1200px;
                     padding: 40px 20px;
                     margin: 0 auto;
                     font-family: 'Hind Siliguri', sans-serif;
+                    box-sizing: border-box;
+                }
+                .people-section .container {
+                    width: 100%;
+                    max-width: 100%;
+                    margin: 0 auto;
                 }
                 .section-title { text-align: center; font-size: 28px; font-weight: 700; margin-bottom: 30px; color: #333; }
                 .purple-text { color: #6d28d9; }
 
-                .dashed-container { padding: 30px; padding-top: 0; position: relative; border-radius: 0 0 15px 15px; }
+                .dashed-container { padding: 30px; padding-top: 0; position: relative; border-radius: 0 0 15px 15px; width: 100%; box-sizing: border-box; }
                 .dashed-border-bg { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; z-index: 0; }
                 .border-line { position: absolute; background: repeating-linear-gradient(to bottom, #e5e7eb 0, #e5e7eb 10px, transparent 10px, transparent 20px); width: 2px; }
                 .border-left  { top: 0; bottom: 15px; left: 0; }
@@ -237,7 +247,7 @@ export default function People() {
                     100% { top: -100px; left: 100%; opacity: 0; }
                 }
 
-                .coders-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; margin-bottom: 30px; position: relative; z-index: 2; }
+                .coders-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 15px; margin-bottom: 30px; position: relative; z-index: 2; width: 100%; box-sizing: border-box; }
                 .grid-item { aspect-ratio: 1; background-color: #ffffff; border: 1px solid #d1d5db; border-radius: 10px; position: relative; transition: all 0.3s ease; overflow: visible; }
 
                 .coder-card { width: 100%; height: 100%; background: #f3f4f6; border-radius: 10px; overflow: visible; position: relative; cursor: pointer; transition: all 0.5s ease; opacity: 0; transform: scale(0.8); }
@@ -245,19 +255,47 @@ export default function People() {
                 .coder-card img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; filter: grayscale(100%); transition: filter 0.3s ease; }
                 .coder-card.active img, .coder-card:hover img { filter: grayscale(0%); box-shadow: 0 0 0 3px #9333ea; }
 
-                .tooltip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-                .badge-batch { background: #fee2e2; color: #ef4444; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
-                .badge-rating { background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
-                .tooltip-user { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; }
-                .tooltip-user img { width: 40px; height: 40px; border-radius: 50%; filter: none !important; box-shadow: none !important; }
-                .tooltip-name { font-weight: 700; color: #6d28d9; font-size: 16px; line-height: 1.2; }
-                .tooltip-handles { font-size: 12px; color: #555; background: #f3f4f6; padding: 8px; border-radius: 6px; border-left: 3px solid #6d28d9; }
+                .tooltip-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; flex-wrap: wrap; gap: 3px; }
+                .badge-batch { background: #fee2e2; color: #ef4444; padding: 1px 5px; border-radius: 3px; font-size: 9px; font-weight: 600; }
+                .badge-rating { background: #dcfce7; color: #16a34a; padding: 1px 5px; border-radius: 3px; font-size: 8px; font-weight: 600; }
+                .tooltip-user { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+                .tooltip-user img { width: 24px; height: 24px; border-radius: 50%; filter: none !important; box-shadow: none !important; }
+                .tooltip-name { font-weight: 700; color: #6d28d9; font-size: 11px; line-height: 1.2; }
+                .tooltip-handles { font-size: 9px; color: #555; background: #f3f4f6; padding: 5px; border-radius: 4px; border-left: 2px solid #6d28d9; }
 
-                .marquee-container { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #e5e7eb; position: relative; z-index: 2; }
-                .marquee-wrapper { flex: 1; overflow: hidden; position: relative; height: 40px; }
-                .marquee-track { display: flex; gap: 20px; position: absolute; left: 0; transition: transform 0.5s ease; }
-                .marquee-item { white-space: nowrap; font-size: 14px; font-weight: 500; color: #6b7280; cursor: pointer; padding: 5px 10px; border-radius: 5px; transition: color 0.3s; }
-                .marquee-item.active { color: #6d28d9; background: #f3f4f6; font-weight: 700; }
+                .coder-tooltip { transform-origin: center bottom; }
+                @media (max-width: 768px) {
+                    .coder-tooltip { width: 140px !important; padding: 6px !important; }
+                    .tooltip-user img { width: 20px !important; height: 20px !important; }
+                    .tooltip-name { font-size: 10px !important; }
+                    .badge-batch, .badge-rating { font-size: 8px !important; padding: 1px 4px !important; }
+                    .tooltip-handles { font-size: 8px !important; padding: 4px !important; }
+                }
+                @media (max-width: 480px) {
+                    .coder-tooltip { width: 120px !important; padding: 5px !important; }
+                    .tooltip-name { font-size: 9px !important; }
+                    .badge-batch, .badge-rating { font-size: 7px !important; }
+                    .tooltip-handles { font-size: 7px !important; }
+                }
+
+                .marquee-container { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-top: 1px solid #e5e7eb; position: relative; z-index: 2; width: 100%; }
+                .marquee-wrapper { flex: 1; overflow-x: auto; overflow-y: hidden; position: relative; height: 40px; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; }
+                .marquee-wrapper::-webkit-scrollbar { display: none; }
+                .marquee-wrapper { -ms-overflow-style: none; scrollbar-width: none; }
+                .marquee-track { display: flex; gap: 15px; position: relative; padding: 0 10px; align-items: center; height: 100%; }
+                .marquee-item { white-space: nowrap; font-size: 14px; font-weight: 500; color: #6b7280; cursor: pointer; padding: 5px 10px; border-radius: 5px; transition: color 0.3s, background 0.3s, transform 0.3s; flex-shrink: 0; }
+                .marquee-item.active { color: #6d28d9; background: #f3f4f6; font-weight: 700; transform: scale(1.05); }
+
+                @media (max-width: 768px) {
+                    .marquee-wrapper { height: 35px; }
+                    .marquee-track { gap: 10px; }
+                    .marquee-item { font-size: 12px; padding: 4px 8px; }
+                }
+                @media (max-width: 480px) {
+                    .marquee-wrapper { height: 32px; }
+                    .marquee-track { gap: 8px; }
+                    .marquee-item { font-size: 11px; padding: 3px 6px; }
+                }
 
                 .nav-btn { background: none; border: none; cursor: pointer; color: #9ca3af; padding: 5px; transition: color 0.3s; }
                 .nav-btn:hover { color: #6d28d9; }
@@ -267,19 +305,21 @@ export default function People() {
                 .view-all-btn { background: linear-gradient(90deg, #7c3aed, #db2777); color: white; text-decoration: none; padding: 10px 40px; border-radius: 25px; font-weight: 600; box-shadow: 0 4px 15px rgba(124,58,237,0.4); transition: transform 0.2s; display: inline-block; }
                 .view-all-btn:hover { transform: translateY(-2px); }
 
-                @media (max-width: 1024px) { .coders-grid { grid-template-columns: repeat(4, 1fr); } }
                 @media (max-width: 768px) {
-                    .coders-grid { grid-template-columns: repeat(3, 1fr); }
-                    .dashed-container { border: none; padding: 0; }
-                    .dashed-border-bg { display: none; }
+                    .people-section { padding: 40px 15px; box-sizing: border-box; }
+                    .dashed-container { padding: 15px 10px; }
+                    .coders-grid { gap: 8px; }
                 }
-                @media (max-width: 480px) { .coders-grid { grid-template-columns: repeat(2, 1fr); } }
+                @media (max-width: 480px) {
+                    .people-section { padding: 20px 10px; }
+                    .coders-grid { gap: 5px; }
+                }
             `}</style>
 
             <section className="people-section">
                 <div className="container">
                     <h2 className="section-title">
-                        প্রবলেম সল্ভারস ক্লাবের <span className="purple-text">র‍্যাংকড কোডার</span>
+                        They Dreamed, <span className="purple-text">We Achieved</span>
                     </h2>
 
                     <div className="dashed-container">
@@ -320,7 +360,7 @@ export default function People() {
                                     <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                                 </svg>
                             </button>
-                            <div className="marquee-wrapper">
+                            <div className="marquee-wrapper" ref={marqueeWrapperRef}>
                                 <div className="marquee-track" ref={marqueeTrackRef}>
                                     {codersData.map(coder => (
                                         <div

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -8,6 +8,38 @@ gsap.registerPlugin(ScrollTrigger);
 const BrandSlider = () => {
   const racesRef = useRef(null);
   const racesWrapperRef = useRef(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const totalSlides = 10; // Total number of brand images
+
+  const slideLeft = () => {
+    if (currentSlide > 0) {
+      setCurrentSlide(prev => prev - 1);
+      const races = racesRef.current;
+      if (races) {
+        const slideWidth = 290; // image width (250) + gap (40)
+        gsap.to(races, {
+          x: `+=${slideWidth}`,
+          duration: 0.5,
+          ease: "power2.out",
+        });
+      }
+    }
+  };
+
+  const slideRight = () => {
+    if (currentSlide < totalSlides - 1) {
+      setCurrentSlide(prev => prev + 1);
+      const races = racesRef.current;
+      if (races) {
+        const slideWidth = 290; // image width (250) + gap (40)
+        gsap.to(races, {
+          x: `-=${slideWidth}`,
+          duration: 0.5,
+          ease: "power2.out",
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     const races = racesRef.current;
@@ -58,6 +90,17 @@ const BrandSlider = () => {
 
       {/* Races Wrapper */}
       <div className="racesWrapper" ref={racesWrapperRef}>
+        {/* Left Arrow */}
+        <button 
+          className={`slide-arrow slide-arrow-left ${currentSlide === 0 ? 'disabled' : ''}`}
+          onClick={slideLeft}
+          aria-label="Slide left"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
+
         <div className="races" ref={racesRef}>
           <img src="/img/brands/gp.png" alt="GP" />
           <img src="/img/brands/ucb.png" alt="UCB" />
@@ -70,6 +113,17 @@ const BrandSlider = () => {
           <img src="/img/brands/gp.png" alt="GP" />
           <img src="/img/brands/ucb.png" alt="UCB" />
         </div>
+
+        {/* Right Arrow */}
+        <button 
+          className={`slide-arrow slide-arrow-right ${currentSlide >= totalSlides - 4 ? 'disabled' : ''}`}
+          onClick={slideRight}
+          aria-label="Slide right"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 18L15 12L9 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </button>
       </div>
 
 
@@ -102,6 +156,55 @@ const BrandSlider = () => {
         .racesWrapper {
           overflow: hidden;
           background: #15151e;
+          position: relative;
+        }
+
+        .slide-arrow {
+          position: absolute;
+          top: 50%;
+          transform: translateY(-50%);
+          z-index: 10;
+          background: rgba(49, 49, 67, 0.9);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 50%;
+          width: 50px;
+          height: 50px;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          color: rgba(255, 255, 255, 0.7);
+          transition: all 0.3s ease;
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .slide-arrow:hover {
+          background: rgba(60, 60, 80, 1);
+          transform: translateY(-50%) scale(1.1);
+          color: #fff;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+          border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .slide-arrow.disabled {
+          background: rgba(30, 30, 40, 0.5);
+          cursor: not-allowed;
+          box-shadow: none;
+          color: rgba(255, 255, 255, 0.3);
+        }
+
+        .slide-arrow.disabled:hover {
+          transform: translateY(-50%);
+          background: rgba(30, 30, 40, 0.5);
+          color: rgba(255, 255, 255, 0.3);
+        }
+
+        .slide-arrow-left {
+          left: 20px;
+        }
+
+        .slide-arrow-right {
+          right: 20px;
         }
 
         .races {
@@ -167,6 +270,19 @@ const BrandSlider = () => {
           .races img {
             width: 200px;
             height: 200px;
+          }
+
+          .slide-arrow {
+            width: 40px;
+            height: 40px;
+          }
+
+          .slide-arrow-left {
+            left: 10px;
+          }
+
+          .slide-arrow-right {
+            right: 10px;
           }
         }
       `}</style>

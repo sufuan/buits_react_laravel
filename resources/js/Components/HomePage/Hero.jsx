@@ -178,7 +178,7 @@ export default function Hero() {
 
   return (
     <>
-      <Head title="GTA VI Landing Page" />
+      <Head title="Barishal University IT Society BUITS" />
       <div className="hero-main-wrapper" ref={containerRef}>
         <div className="overlay" ref={overlayRef}></div>
         <div className="hero-1-container" ref={hero1Ref}>
@@ -203,9 +203,9 @@ export default function Hero() {
 
           <div className="buits-container-fixed">
             <div className="buits-badges">
-              <div className="buits-badge-fixed">⚡ TECH</div>
-              <div className="buits-badge-fixed">🔬 RESEARCH</div>
-              <div className="buits-badge-fixed">🛠 BUILD</div>
+              <div className="buits-badge-fixed"> TECH</div>
+              <div className="buits-badge-fixed">RECK</div>
+              <div className="buits-badge-fixed">MAKE</div>
             </div>
 
             <h1>

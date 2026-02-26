@@ -27,21 +27,21 @@ const Jason = () => {
   return (
     <section className="jason">
       <div className="max-w-lg jason-content">
-        <h1>Jason Duval</h1>
-        <h2>Jason wants an easy life, but things just keep getting harder.</h2>
-        <p>Jason grew up around grifters and crooks. After a stint in the Army trying to shake off his troubled teens, he found himself in the Keys doing what he knows best, working for local drug runners. It might be time to try something new.</p>
+        <h1>BUITS IT Fest 1.0</h1>
+        <h2>Where Innovation Meets Celebration</h2>
+        <p>BUITS IT Fest 1.0 was the first-ever tech festival organized by Barishal University IT Society. Featuring hackathons, coding competitions, workshops, and tech talks, it brought together students, developers, and tech enthusiasts to celebrate innovation and creativity.</p>
 
         <div className="jason-2">
-          <img src="/img/jason-2.webp" alt="Jason 2" />
+          <img src="/img/fest_new_2.jpg" alt="Jason 2" />
         </div>
       </div>
 
       <div className="space-y-5 mt-96 img-box">
         <div className="jason-1">
-          <img src="/img/jason-1.webp" alt="Jason 1" />
+          <img src="/img/fest_new_3.jpg" alt="Jason 1" />
         </div>
         <div className="jason-3">
-          <img src="/img/jason-3.webp" alt="Jason 3" />
+          <img src="/img/fest_new_4.jpg" alt="Jason 3" />
         </div>
       </div>
     </section>

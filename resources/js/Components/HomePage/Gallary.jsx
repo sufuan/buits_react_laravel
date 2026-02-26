@@ -1,187 +1,244 @@
-import React, { useLayoutEffect, useRef, useState, useEffect } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useGSAP } from '@gsap/react';
+import React, { useEffect, useRef } from 'react';
+import Swiper from 'swiper';
+import { EffectCoverflow, Autoplay, Pagination } from 'swiper/modules';
 
-gsap.registerPlugin(ScrollTrigger);
+// Import Swiper styles
+import 'swiper/css';
+import 'swiper/css/effect-coverflow';
+import 'swiper/css/pagination';
 
-const Gallary = ({ photos = [] }) => {
-    const containerRef = useRef(null);
-    const spiralRef = useRef(null);
-    const itemsRef = useRef([]);
-    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+const galleryImages = [
+  { src: '/img/gallery/booth.jpg', title: 'BUITS Booth' },
+  { src: '/img/gallery/commitee.jpg', title: 'Committee Members' },
+  { src: '/img/gallery/fest.jpg', title: 'IT Fest' },
+  { src: '/img/gallery/fest 2.jpg', title: 'IT Fest Highlights' },
+  { src: '/img/gallery/fest 3.jpg', title: 'Tech Showcase' },
+  { src: '/img/gallery/fest 4.jpg', title: 'Event Moments' },
+  { src: '/img/gallery/fest 6.jpg', title: 'Festival Vibes' },
+  { src: '/img/gallery/it 6.jpg', title: 'IT Event' },
+  { src: '/img/gallery/it fest 5.jpg', title: 'IT Fest 5' },
+  { src: '/img/gallery/itfest 33.jpg', title: 'IT Fest Memories' },
+  { src: '/img/gallery/itfest 343.jpg', title: 'IT Fest Gallery' },
+  { src: '/img/gallery/ucb.jpg', title: 'UCB Partnership' },
+];
 
-    useEffect(() => {
-        const handleResize = () => setIsMobile(window.innerWidth < 768);
-        window.addEventListener('resize', handleResize);
-        return () => window.removeEventListener('resize', handleResize);
-    }, []);
+const Gallary = () => {
+  const swiperRef = useRef(null);
+  const swiperContainerRef = useRef(null);
 
-    // Loading images from local public assets
-    const localImages = [
-        '/img/gallery/booth.jpg', '/img/gallery/commitee.jpg', '/img/gallery/fest 2.jpg', '/img/gallery/fest 3.jpg',
-        '/img/gallery/fest 4.jpg', '/img/gallery/fest 6.jpg', '/img/gallery/fest.jpg', '/img/gallery/it 6.jpg',
-        '/img/gallery/it fest 5.jpg', '/img/gallery/itfest 33.jpg', '/img/gallery/itfest 343.jpg', '/img/gallery/photo_1563171920366323.jpg',
-        '/img/gallery/photo_1563172457032936.jpg', '/img/gallery/photo_1619957404687774.jpg', '/img/gallery/photo_1656855310997983.jpg',
-        '/img/gallery/photo_1668235656526615.jpg', '/img/gallery/photo_1688388211178026.jpg', '/img/gallery/ucb.jpg'
-    ];
+  useEffect(() => {
+    if (swiperContainerRef.current && !swiperRef.current) {
+      swiperRef.current = new Swiper(swiperContainerRef.current, {
+        modules: [EffectCoverflow, Autoplay, Pagination],
+        effect: 'coverflow',
+        grabCursor: true,
+        centeredSlides: true,
+        loop: true,
+        slidesPerView: 'auto',
+        coverflowEffect: {
+          rotate: 0,
+          stretch: 0,
+          depth: 150,
+          modifier: 2.5,
+          slideShadows: true,
+        },
+        autoplay: {
+          delay: 3000,
+          disableOnInteraction: false,
+        },
+        pagination: {
+          el: '.swiper-pagination',
+          clickable: true,
+        },
+      });
+    }
 
-    const displayPhotos = photos.length > 0 ? photos : localImages.map((url, i) => ({
-        id: i,
-        url: url
-    }));
+    return () => {
+      if (swiperRef.current) {
+        swiperRef.current.destroy(true, true);
+        swiperRef.current = null;
+      }
+    };
+  }, []);
 
-    useGSAP(() => {
-        if (!spiralRef.current) return;
+  return (
+    <section className="gallery-section">
+      <div className="gallery-header">
+        <h2>Our Gallery</h2>
+        <p>Capturing moments of innovation and community</p>
+      </div>
 
-        // GSAP ScrollTrigger for 3D Rotation and subtle drifting
-        const mainRotation = gsap.to(spiralRef.current, {
-            rotateY: 720, // Reduced from 1080 to slow it down
-            y: isMobile ? -600 : -800,
-            ease: "none",
-            scrollTrigger: {
-                trigger: containerRef.current,
-                start: "top top",
-                end: "bottom bottom",
-                scrub: 1, // Weighted catch-up for smooth motion during fast scrolls
-                invalidateOnRefresh: true,
-                overwrite: 'auto'
-            }
-        });
-
-        // Use matchMedia to handle responsive hover logic
-        const mm = gsap.matchMedia();
-
-        mm.add("(min-width: 768px)", () => {
-            // Deskstop-only hover effects
-            itemsRef.current.forEach((item) => {
-                if (!item) return;
-
-                const tl = gsap.timeline({ paused: true });
-                tl.to(item, {
-                    scale: 1.15,
-                    z: 150,
-                    duration: 0.4,
-                    ease: "power3.out",
-                    transformOrigin: "center center"
-                });
-
-                const onMouseEnter = () => {
-                    // Disable hover zoom if we're actively scrolling to keep it smooth
-                    if (ScrollTrigger.isScrolling()) return;
-
-                    tl.play();
-                    gsap.to(itemsRef.current.filter(i => i && i !== item), {
-                        opacity: 0.2,
-                        filter: "blur(8px)",
-                        duration: 0.4
-                    });
-                };
-
-                const onMouseLeave = () => {
-                    tl.reverse();
-                    gsap.to(itemsRef.current, {
-                        opacity: 1,
-                        filter: "blur(0px)",
-                        duration: 0.4
-                    });
-                };
-
-                item.addEventListener('mouseenter', onMouseEnter);
-                item.addEventListener('mouseleave', onMouseLeave);
-
-                return () => {
-                    item.removeEventListener('mouseenter', onMouseEnter);
-                    item.removeEventListener('mouseleave', onMouseLeave);
-                };
-            });
-        });
-
-    }, { scope: containerRef, dependencies: [isMobile] });
-
-    return (
-        <section
-            ref={containerRef}
-            className="relative w-full h-[300vh] overflow-hidden" style={{ backgroundColor: '#111117' }}
-            id="gallery-section"
-        >
-            {/* Sticky Background Text - Signature Studio Dialect look */}
-            <div className="sticky top-0 w-full h-screen flex flex-col items-center justify-center pointer-events-none select-none overflow-hidden">
-                <h2 className="text-white/[0.03] text-[25vw] font-black leading-[0.8] tracking-tighter uppercase whitespace-nowrap">
-                    EXPERT DIGITAL
-                </h2>
-                <h2 className="text-white/[0.03] text-[25vw] font-black leading-[0.8] tracking-tighter uppercase whitespace-nowrap">
-                    PRODUCTION
-                </h2>
-            </div>
-
-            <div className="sticky top-0 w-full h-screen flex items-center justify-center overflow-visible z-10">
-                {/* 3D Scene Root */}
-                <div
-                    className="relative w-0 h-0"
-                    style={{ perspective: '1800px' }}
-                >
-                    {/* Ribbon Spiral Container */}
-                    <div
-                        ref={spiralRef}
-                        className="relative w-0 h-0"
-                        style={{ transformStyle: 'preserve-3d' }}
-                    >
-                        {displayPhotos.map((photo, index) => {
-                            // Responsive constants
-                            const rotationStep = isMobile ? 45 : 32;
-                            const verticalStep = isMobile ? 50 : 60;
-                            const depth = isMobile ? 250 : 400;
-                            const imgWidth = isMobile ? 160 : 220;
-                            const imgHeight = isMobile ? 220 : 300;
-
-                            const rotation = index * rotationStep;
-                            const verticalTranslation = index * verticalStep - (displayPhotos.length * verticalStep / 2);
-
-                            return (
-                                <div
-                                    key={photo.id}
-                                    ref={el => itemsRef.current[index] = el}
-                                    className="absolute overflow-hidden rounded-sm shadow-2xl transition-all duration-300 group cursor-pointer"
-                                    style={{
-                                        width: `${imgWidth}px`,
-                                        height: `${imgHeight}px`,
-                                        left: `-${imgWidth / 2}px`,
-                                        top: `-${imgHeight / 2}px`,
-                                        transform: `rotateY(${rotation}deg) translateY(${verticalTranslation}px) translateZ(${depth}px)`,
-                                        backfaceVisibility: 'visible',
-                                        transformStyle: 'preserve-3d',
-                                        transformOrigin: 'center center'
-                                    }}
-                                >
-                                    <img
-                                        src={photo.url}
-                                        alt={`Gallery Image ${index + 1}`}
-                                        className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
-                                        loading="lazy"
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
-
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
+      <div className="gallery-swiper-container">
+        <div className="swiper gallery-swiper" ref={swiperContainerRef}>
+          <div className="swiper-wrapper">
+            {galleryImages.map((image, index) => (
+              <div key={index} className="swiper-slide gallery-slide">
+                <div className="gallery-card">
+                  <img src={image.src} alt={image.title} />
+                  <div className="gallery-overlay">
+                    <h3>{image.title}</h3>
+                  </div>
                 </div>
-            </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
 
-            {/* Subtle Gradient Overlays for Depth */}
-            <div
-                className="sticky top-0 inset-0 pointer-events-none z-20 h-screen w-full"
-                style={{ background: 'linear-gradient(to bottom, #111117 0%, transparent 15%, transparent 85%, #111117 100%)', opacity: 0.4 }}
-            />
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
 
-            {/* Scroll Hint */}
-            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/10 font-mono text-[8px] uppercase tracking-[0.4em] z-30">
+        .gallery-section {
+          min-height: 100vh;
+          background-color: #111117;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+          padding: 60px 20px;
+          font-family: 'Poppins', sans-serif;
+        }
 
-            </div>
-        </section>
-    );
+        .gallery-header {
+          text-align: center;
+          margin-bottom: 50px;
+        }
+
+        .gallery-header h2 {
+          font-size: 3rem;
+          font-weight: 600;
+          color: #fff;
+          margin: 0 0 15px 0;
+          letter-spacing: 2px;
+        }
+
+        .gallery-header p {
+          font-size: 1.2rem;
+          color: #888;
+          margin: 0;
+          font-weight: 300;
+        }
+
+        .gallery-swiper-container {
+          width: 100%;
+          max-width: 1400px;
+          padding: 20px 0;
+        }
+
+        .gallery-swiper {
+          width: 100%;
+          padding: 50px 0;
+        }
+
+        .gallery-swiper .swiper-slide {
+          width: 350px;
+          height: 450px;
+        }
+
+        .gallery-card {
+          height: 100%;
+          width: 100%;
+          background-color: #1b1f2a;
+          border: 2px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          border-bottom: 4px solid #00C066;
+          border-top: 4px solid #00C066;
+          overflow: hidden;
+          position: relative;
+          transition: all 0.3s ease;
+        }
+
+        .gallery-card:hover {
+          transform: translateY(-5px);
+          box-shadow: 0 20px 40px rgba(0, 192, 102, 0.2);
+        }
+
+        .gallery-card img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          transition: transform 0.5s ease;
+        }
+
+        .gallery-card:hover img {
+          transform: scale(1.05);
+        }
+
+        .gallery-overlay {
+          position: absolute;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+          padding: 40px 20px 20px;
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+
+        .gallery-card:hover .gallery-overlay {
+          opacity: 1;
+        }
+
+        .gallery-overlay h3 {
+          color: #fff;
+          font-size: 1.4rem;
+          font-weight: 500;
+          margin: 0;
+          text-align: center;
+        }
+
+        .gallery-swiper .swiper-pagination {
+          position: relative;
+          margin-top: 30px;
+        }
+
+        .gallery-swiper .swiper-pagination-bullet {
+          width: 12px;
+          height: 12px;
+          background: rgba(255, 255, 255, 0.3);
+          opacity: 1;
+          transition: all 0.3s ease;
+        }
+
+        .gallery-swiper .swiper-pagination-bullet-active {
+          background: #00C066;
+          transform: scale(1.2);
+        }
+
+        .gallery-swiper .swiper-slide-shadow-left,
+        .gallery-swiper .swiper-slide-shadow-right {
+          background-image: linear-gradient(to left, rgba(0, 0, 0, 0.4), rgba(0, 0, 0, 0));
+          border-radius: 12px;
+        }
+
+        @media (max-width: 768px) {
+          .gallery-header h2 {
+            font-size: 2rem;
+          }
+
+          .gallery-header p {
+            font-size: 1rem;
+          }
+
+          .gallery-swiper .swiper-slide {
+            width: 280px;
+            height: 380px;
+          }
+
+          .gallery-overlay h3 {
+            font-size: 1.1rem;
+          }
+        }
+
+        @media (max-width: 480px) {
+          .gallery-swiper .swiper-slide {
+            width: 250px;
+            height: 340px;
+          }
+        }
+      `}</style>
+    </section>
+  );
 };
 
 export default Gallary;
