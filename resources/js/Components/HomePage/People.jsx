@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Link } from '@inertiajs/react';
 
-const codersData = [
+const membersDataold = [
     { id: 1, name: "Md. Samiul Islam Soumik", batch: "Batch - 5", rating: "2 star (Max Rating - 1587)", cf: "Soumik_SHU", cc: "soumik_prime", img: "https://i.pravatar.cc/150?u=1" },
     { id: 2, name: "Fiaze Ahamed", batch: "Batch - 4", rating: "3 star (Max Rating - 1650)", cf: "fiaze_code", cc: "fiaze_master", img: "https://i.pravatar.cc/150?u=2" },
     { id: 3, name: "MD. Tanbir Hasan", batch: "Batch - 5", rating: "2 star (Max Rating - 1490)", cf: "tanbir_dev", cc: "tanbir_pro", img: "https://i.pravatar.cc/150?u=3" },
@@ -16,6 +16,27 @@ const codersData = [
     { id: 12, name: "Lina Akter", batch: "Batch - 5", rating: "2 star (Max Rating - 1470)", cf: "lina_a", cc: "lina_pro", img: "https://i.pravatar.cc/150?u=12" }
 ];
 
+
+
+
+const membersData = [
+    { id: 1, name: "Mazharul Islam Rifat", batch: "", status: "alumni", cf: "Founding Member", img: "/img/people/male-placeholder-image.jpeg" },
+    { id: 2, name: "Md Jawadur Rahman", batch: "", status: "alumni", cf: "Founding Member", img: "/img/people/male-placeholder-image.jpeg" },
+    { id: 3, name: "Abu Ubaida", batch: "", status: "alumni", note: "", img: "/img/people/Abu Ubaida.jpg" },
+    { id: 4, name: "Ashik Hossain", batch: "", status: "alumni", note: "", img: "/img/people/Ashik Hossain.jpg" },
+    { id: 5, name: "Dipan Nandi", batch: "", status: "alumni", note: "", img: "/img/people/Dipan Nandi.jpg" },
+    { id: 6, name: "Hadiuzzaman Sujon", batch: "", status: "alumni", note: "", img: "/img/people/Hadiuzzaman Sujon.jpg" },
+    { id: 7, name: "Jannatul Ferdous Rima", batch: "", status: "alumni", note: "", img: "/img/people/Jannatul Ferdous Rima.jpg" },
+    { id: 8, name: "Mahfuzur Rahman Nazim", batch: "", status: "alumni", note: "", img: "/img/people/Mahfuzur Rahman Nazim.jpg" },
+    { id: 9, name: "Md Fazlay Rabby", batch: "", status: "alumni", note: "", img: "/img/people/Md Fazlay Rabby.jpg" },
+    { id: 10, name: "Md Shoibur Rahman khan Shifat", batch: "", status: "alumni", note: "", img: "/img/people/Md Shoibur Rahman khan Shifat.jpg" },
+    { id: 11, name: "Md. Hasan Shahrier", batch: "", status: "alumni", note: "", img: "/img/people/Md. Hasan Shahrier.jpg" },
+    { id: 12, name: "Md. Redoan Sarkar", batch: "", status: "alumni", cf: "", img: "/img/people/Md. Redoan Sarkar.jpg" },
+    { id: 13, name: "Md. Tanvir Rahman", batch: "", status: "alumni", cf: "", img: "/img/people/Md. Tanvir Rahman.jpg" },
+    { id: 14, name: "shuvro", batch: "", status: "Running President", cf: "", img: "/img/people/shuvro.jpg" },
+    { id: 15, name: "Taium Hossain Sajal", batch: "", status: "alumni", cf: "", img: "/img/people/Taium Hossain Sajal.jpg" },
+    { id: 16, name: "Farhana Yesmen Tori", batch: "", status: "alumni", cf: "", img: "/img/people/female_placeholder.jpg" },
+];
 const COLS = 6;
 const ROWS = 3;
 const GRID_SIZE = COLS * ROWS;
@@ -50,7 +71,7 @@ function buildInitialGrid() {
             emptyIndices.push(Math.floor(Math.random() * ROWS) * COLS + c);
         }
         const available = slots.filter(s => !emptyIndices.includes(s.index));
-        const shuffled = [...codersData].sort(() => Math.random() - 0.5);
+        const shuffled = [...membersData].sort(() => Math.random() - 0.5);
         shuffled.forEach((coder, i) => { if (i < available.length) available[i].content = coder; });
         if (checkConstraints(slots)) return slots;
     }
@@ -129,7 +150,7 @@ function CoderCard({ coder, isActive, onMouseEnter, onMouseLeave, filledAnim, co
 
 export default function People() {
     const [gridSlots, setGridSlots] = useState(() => buildInitialGrid());
-    const [activeCoderId, setActiveCoderId] = useState(codersData[0].id);
+    const [activeCoderId, setActiveCoderId] = useState(membersData[0].id);
     const [filledSet, setFilledSet] = useState(() => new Set(Array.from({ length: GRID_SIZE }, (_, i) => i)));
     const isHovered = useRef(false);
     const recentMoves = useRef([]);
@@ -143,7 +164,7 @@ export default function People() {
         if (marqueeWrapperRef.current && marqueeTrackRef.current) {
             const wrapper = marqueeWrapperRef.current;
             const items = marqueeTrackRef.current.querySelectorAll('.marquee-item');
-            const coderIndex = codersData.findIndex(c => c.id === coderId);
+            const coderIndex = membersData.findIndex(c => c.id === coderId);
             if (coderIndex >= 0 && items[coderIndex]) {
                 const item = items[coderIndex];
                 const itemLeft = item.offsetLeft;
@@ -187,7 +208,7 @@ export default function People() {
     }, [setActive]);
 
     useEffect(() => {
-        setActive(codersData[0].id);
+        setActive(membersData[0].id);
         loopRef.current = setInterval(() => {
             if (!isHovered.current) shuffleConstraint();
         }, 2500);
@@ -195,13 +216,13 @@ export default function People() {
     }, [shuffleConstraint, setActive]);
 
     const handlePrev = () => {
-        const idx = codersData.findIndex(c => c.id === activeCoderId);
-        setActive(idx > 0 ? codersData[idx - 1].id : codersData[codersData.length - 1].id);
+        const idx = membersData.findIndex(c => c.id === activeCoderId);
+        setActive(idx > 0 ? membersData[idx - 1].id : membersData[membersData.length - 1].id);
     };
 
     const handleNext = () => {
-        const idx = codersData.findIndex(c => c.id === activeCoderId);
-        setActive(idx < codersData.length - 1 ? codersData[idx + 1].id : codersData[0].id);
+        const idx = membersData.findIndex(c => c.id === activeCoderId);
+        setActive(idx < membersData.length - 1 ? membersData[idx + 1].id : membersData[0].id);
     };
 
     return (
@@ -362,7 +383,7 @@ export default function People() {
                             </button>
                             <div className="marquee-wrapper" ref={marqueeWrapperRef}>
                                 <div className="marquee-track" ref={marqueeTrackRef}>
-                                    {codersData.map(coder => (
+                                    {membersData.map(coder => (
                                         <div
                                             key={coder.id}
                                             className={`marquee-item${activeCoderId === coder.id ? ' active' : ''}`}
