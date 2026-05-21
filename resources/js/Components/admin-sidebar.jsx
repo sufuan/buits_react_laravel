@@ -171,6 +171,10 @@ const adminNavData = {
           title: "Volunteer Settings",
           url: "/admin/settings/volunteer",
         },
+        {
+          title: "Payment Settings",
+          url: "/admin/settings/payment",
+        },
       ],
     },
   ],

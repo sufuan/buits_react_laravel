@@ -182,6 +182,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::prefix('settings')->name('settings.')->group(function () {
              Route::get('volunteer', [App\Http\Controllers\Admin\Settings\VolunteerSettingsController::class, 'index'])->name('volunteer');
              Route::post('volunteer', [App\Http\Controllers\Admin\Settings\VolunteerSettingsController::class, 'update'])->name('volunteer.update');
+             Route::get('payment', [App\Http\Controllers\Admin\Settings\PaymentSettingsController::class, 'index'])->name('payment');
+             Route::post('payment', [App\Http\Controllers\Admin\Settings\PaymentSettingsController::class, 'update'])->name('payment.update');
         });
 
         // ================= Designations Management =================
