@@ -78,14 +78,24 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     // Volunteer Application Routes
     Route::get('/volunteer-application/create', [App\Http\Controllers\VolunteerApplicationController::class, 'create'])->name('volunteer-application.create');
     Route::post('/volunteer-application', [App\Http\Controllers\VolunteerApplicationController::class, 'store'])->name('volunteer-application.store');
-    
+
     // Executive Application Routes
     Route::get('/executive-application/create', [App\Http\Controllers\ExecutiveApplicationController::class, 'create'])->name('executive-application.create');
     Route::post('/executive-application', [App\Http\Controllers\ExecutiveApplicationController::class, 'store'])->name('executive-application.store');
+});
+
+// ================= Payment Routes =================
+Route::prefix('payment')->name('payment.')->group(function () {
+    Route::get('/checkout', [App\Http\Controllers\PaymentController::class, 'checkout'])->name('checkout');
+    Route::post('/initiate', [App\Http\Controllers\PaymentController::class, 'initiate'])->name('initiate');
+    Route::get('/success', [App\Http\Controllers\PaymentController::class, 'success'])->name('success');
+    Route::get('/cancel', [App\Http\Controllers\PaymentController::class, 'cancel'])->name('cancel');
+    Route::get('/check/{pp_id}', [App\Http\Controllers\PaymentController::class, 'check'])->name('check');
+    Route::post('/webhook', [App\Http\Controllers\PaymentController::class, 'webhook'])->name('webhook');
 });
 
 
@@ -182,8 +192,8 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::prefix('settings')->name('settings.')->group(function () {
              Route::get('volunteer', [App\Http\Controllers\Admin\Settings\VolunteerSettingsController::class, 'index'])->name('volunteer');
              Route::post('volunteer', [App\Http\Controllers\Admin\Settings\VolunteerSettingsController::class, 'update'])->name('volunteer.update');
-             Route::get('payment', [App\Http\Controllers\Admin\Settings\PaymentSettingsController::class, 'index'])->name('payment');
-             Route::post('payment', [App\Http\Controllers\Admin\Settings\PaymentSettingsController::class, 'update'])->name('payment.update');
+             Route::get('payment', [App\Http\Controllers\Admin\Settings\AdminPaymentController::class, 'index'])->name('payment');
+             Route::post('payment', [App\Http\Controllers\Admin\Settings\AdminPaymentController::class, 'update'])->name('payment.update');
         });
 
         // ================= Designations Management =================
