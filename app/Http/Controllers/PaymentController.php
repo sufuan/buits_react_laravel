@@ -100,6 +100,11 @@ class PaymentController extends Controller
             return redirect('/');
         }
 
+        // Handle pending status - also redirect to home
+        if ($payment->status === 'pending') {
+            return redirect('/');
+        }
+
         return response()->json([
             'status' => 'ok',
             'message' => 'Payment received. Your payment is being processed.',
