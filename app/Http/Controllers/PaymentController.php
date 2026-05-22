@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Payment;
 use App\Services\PipraPay;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 
 class PaymentController extends Controller
@@ -28,8 +29,8 @@ class PaymentController extends Controller
 
     /**
      * Initiate a new payment.
-     * Creates charge with PipraPay, saves to DB, redirects to PipraPay checkout.
-     * Webhook handles payment updates when user completes payment.
+     * Calls POST https://pay.buits.org/api/create-charge
+     * On success: saves pending payment to DB, redirects to pp_url
      */
     public function initiate(Request $request)
     {
@@ -48,7 +49,7 @@ class PaymentController extends Controller
             'mobile_number' => $validated['mobile_number'],
             'amount'        => (string) $validated['amount'],
             'metadata'      => ['invoiceid' => $invoiceId],
-            'return_url'    => route('home'),
+            'return_url'    => route('payment.success'),
             'webhook_url'   => route('payment.webhook'),
         ]);
 
@@ -71,24 +72,64 @@ class PaymentController extends Controller
         ]);
     }
 
+    /**
+     * Webhook handles payment updates.
+     * This endpoint is called after user completes payment on PipraPay.
+     */
+    public function success(Request $request)
+    {
+        $ppId = $request->query('pp_id');
+
+        if (!$ppId) {
+            return response()->json(['status' => 'error', 'message' => 'Payment ID missing'], 400);
+        }
+
+        // Payment will be updated by webhook
+        $payment = Payment::where('pp_id', (string) $ppId)->first();
+
+        if (!$payment) {
+            return response()->json(['status' => 'error', 'message' => 'Payment not found'], 404);
+        }
+
+        return response()->json([
+            'status' => 'ok',
+            'message' => 'Payment received. Your payment is being processed.',
+            'pp_id' => $ppId,
+            'payment_status' => $payment->status,
+        ]);
+    }
 
     /**
      * Webhook endpoint — receives real-time updates from PipraPay.
-     * Updates payment record when payment status changes.
+     * Updates payment record with status from PipraPay.
      */
     public function webhook(Request $request)
     {
         $validation = $this->pipra->handleWebhook();
 
         if (!$validation['status']) {
-            return response()->json(['status' => 'error', 'message' => 'Invalid payload'], 400);
+            Log::error('Webhook Validation Failed', ['error' => $validation['message'] ?? 'Unknown']);
+            return response()->json(['status' => 'error', 'message' => $validation['message'] ?? 'Invalid payload'], 400);
         }
 
         $data = $validation['data'];
 
-        if (isset($data['pp_id'], $data['status'])) {
-            Payment::where('pp_id', (string) $data['pp_id'])->update([
-                'customer_name'         => $data['full_name'] ?? null,
+        if (!isset($data['pp_id'], $data['status'])) {
+            Log::error('Webhook Missing Required Fields', ['data' => $data]);
+            return response()->json(['status' => 'error', 'message' => 'Missing pp_id or status'], 400);
+        }
+
+        try {
+            $payment = Payment::where('pp_id', (string) $data['pp_id'])->first();
+
+            if (!$payment) {
+                Log::warning('Webhook Payment Not Found', ['pp_id' => $data['pp_id']]);
+                return response()->json(['status' => 'error', 'message' => 'Payment not found'], 404);
+            }
+
+            // Update payment record
+            $payment->update([
+                'customer_name'         => $data['full_name'] ?? $payment->customer_name,
                 'customer_email_mobile' => ($data['email_address'] ?? '') . ' | ' . ($data['mobile_number'] ?? ''),
                 'payment_method'        => $data['gateway'] ?? null,
                 'fee'                   => $data['fee'] ?? '0',
@@ -98,10 +139,22 @@ class PaymentController extends Controller
                 'sender_number'         => $data['sender'] ?? null,
                 'metadata'              => $data['metadata'] ?? null,
                 'status'                => $data['status'],
-                'paid_at'               => $data['date'] ?? null,
+                'paid_at'               => $data['date'] ?? now(),
             ]);
-        }
 
-        return response()->json(['status' => 'ok'], 200);
+            Log::info('Webhook Payment Updated', [
+                'pp_id' => $data['pp_id'],
+                'status' => $data['status'],
+            ]);
+
+            return response()->json(['status' => 'ok'], 200);
+        } catch (\Exception $e) {
+            Log::error('Webhook Processing Error', [
+                'pp_id' => $data['pp_id'] ?? null,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['status' => 'error', 'message' => 'Processing failed'], 500);
+        }
     }
 }
