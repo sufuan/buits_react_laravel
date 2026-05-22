@@ -75,20 +75,29 @@ class PaymentController extends Controller
     /**
      * Webhook handles payment updates.
      * This endpoint is called after user completes payment on PipraPay.
+     * Handles both successful and cancelled payments.
      */
     public function success(Request $request)
     {
-        $ppId = $request->query('pp_id');
+        // PipraPay sends either pp_id or transaction_ref
+        $ppId = $request->query('pp_id') ?? $request->query('transaction_ref');
+        $ppStatus = $request->query('pp_status');
 
         if (!$ppId) {
-            return response()->json(['status' => 'error', 'message' => 'Payment ID missing'], 400);
+            return redirect()->route('home');
         }
 
         // Payment will be updated by webhook
         $payment = Payment::where('pp_id', (string) $ppId)->first();
 
         if (!$payment) {
-            return response()->json(['status' => 'error', 'message' => 'Payment not found'], 404);
+            return redirect()->route('home');
+        }
+
+        // Handle cancelled status from return_url
+        if ($ppStatus === 'canceled') {
+            $payment->update(['status' => 'cancelled']);
+            return redirect()->route('home');
         }
 
         return response()->json([
