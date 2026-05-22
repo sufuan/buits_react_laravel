@@ -84,20 +84,20 @@ class PaymentController extends Controller
         $ppStatus = $request->query('pp_status');
 
         if (!$ppId) {
-            return redirect()->route('home');
+            return redirect('/');
         }
 
         // Payment will be updated by webhook
         $payment = Payment::where('pp_id', (string) $ppId)->first();
 
         if (!$payment) {
-            return redirect()->route('home');
+            return redirect('/');
         }
 
         // Handle cancelled status from return_url
         if ($ppStatus === 'canceled') {
             $payment->update(['status' => 'cancelled']);
-            return redirect()->route('home');
+            return redirect('/');
         }
 
         return response()->json([
