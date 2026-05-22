@@ -28,8 +28,8 @@ class PaymentController extends Controller
 
     /**
      * Initiate a new payment.
-     * Calls POST https://pay.buits.org/api/create-charge
-     * On success: saves pending payment to DB, redirects to pp_url
+     * Creates charge with PipraPay, saves to DB, redirects to PipraPay checkout.
+     * Webhook handles payment updates when user completes payment.
      */
     public function initiate(Request $request)
     {
@@ -48,7 +48,7 @@ class PaymentController extends Controller
             'mobile_number' => $validated['mobile_number'],
             'amount'        => (string) $validated['amount'],
             'metadata'      => ['invoiceid' => $invoiceId],
-            'return_url'    => route('payment.success'),
+            'return_url'    => route('home'),
             'webhook_url'   => route('payment.webhook'),
         ]);
 
@@ -71,91 +71,10 @@ class PaymentController extends Controller
         ]);
     }
 
-    /**
-     * Customer redirected back here after payment.
-     * PipraPay sends pp_id via GET (return_type = GET).
-     * Calls POST https://pay.buits.org/api/verify-payments
-     */
-    public function success(Request $request)
-    {
-        $ppId = $request->query('pp_id');
-
-        if (!$ppId) {
-            return Inertia::render('Payment/Failed', [
-                'message' => 'Payment ID missing. Please contact support.'
-            ]);
-        }
-
-        $verify = $this->pipra->verifyPayment((string) $ppId);
-
-        if (isset($verify['status']) && $verify['status'] === 'completed') {
-            Payment::where('pp_id', (string) $ppId)->update([
-                'customer_name'         => $verify['full_name'] ?? null,
-                'customer_email_mobile' => ($verify['email_address'] ?? '') . ' | ' . ($verify['mobile_number'] ?? ''),
-                'payment_method'        => $verify['gateway'] ?? null,
-                'fee'                   => $verify['fee'] ?? '0',
-                'refund_amount'         => $verify['discount_amount'] ?? '0',
-                'total'                 => $verify['total'] ?? 0,
-                'transaction_id'        => $verify['transaction_id'] ?? null,
-                'sender_number'         => $verify['sender'] ?? null,
-                'metadata'              => $verify['metadata'] ?? null,
-                'status'                => 'completed',
-                'paid_at'               => $verify['date'] ?? null,
-            ]);
-
-            return Inertia::render('Payment/Success', [
-                'transaction' => $verify
-            ]);
-        }
-
-        return Inertia::render('Payment/Pending', [
-            'pp_id' => $ppId
-        ]);
-    }
-
-    /**
-     * AJAX polling endpoint — called by Pending.jsx every 5 seconds.
-     * Returns JSON with current payment status.
-     */
-    public function check(string $ppId)
-    {
-        $verify = $this->pipra->verifyPayment($ppId);
-
-        if (isset($verify['status']) && $verify['status'] === 'completed') {
-            Payment::where('pp_id', $ppId)->update([
-                'payment_method' => $verify['gateway'] ?? null,
-                'fee'            => $verify['fee'] ?? '0',
-                'total'          => $verify['total'] ?? 0,
-                'transaction_id' => $verify['transaction_id'] ?? null,
-                'sender_number'  => $verify['sender'] ?? null,
-                'metadata'       => $verify['metadata'] ?? null,
-                'status'         => 'completed',
-                'paid_at'        => $verify['date'] ?? null,
-            ]);
-        }
-
-        return response()->json($verify);
-    }
-
-    /**
-     * Customer cancelled the payment.
-     */
-    public function cancel(Request $request)
-    {
-        $ppId = $request->query('pp_id');
-
-        if ($ppId) {
-            Payment::where('pp_id', (string) $ppId)->update(['status' => 'cancelled']);
-        }
-
-        return Inertia::render('Payment/Cancel', [
-            'message' => 'Payment was cancelled. You can try again.'
-        ]);
-    }
 
     /**
      * Webhook endpoint — receives real-time updates from PipraPay.
-     * Validates API key, then updates payment record.
+     * Updates payment record when payment status changes.
      */
     public function webhook(Request $request)
     {

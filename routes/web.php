@@ -92,9 +92,6 @@ Route::middleware('auth')->group(function () {
 Route::prefix('payment')->name('payment.')->group(function () {
     Route::get('/checkout', [App\Http\Controllers\PaymentController::class, 'checkout'])->name('checkout');
     Route::post('/initiate', [App\Http\Controllers\PaymentController::class, 'initiate'])->name('initiate');
-    Route::get('/success', [App\Http\Controllers\PaymentController::class, 'success'])->name('success');
-    Route::get('/cancel', [App\Http\Controllers\PaymentController::class, 'cancel'])->name('cancel');
-    Route::get('/check/{pp_id}', [App\Http\Controllers\PaymentController::class, 'check'])->name('check');
     Route::post('/webhook', [App\Http\Controllers\PaymentController::class, 'webhook'])->name('webhook');
 });
 
