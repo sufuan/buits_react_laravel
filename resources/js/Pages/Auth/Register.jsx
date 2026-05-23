@@ -24,6 +24,8 @@ export default function Register({ success }) {
     const [currentStep, setCurrentStep] = useState(1);
     const [completedSteps, setCompletedSteps] = useState([]);
     const [isAnimating, setIsAnimating] = useState(false);
+    const [emailChecking, setEmailChecking] = useState(false);
+    const [emailError, setEmailError] = useState('');
 
     const { data, setData, post, processing, errors, reset } = useForm({
         name: '',
@@ -41,6 +43,7 @@ export default function Register({ success }) {
         permanent_address: '',
         transaction_id: '',
         to_account: '01939378080',
+        payment_method: '',
     });
 
     const totalSteps = 5;
@@ -85,15 +88,44 @@ export default function Register({ success }) {
     ];
 
     // Navigation functions
-    const nextStep = () => {
-        if (currentStep < totalSteps && validateCurrentStep()) {
-            setIsAnimating(true);
-            setTimeout(() => {
-                setCompletedSteps(prev => [...prev, currentStep]);
-                setCurrentStep(prev => prev + 1);
-                setIsAnimating(false);
-            }, 300);
+    const nextStep = async () => {
+        if (currentStep >= totalSteps || !validateCurrentStep()) return;
+
+        // Server-side email check on step 1
+        if (currentStep === 1) {
+            setEmailChecking(true);
+            setEmailError('');
+            try {
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') ?? '';
+                const res = await fetch(route('register.check-email'), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({ email: data.email }),
+                });
+                const json = await res.json();
+                if (!json.available) {
+                    setEmailError(json.message);
+                    setEmailChecking(false);
+                    return; // block navigation
+                }
+            } catch {
+                setEmailError('Unable to verify email. Please check your connection and try again.');
+                setEmailChecking(false);
+                return;
+            }
+            setEmailChecking(false);
         }
+
+        setIsAnimating(true);
+        setTimeout(() => {
+            setCompletedSteps(prev => [...prev, currentStep]);
+            setCurrentStep(prev => prev + 1);
+            setIsAnimating(false);
+        }, 300);
     };
 
     const prevStep = () => {
@@ -128,7 +160,7 @@ export default function Register({ success }) {
             case 4:
                 return data.current_address;
             case 5:
-                return data.transaction_id;
+                return data.transaction_id && data.payment_method;
             default:
                 return true;
         }
@@ -187,7 +219,7 @@ export default function Register({ success }) {
         <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
             <Head title="Register - Join Us!" />
 
-            <style jsx>{`
+            <style>{`
                 @keyframes fade-in {
                     from { opacity: 0; transform: translateY(20px); }
                     to { opacity: 1; transform: translateY(0); }
@@ -327,14 +359,34 @@ export default function Register({ success }) {
                                                 type="email"
                                                 name="email"
                                                 value={data.email}
-                                                className="mt-2 block w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500"
+                                                className={`mt-2 block w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 ${
+                                                    emailError ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''
+                                                }`}
                                                 autoComplete="username"
-                                                onChange={(e) => setData('email', e.target.value)}
+                                                onChange={(e) => { setData('email', e.target.value); setEmailError(''); }}
                                                 placeholder="your.email@example.com"
                                                 required
                                             />
                                             <InputError message={errors.email} className="mt-2" />
                                         </div>
+
+                                        {/* Email duplicate error banner */}
+                                        {emailError && (
+                                            <div className="md:col-span-2 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl animate-fade-in">
+                                                <div className="flex-shrink-0 w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mt-0.5">
+                                                    <svg className="w-4 h-4 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                                                        <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-red-700">Email Not Available</p>
+                                                    <p className="text-sm text-red-600 mt-0.5">{emailError}</p>
+                                                    <Link href={route('login')} className="inline-block mt-2 text-sm font-medium text-red-700 underline hover:text-red-900">
+                                                        Sign in instead →
+                                                    </Link>
+                                                </div>
+                                            </div>
+                                        )}
 
                                         <div>
                                             <InputLabel htmlFor="password" value="Password" className="text-gray-700 font-medium" />
@@ -553,49 +605,83 @@ export default function Register({ success }) {
                                     <div className="text-center mb-6">
                                         <CreditCard className="h-12 w-12 text-teal-500 mx-auto mb-2 animate-pulse" />
                                         <h3 className="text-xl font-semibold text-gray-800">Almost there!</h3>
-                                        <p className="text-gray-600">Complete your registration with payment details</p>
+                                        <p className="text-gray-600">Choose a payment method and complete your registration</p>
                                     </div>
 
-                                    <div className="bg-gradient-to-r from-teal-50 to-green-50 p-6 rounded-lg border border-teal-200">
-                                        <h4 className="font-semibold text-teal-800 mb-4">Payment Instructions</h4>
-                                        <div className="space-y-2 text-sm text-teal-700">
-                                            <p>• Send payment to: <strong>01939378080</strong></p>
-                                            <p>• Use Bkash, Rocket, or Nagad</p>
-                                            <p>• Keep your transaction ID ready</p>
+                                    {/* Payment Method Toggle Buttons */}
+                                    <div>
+                                        <InputLabel value="Select Payment Method" className="text-gray-700 font-medium mb-3 block" />
+                                        <div className="grid grid-cols-3 gap-3">
+                                            {[
+                                                { value: 'bkash',  label: 'bKash',  color: 'from-pink-500 to-rose-500',   ring: 'ring-pink-400',   bg: 'bg-pink-50',   border: 'border-pink-400'  },
+                                                { value: 'rocket', label: 'Rocket', color: 'from-purple-500 to-violet-600', ring: 'ring-purple-400', bg: 'bg-purple-50', border: 'border-purple-400' },
+                                                { value: 'nagad',  label: 'Nagad',  color: 'from-orange-500 to-amber-500', ring: 'ring-orange-400', bg: 'bg-orange-50', border: 'border-orange-400' },
+                                            ].map((method) => (
+                                                <button
+                                                    key={method.value}
+                                                    type="button"
+                                                    onClick={() => setData('payment_method', method.value)}
+                                                    className={`
+                                                        relative flex flex-col items-center justify-center py-4 px-3 rounded-xl border-2 font-semibold text-sm transition-all duration-200 cursor-pointer
+                                                        ${data.payment_method === method.value
+                                                            ? `bg-gradient-to-br ${method.color} text-white border-transparent shadow-lg scale-105 ring-2 ${method.ring} ring-offset-2`
+                                                            : `bg-white text-gray-700 border-gray-200 hover:${method.bg} hover:border-current hover:scale-102`
+                                                        }
+                                                    `}
+                                                >
+                                                    {data.payment_method === method.value && (
+                                                        <CheckCircle className="h-4 w-4 mb-1" />
+                                                    )}
+                                                    {method.label}
+                                                </button>
+                                            ))}
                                         </div>
+                                        <InputError message={errors.payment_method} className="mt-2" />
                                     </div>
 
-                                    <div className="grid md:grid-cols-2 gap-6">
-                                        <div>
-                                            <InputLabel htmlFor="transaction_id" value="Transaction ID" className="text-gray-700 font-medium" />
-                                            <TextInput
-                                                id="transaction_id"
-                                                name="transaction_id"
-                                                value={data.transaction_id}
-                                                className="mt-2 block w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring-teal-500"
-                                                onChange={(e) => setData('transaction_id', e.target.value)}
-                                                placeholder="Enter transaction ID"
-                                                required
-                                            />
-                                            <InputError message={errors.transaction_id} className="mt-2" />
+                                    {/* Dynamic Payment Instructions */}
+                                    {data.payment_method && (
+                                        <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${
+                                            data.payment_method === 'bkash'  ? 'bg-pink-50 border-pink-200'   :
+                                            data.payment_method === 'rocket' ? 'bg-purple-50 border-purple-200' :
+                                                                                'bg-orange-50 border-orange-200'
+                                        }`}>
+                                            <h4 className={`font-semibold mb-2 ${
+                                                data.payment_method === 'bkash'  ? 'text-pink-800'   :
+                                                data.payment_method === 'rocket' ? 'text-purple-800' :
+                                                                                    'text-orange-800'
+                                            }`}>
+                                                {data.payment_method === 'bkash'  ? '📱 bKash Payment' :
+                                                 data.payment_method === 'rocket' ? '🚀 Rocket Payment' :
+                                                                                    '💛 Nagad Payment'} Instructions
+                                            </h4>
+                                            <p className={`text-sm ${
+                                                data.payment_method === 'bkash'  ? 'text-pink-700'   :
+                                                data.payment_method === 'rocket' ? 'text-purple-700' :
+                                                                                    'text-orange-700'
+                                            }`}>
+                                                Send money to <strong>01939378080</strong> via{' '}
+                                                <strong>
+                                                    {data.payment_method === 'bkash'  ? 'bKash'  :
+                                                     data.payment_method === 'rocket' ? 'Rocket' : 'Nagad'}
+                                                </strong>, then enter your Transaction ID below.
+                                            </p>
                                         </div>
+                                    )}
 
-                                        <div>
-                                            <InputLabel htmlFor="to_account" value="Payment Method" className="text-gray-700 font-medium" />
-                                            <select
-                                                id="to_account"
-                                                name="to_account"
-                                                value={data.to_account}
-                                                onChange={(e) => setData('to_account', e.target.value)}
-                                                className="mt-2 block w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring-teal-500"
-                                                required
-                                            >
-                                                <option value="01939378080">Bkash - 01939378080</option>
-                                                <option value="01939378080">Rocket - 01939378080</option>
-                                                <option value="01939378080">Nagad - 01939378080</option>
-                                            </select>
-                                            <InputError message={errors.to_account} className="mt-2" />
-                                        </div>
+                                    {/* Transaction ID */}
+                                    <div>
+                                        <InputLabel htmlFor="transaction_id" value="Transaction ID" className="text-gray-700 font-medium" />
+                                        <TextInput
+                                            id="transaction_id"
+                                            name="transaction_id"
+                                            value={data.transaction_id}
+                                            className="mt-2 block w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring-teal-500"
+                                            onChange={(e) => setData('transaction_id', e.target.value)}
+                                            placeholder="Enter your transaction ID"
+                                            required
+                                        />
+                                        <InputError message={errors.transaction_id} className="mt-2" />
                                     </div>
                                 </div>
                             )}
@@ -633,17 +719,26 @@ export default function Register({ success }) {
                                 <button
                                     type="button"
                                     onClick={nextStep}
-                                    disabled={!validateCurrentStep()}
+                                    disabled={!validateCurrentStep() || emailChecking}
                                     className={`
                                         flex items-center px-6 py-3 rounded-lg font-medium transition-all duration-200
-                                        ${validateCurrentStep()
+                                        ${validateCurrentStep() && !emailChecking
                                             ? `bg-gradient-to-r ${steps[currentStep - 1].color} text-white hover:scale-105 shadow-lg`
                                             : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                         }
                                     `}
                                 >
-                                    Next
-                                    <ChevronRight className="h-5 w-5 ml-2" />
+                                    {emailChecking ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-gray-400 mr-2"></div>
+                                            Checking...
+                                        </>
+                                    ) : (
+                                        <>
+                                            Next
+                                            <ChevronRight className="h-5 w-5 ml-2" />
+                                        </>
+                                    )}
                                 </button>
                             ) : (
                                 <PrimaryButton

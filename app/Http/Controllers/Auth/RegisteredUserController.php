@@ -52,6 +52,34 @@ class RegisteredUserController extends Controller
     }
 
     /**
+     * Check if an email is already registered or pending.
+     */
+    public function checkEmail(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $request->validate([
+            'email' => ['required', 'string', 'email', 'max:255'],
+        ]);
+
+        $email = strtolower($request->email);
+
+        if (User::where('email', $email)->exists()) {
+            return response()->json([
+                'available' => false,
+                'message'   => 'This email is already registered. Please sign in or use a different email address.',
+            ]);
+        }
+
+        if (PendingUser::where('email', $email)->exists()) {
+            return response()->json([
+                'available' => false,
+                'message'   => 'A registration with this email is already pending admin approval. Please wait or contact support.',
+            ]);
+        }
+
+        return response()->json(['available' => true]);
+    }
+
+    /**
      * Handle an incoming registration request.
      *
      * @throws \Illuminate\Validation\ValidationException
@@ -61,7 +89,7 @@ class RegisteredUserController extends Controller
         // Validate the standard user fields
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class, 'unique:pending_users,email'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'phone' => ['required', 'string', 'max:255'],
             'department' => ['required', 'string', 'max:255'],
@@ -72,8 +100,9 @@ class RegisteredUserController extends Controller
             'mother_name' => ['nullable', 'string', 'max:255'],
             'current_address' => ['nullable', 'string', 'max:255'],
             'permanent_address' => ['nullable', 'string', 'max:255'],
-            'transaction_id' => ['required', 'string', 'max:255'],
-            'to_account' => ['required','string',]
+            'transaction_id' => ['required', 'string', 'max:255', 'unique:pending_users,transaction_id', 'unique:users,transaction_id'],
+            'to_account' => ['required', 'string'],
+            'payment_method' => ['required', 'string', 'in:bkash,rocket,nagad'],
         ]);
 
         // Create the pending user
@@ -93,6 +122,7 @@ class RegisteredUserController extends Controller
             'permanent_address' => $request->permanent_address,
             'transaction_id' => $request->transaction_id,
             'to_account' => $request->to_account,
+            'payment_method' => $request->payment_method,
         ]);
 
         // Notify all admins about the new user registration (commented out for now)

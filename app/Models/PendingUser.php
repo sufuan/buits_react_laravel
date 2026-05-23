@@ -30,6 +30,7 @@ class PendingUser extends Model
         'is_approved',
         'transaction_id',
         'to_account',
+        'payment_method',
         'image',
         'skills',
         'custom-form',

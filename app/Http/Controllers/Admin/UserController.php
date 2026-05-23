@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\PendingUser;
 use App\Models\User;
 use App\Exports\UsersExport;
 use App\Exports\UsersTemplateExport;
@@ -704,5 +705,46 @@ class UserController extends Controller
                 'message' => 'Failed to retrieve validation metadata'
             ], 500);
         }
+    }
+    /**
+     * Approve a pending user registration.
+     */
+    public function approvePending(PendingUser $pendingUser)
+    {
+        $memberId = $this->generateNewMemberId($pendingUser->department, $pendingUser->session);
+
+        User::create([
+            'name'              => $pendingUser->name,
+            'email'             => $pendingUser->email,
+            'password'          => $pendingUser->password,
+            'phone'             => $pendingUser->phone,
+            'department'        => $pendingUser->department,
+            'session'           => $pendingUser->session,
+            'usertype'          => $pendingUser->usertype ?? 'user',
+            'gender'            => $pendingUser->gender,
+            'class_roll'        => $pendingUser->class_roll,
+            'father_name'       => $pendingUser->father_name,
+            'mother_name'       => $pendingUser->mother_name,
+            'current_address'   => $pendingUser->current_address,
+            'permanent_address' => $pendingUser->permanent_address,
+            'transaction_id'    => $pendingUser->transaction_id,
+            'to_account'        => $pendingUser->to_account,
+            'member_id'         => $memberId,
+            'is_approved'       => true,
+        ]);
+
+        $pendingUser->delete();
+
+        return back()->with('success', 'Registration approved. Member ID: ' . $memberId);
+    }
+
+    /**
+     * Reject (delete) a pending user registration.
+     */
+    public function rejectPending(PendingUser $pendingUser)
+    {
+        $pendingUser->delete();
+
+        return back()->with('success', 'Registration rejected.');
     }
 }

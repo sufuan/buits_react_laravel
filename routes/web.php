@@ -152,6 +152,10 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::post('bulk-approve', [UserApprovalController::class, 'bulkApprove'])->name('bulk-approve');
             Route::post('bulk-reject', [UserApprovalController::class, 'bulkReject'])->name('bulk-reject');
 
+        // Pending User Approve / Reject Routes
+        Route::post('pending/{pendingUser}/approve', [UserController::class, 'approvePending'])->name('pending.approve');
+        Route::delete('pending/{pendingUser}/reject', [UserController::class, 'rejectPending'])->name('pending.reject');
+
             // User CRUD Routes (must come after specific routes)
             Route::get('{user}', [UserController::class, 'show'])->name('show');
             Route::get('{user}/edit', [UserController::class, 'edit'])->name('edit');
