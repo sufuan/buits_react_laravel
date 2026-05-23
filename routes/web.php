@@ -97,6 +97,15 @@ Route::prefix('payment')->name('payment.')->group(function () {
 });
 
 
+// ================= Registration Payment Routes =================
+// Public — no guest/auth middleware. Must be outside auth.php so they are
+// accessible after RegisteredUserController@store sets the session.
+Route::get('/register/payment', [App\Http\Controllers\Auth\RegisteredUserController::class, 'registrationCheckout'])
+    ->name('registration.payment.checkout');
+Route::get('/register/cancelled', [App\Http\Controllers\Auth\RegisteredUserController::class, 'registrationCancelled'])
+    ->name('registration.payment.cancelled');
+
+
 
 require __DIR__ . '/auth.php';
 

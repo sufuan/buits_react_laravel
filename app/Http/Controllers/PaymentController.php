@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Payment;
+use App\Models\PendingUser;
+use App\Models\User;
 use App\Services\PipraPay;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -43,12 +45,19 @@ class PaymentController extends Controller
 
         $invoiceId = 'INV-' . uniqid();
 
+        // Build metadata — include pending_user_id if this is a registration payment
+        $pendingUserId = session('registration_pending_user_id');
+        $metadata = ['invoiceid' => $invoiceId];
+        if ($pendingUserId) {
+            $metadata['pending_user_id'] = $pendingUserId;
+        }
+
         $response = $this->pipra->createCharge([
             'full_name'     => $validated['full_name'],
             'email_address' => $validated['email_address'],
             'mobile_number' => $validated['mobile_number'],
             'amount'        => (string) $validated['amount'],
-            'metadata'      => ['invoiceid' => $invoiceId],
+            'metadata'      => $metadata,
             'return_url'    => route('payment.success'),
             'webhook_url'   => route('payment.webhook'),
         ]);
@@ -60,7 +69,7 @@ class PaymentController extends Controller
                 'customer_email_mobile' => $validated['email_address'] . ' | ' . $validated['mobile_number'],
                 'amount'                => (string) $validated['amount'],
                 'currency'              => config('services.piprapay.currency', 'BDT'),
-                'metadata'              => ['invoiceid' => $invoiceId],
+                'metadata'              => $metadata,
                 'status'                => 'pending',
             ]);
 
@@ -97,6 +106,13 @@ class PaymentController extends Controller
         // Handle cancelled status from return_url
         if ($ppStatus === 'canceled') {
             $payment->update(['status' => 'cancelled']);
+
+            // If this is a registration payment, delegate to the cancellation page
+            // (which will delete the PendingUser and clear the session)
+            if (session('registration_pending_user_id')) {
+                return redirect()->route('registration.payment.cancelled');
+            }
+
             return redirect('/');
         }
 
@@ -119,26 +135,28 @@ class PaymentController extends Controller
      */
     public function webhook(Request $request)
     {
+        // ── 1. Validate webhook signature ─────────────────────────────────────
         $validation = $this->pipra->handleWebhook();
 
         if (!$validation['status']) {
             Log::error('Webhook Validation Failed', ['error' => $validation['message'] ?? 'Unknown']);
-            return response()->json(['status' => 'error', 'message' => $validation['message'] ?? 'Invalid payload'], 400);
+            return response()->json(['status' => 'error', 'message' => $validation['message'] ?? 'Invalid payload'], 200);
         }
 
         $data = $validation['data'];
 
         if (!isset($data['pp_id'], $data['status'])) {
             Log::error('Webhook Missing Required Fields', ['data' => $data]);
-            return response()->json(['status' => 'error', 'message' => 'Missing pp_id or status'], 400);
+            return response()->json(['status' => 'error', 'message' => 'Missing pp_id or status'], 200);
         }
 
+        // ── 2. Update Payment record (existing logic — untouched) ──────────────
         try {
             $payment = Payment::where('pp_id', (string) $data['pp_id'])->first();
 
             if (!$payment) {
                 Log::warning('Webhook Payment Not Found', ['pp_id' => $data['pp_id']]);
-                return response()->json(['status' => 'error', 'message' => 'Payment not found'], 404);
+                return response()->json(['status' => 'error', 'message' => 'Payment not found'], 200);
             }
 
             // Update payment record
@@ -161,14 +179,86 @@ class PaymentController extends Controller
                 'status' => $data['status'],
             ]);
 
-            return response()->json(['status' => 'ok'], 200);
         } catch (\Exception $e) {
             Log::error('Webhook Processing Error', [
                 'pp_id' => $data['pp_id'] ?? null,
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            return response()->json(['status' => 'error', 'message' => 'Processing failed'], 500);
+            return response()->json(['status' => 'error', 'message' => 'Processing failed'], 200);
         }
+
+        // ── 3. Registration block (new — isolated try/catch, never breaks payment update) ──
+        try {
+            // Prefer the pending_user_id from payment metadata (most reliable)
+            // Webhooks are server-to-server — they have NO browser session; never use session() here
+            $pendingUserId = $data['metadata']['pending_user_id'] ?? null;
+
+            $pendingUser = $pendingUserId
+                ? PendingUser::find($pendingUserId)
+                : PendingUser::where('payment_type', 'online')
+                             ->where('email', $data['email_address'] ?? '')
+                             ->first();
+
+            if (!$pendingUser) {
+                // Not a registration payment — nothing to do
+            } elseif ($data['status'] === 'completed') {
+                $memberId = generate_member_id($pendingUser->department, $pendingUser->session);
+
+                User::create([
+                    'name'              => $pendingUser->name,
+                    'email'             => $pendingUser->email,
+                    'password'          => $pendingUser->password,
+                    'phone'             => $pendingUser->phone,
+                    'department'        => $pendingUser->department,
+                    'session'           => $pendingUser->session,
+                    'usertype'          => $pendingUser->usertype ?? 'user',
+                    'gender'            => $pendingUser->gender,
+                    'class_roll'        => $pendingUser->class_roll,
+                    'father_name'       => $pendingUser->father_name,
+                    'mother_name'       => $pendingUser->mother_name,
+                    'current_address'   => $pendingUser->current_address,
+                    'permanent_address' => $pendingUser->permanent_address,
+                    'member_id'         => $memberId,
+                    'is_approved'       => true,
+                ]);
+
+                $pendingUser->delete();
+                // NOTE: Do NOT call session()->forget() here — webhooks are stateless server-to-server
+                // requests and have no access to the user's browser session.
+                Log::info('Registration approved via webhook', [
+                    'email'     => $pendingUser->email,
+                    'member_id' => $memberId,
+                ]);
+
+            } elseif ($data['status'] === 'cancelled') {
+                $pendingUser->delete(); // free the email so user can re-register
+                // NOTE: Do NOT call session()->forget() here — no browser session in webhook context.
+                // Browser session cleanup happens in registrationCancelled() on the return_url path.
+                Log::info('Registration PendingUser deleted on webhook cancellation', [
+                    'email' => $pendingUser->email,
+                ]);
+
+            } elseif ($data['status'] === 'pending') {
+                Log::info('Registration payment pending — no action needed', [
+                    'email' => $pendingUser->email ?? 'unknown',
+                ]);
+
+            } elseif ($data['status'] === 'failed') {
+                Log::info('Registration payment failed — admin must handle manually', [
+                    'email' => $pendingUser->email ?? 'unknown',
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            // Log but do NOT return an error — the payment record was already updated successfully
+            Log::error('Registration webhook block failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+
+        // ── 4. Single return point ─────────────────────────────────────────────
+        return response()->json(['status' => 'ok'], 200);
     }
 }

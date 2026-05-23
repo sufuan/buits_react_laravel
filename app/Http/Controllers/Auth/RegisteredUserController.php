@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -100,9 +101,24 @@ class RegisteredUserController extends Controller
             'mother_name' => ['nullable', 'string', 'max:255'],
             'current_address' => ['nullable', 'string', 'max:255'],
             'permanent_address' => ['nullable', 'string', 'max:255'],
-            'transaction_id' => ['required', 'string', 'max:255', 'unique:pending_users,transaction_id', 'unique:users,transaction_id'],
-            'to_account' => ['required', 'string'],
-            'payment_method' => ['required', 'string', 'in:bkash,rocket,nagad'],
+            
+            // Payment fields
+            'payment_type' => ['required', 'string', 'in:online,offline'],
+            'transaction_id' => Rule::when(
+                $request->payment_type === 'offline',
+                ['required', 'string', 'max:255', 'unique:pending_users,transaction_id', 'unique:users,transaction_id'],
+                ['nullable', 'string', 'max:255']
+            ),
+            'to_account' => Rule::when(
+                $request->payment_type === 'offline',
+                ['required', 'string'],
+                ['nullable', 'string']
+            ),
+            'payment_method' => Rule::when(
+                $request->payment_type === 'offline',
+                ['required', 'string', 'in:bkash,rocket,nagad'],
+                ['nullable', 'string']
+            ),
         ]);
 
         // Create the pending user
@@ -123,6 +139,8 @@ class RegisteredUserController extends Controller
             'transaction_id' => $request->transaction_id,
             'to_account' => $request->to_account,
             'payment_method' => $request->payment_method,
+            'payment_type' => $request->payment_type,
+            'payment_status' => 'pending_payment',
         ]);
 
         // Notify all admins about the new user registration (commented out for now)
@@ -131,6 +149,46 @@ class RegisteredUserController extends Controller
         //     $admin->notify(new NewUserRegistered($pendingUser)); // Send the notification
         // }
 
-        return redirect()->route('login')->with('status', 'Registration successful! Please wait for approval.');
+        if ($request->payment_type === 'offline') {
+            return redirect()->route('login')->with('status', 'Registration submitted! Your payment is under review.');
+        }
+
+        // Online payment: store pending user ID in session, send to checkout
+        session(['registration_pending_user_id' => $pendingUser->id]);
+        return redirect()->route('registration.payment.checkout');
+    }
+
+    /**
+     * Display the payment checkout page for online registration.
+     */
+    public function registrationCheckout(): Response|RedirectResponse
+    {
+        $pendingUser = PendingUser::find(session('registration_pending_user_id'));
+
+        if (!$pendingUser) {
+            return redirect()->route('register')
+                ->withErrors(['error' => 'Session expired. Please register again.']);
+        }
+
+        return Inertia::render('Auth/RegistrationPayment', [
+            'pending_user' => $pendingUser->only(['name', 'email', 'phone']),
+            'amount'       => config('services.piprapay.registration_fee'),
+        ]);
+    }
+
+    /**
+     * Handle registration cancellation and free the email.
+     */
+    public function registrationCancelled(): Response
+    {
+        $pendingUserId = session('registration_pending_user_id');
+
+        if ($pendingUserId) {
+            PendingUser::find($pendingUserId)?->delete(); // free the email
+        }
+
+        session()->forget('registration_pending_user_id'); // clean up browser session
+
+        return Inertia::render('Auth/RegistrationCancelled');
     }
 }

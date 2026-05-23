@@ -29,6 +29,10 @@ return Application::configure(basePath: dirname(__DIR__))
             return route('dashboard');
         });
 
+        $middleware->validateCsrfTokens(except: [
+            'payment/webhook',
+        ]);
+
         $middleware->web(append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
             \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,

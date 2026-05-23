@@ -36,9 +36,10 @@ return [
     ],
 
     'piprapay' => [
-        'api_key'  => env('PIPRAPAY_API_KEY'),
-        'base_url' => env('PIPRAPAY_BASE_URL'),
-        'currency' => env('PIPRAPAY_CURRENCY', 'BDT'),
+        'api_key'          => env('PIPRAPAY_API_KEY'),
+        'base_url'         => env('PIPRAPAY_BASE_URL'),
+        'currency'         => env('PIPRAPAY_CURRENCY', 'BDT'),
+        'registration_fee' => env('PIPRAPAY_REGISTRATION_FEE', 10),
     ],
 
 ];

@@ -78,7 +78,7 @@ class UserController extends Controller
             }
 
             // Generate member ID
-            $memberId = $this->generateNewMemberId($request->department, $request->session);
+            $memberId = generate_member_id($request->department, $request->session);
 
             // Create the user
             $user = User::create([
@@ -167,7 +167,7 @@ class UserController extends Controller
 
             // Check if department or session has changed to update member_id
             if ($user->department !== $request->department || $user->session !== $request->session) {
-                $memberId = $this->generateNewMemberId($request->department, $request->session);
+                $memberId = generate_member_id($request->department, $request->session);
             } else {
                 $memberId = $user->member_id;
             }
@@ -237,64 +237,6 @@ class UserController extends Controller
         ];
     }
 
-    /**
-     * Generate a new unique member ID based on department and session.
-     */
-    private function generateNewMemberId($department, $session)
-    {
-        // Define department codes
-        $departmentCodes = [
-            "Marketing" => "04",
-            "Law" => "15",
-            "Mathematics" => "05",
-            "Physics" => "18",
-            "History & Civilization" => "23",
-            "Soil & Environmental Sciences" => "10",
-            "Economics" => "01",
-            "Geology & Mining" => "17",
-            "Management Studies" => "03",
-            "Statistics" => "24",
-            "Chemistry" => "12",
-            "Coastal Studies and Disaster Management" => "19",
-            "Accounting & Information Systems" => "07",
-            "Computer Science and Engineering" => "13",
-            "Sociology" => "06",
-            "Botany" => "11",
-            "Public Administration" => "09",
-            "Philosophy" => "20",
-            "Political Science" => "16",
-            "Biochemistry and Biotechnology" => "21",
-            "Finance and Banking" => "14",
-            "Mass Communication and Journalism" => "22",
-            "English" => "02",
-            "Bangla" => "08"
-        ];
-
-        // Get department code
-        $departmentCode = $departmentCodes[$department] ?? "00";
-
-        // Extract last two digits of the session (assuming session format is YYYY-YYYY)
-        $sessionYear = explode('-', $session);
-        $lastTwoDigitsOfSession = substr(end($sessionYear), -2);
-
-        // Fetch the last member ID by ordering the users table in descending order
-        $lastMember = User::orderBy('id', 'desc')->first();
-
-        // Initialize the default starting number
-        $newFormNumber = 1130;
-
-        if ($lastMember && $lastMember->member_id) {
-            // Extract the last four digits of the member_id from the last record
-            $lastFormNumber = (int)substr($lastMember->member_id, -4);
-            // Increment the last form number by 1
-            $newFormNumber = $lastFormNumber + 1;
-        }
-
-        // Return the new member ID with department code, session year, and the new form number
-        $newMemberId = $departmentCode . $lastTwoDigitsOfSession . str_pad($newFormNumber, 4, '0', STR_PAD_LEFT);
-
-        return $newMemberId;
-    }
 
     /**
      * Export users to Excel.
@@ -711,7 +653,7 @@ class UserController extends Controller
      */
     public function approvePending(PendingUser $pendingUser)
     {
-        $memberId = $this->generateNewMemberId($pendingUser->department, $pendingUser->session);
+        $memberId = generate_member_id($pendingUser->department, $pendingUser->session);
 
         User::create([
             'name'              => $pendingUser->name,

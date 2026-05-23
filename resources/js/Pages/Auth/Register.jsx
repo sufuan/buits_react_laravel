@@ -44,6 +44,7 @@ export default function Register({ success }) {
         transaction_id: '',
         to_account: '01939378080',
         payment_method: '',
+        payment_type: '',
     });
 
     const totalSteps = 5;
@@ -160,7 +161,11 @@ export default function Register({ success }) {
             case 4:
                 return data.current_address;
             case 5:
-                return data.transaction_id && data.payment_method;
+                if (!data.payment_type) return false;
+                if (data.payment_type === 'offline') {
+                    return !!(data.transaction_id && data.payment_method);
+                }
+                return true; // online — no extra fields needed
             default:
                 return true;
         }
@@ -608,81 +613,139 @@ export default function Register({ success }) {
                                         <p className="text-gray-600">Choose a payment method and complete your registration</p>
                                     </div>
 
-                                    {/* Payment Method Toggle Buttons */}
-                                    <div>
-                                        <InputLabel value="Select Payment Method" className="text-gray-700 font-medium mb-3 block" />
-                                        <div className="grid grid-cols-3 gap-3">
-                                            {[
-                                                { value: 'bkash',  label: 'bKash',  color: 'from-pink-500 to-rose-500',   ring: 'ring-pink-400',   bg: 'bg-pink-50',   border: 'border-pink-400'  },
-                                                { value: 'rocket', label: 'Rocket', color: 'from-purple-500 to-violet-600', ring: 'ring-purple-400', bg: 'bg-purple-50', border: 'border-purple-400' },
-                                                { value: 'nagad',  label: 'Nagad',  color: 'from-orange-500 to-amber-500', ring: 'ring-orange-400', bg: 'bg-orange-50', border: 'border-orange-400' },
-                                            ].map((method) => (
-                                                <button
-                                                    key={method.value}
-                                                    type="button"
-                                                    onClick={() => setData('payment_method', method.value)}
-                                                    className={`
-                                                        relative flex flex-col items-center justify-center py-4 px-3 rounded-xl border-2 font-semibold text-sm transition-all duration-200 cursor-pointer
-                                                        ${data.payment_method === method.value
-                                                            ? `bg-gradient-to-br ${method.color} text-white border-transparent shadow-lg scale-105 ring-2 ${method.ring} ring-offset-2`
-                                                            : `bg-white text-gray-700 border-gray-200 hover:${method.bg} hover:border-current hover:scale-102`
-                                                        }
-                                                    `}
-                                                >
-                                                    {data.payment_method === method.value && (
-                                                        <CheckCircle className="h-4 w-4 mb-1" />
-                                                    )}
-                                                    {method.label}
-                                                </button>
-                                            ))}
-                                        </div>
-                                        <InputError message={errors.payment_method} className="mt-2" />
-                                    </div>
-
-                                    {/* Dynamic Payment Instructions */}
-                                    {data.payment_method && (
-                                        <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${
-                                            data.payment_method === 'bkash'  ? 'bg-pink-50 border-pink-200'   :
-                                            data.payment_method === 'rocket' ? 'bg-purple-50 border-purple-200' :
-                                                                                'bg-orange-50 border-orange-200'
-                                        }`}>
-                                            <h4 className={`font-semibold mb-2 ${
-                                                data.payment_method === 'bkash'  ? 'text-pink-800'   :
-                                                data.payment_method === 'rocket' ? 'text-purple-800' :
-                                                                                    'text-orange-800'
-                                            }`}>
-                                                {data.payment_method === 'bkash'  ? '📱 bKash Payment' :
-                                                 data.payment_method === 'rocket' ? '🚀 Rocket Payment' :
-                                                                                    '💛 Nagad Payment'} Instructions
-                                            </h4>
-                                            <p className={`text-sm ${
-                                                data.payment_method === 'bkash'  ? 'text-pink-700'   :
-                                                data.payment_method === 'rocket' ? 'text-purple-700' :
-                                                                                    'text-orange-700'
-                                            }`}>
-                                                Send money to <strong>01939378080</strong> via{' '}
-                                                <strong>
-                                                    {data.payment_method === 'bkash'  ? 'bKash'  :
-                                                     data.payment_method === 'rocket' ? 'Rocket' : 'Nagad'}
-                                                </strong>, then enter your Transaction ID below.
+                                    {/* Payment Type Selection */}
+                                    <div className="grid md:grid-cols-2 gap-4">
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setData('payment_type', 'online');
+                                                setData('payment_method', '');
+                                                setData('transaction_id', '');
+                                            }}
+                                            className={`
+                                                relative flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300
+                                                ${data.payment_type === 'online'
+                                                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-transparent shadow-xl scale-105 ring-4 ring-blue-300 ring-opacity-50'
+                                                    : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:shadow-md'
+                                                }
+                                            `}
+                                        >
+                                            <CreditCard className={`h-10 w-10 mb-3 ${data.payment_type === 'online' ? 'text-white' : 'text-blue-500'}`} />
+                                            <h4 className="text-lg font-bold mb-1">Pay Online</h4>
+                                            <p className={`text-sm text-center ${data.payment_type === 'online' ? 'text-blue-100' : 'text-gray-500'}`}>
+                                                Redirected to payment gateway
                                             </p>
+                                        </button>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setData('payment_type', 'offline')}
+                                            className={`
+                                                relative flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300
+                                                ${data.payment_type === 'offline'
+                                                    ? 'bg-gradient-to-br from-orange-500 to-pink-600 text-white border-transparent shadow-xl scale-105 ring-4 ring-orange-300 ring-opacity-50'
+                                                    : 'bg-white text-gray-700 border-gray-200 hover:border-orange-400 hover:shadow-md'
+                                                }
+                                            `}
+                                        >
+                                            <Phone className={`h-10 w-10 mb-3 ${data.payment_type === 'offline' ? 'text-white' : 'text-orange-500'}`} />
+                                            <h4 className="text-lg font-bold mb-1">Pay Offline</h4>
+                                            <p className={`text-sm text-center ${data.payment_type === 'offline' ? 'text-orange-100' : 'text-gray-500'}`}>
+                                                bKash / Rocket / Nagad
+                                            </p>
+                                        </button>
+                                    </div>
+                                    <InputError message={errors.payment_type} className="text-center" />
+
+                                    {/* Online Payment Info */}
+                                    {data.payment_type === 'online' && (
+                                        <div className="p-5 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 animate-fade-in text-center mt-4">
+                                            <Sparkles className="h-6 w-6 inline-block mb-2 text-blue-500" />
+                                            <p className="font-medium">You will be redirected to the secure payment gateway after submitting.</p>
+                                            <p className="text-sm text-blue-600 mt-1">Your account will be activated automatically once payment is confirmed.</p>
                                         </div>
                                     )}
 
-                                    {/* Transaction ID */}
-                                    <div>
-                                        <InputLabel htmlFor="transaction_id" value="Transaction ID" className="text-gray-700 font-medium" />
-                                        <TextInput
-                                            id="transaction_id"
-                                            name="transaction_id"
-                                            value={data.transaction_id}
-                                            className="mt-2 block w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring-teal-500"
-                                            onChange={(e) => setData('transaction_id', e.target.value)}
-                                            placeholder="Enter your transaction ID"
-                                            required
-                                        />
-                                        <InputError message={errors.transaction_id} className="mt-2" />
-                                    </div>
+                                    {/* Offline Payment Fields */}
+                                    {data.payment_type === 'offline' && (
+                                        <div className="space-y-6 animate-fade-in mt-6">
+                                            {/* Payment Method Toggle Buttons */}
+                                            <div>
+                                                <InputLabel value="Select Payment Method" className="text-gray-700 font-medium mb-3 block" />
+                                                <div className="grid grid-cols-3 gap-3">
+                                                    {[
+                                                        { value: 'bkash',  label: 'bKash',  color: 'from-pink-500 to-rose-500',   ring: 'ring-pink-400',   bg: 'bg-pink-50',   border: 'border-pink-400'  },
+                                                        { value: 'rocket', label: 'Rocket', color: 'from-purple-500 to-violet-600', ring: 'ring-purple-400', bg: 'bg-purple-50', border: 'border-purple-400' },
+                                                        { value: 'nagad',  label: 'Nagad',  color: 'from-orange-500 to-amber-500', ring: 'ring-orange-400', bg: 'bg-orange-50', border: 'border-orange-400' },
+                                                    ].map((method) => (
+                                                        <button
+                                                            key={method.value}
+                                                            type="button"
+                                                            onClick={() => setData('payment_method', method.value)}
+                                                            className={`
+                                                                relative flex flex-col items-center justify-center py-4 px-3 rounded-xl border-2 font-semibold text-sm transition-all duration-200 cursor-pointer
+                                                                ${data.payment_method === method.value
+                                                                    ? `bg-gradient-to-br ${method.color} text-white border-transparent shadow-lg scale-105 ring-2 ${method.ring} ring-offset-2`
+                                                                    : `bg-white text-gray-700 border-gray-200 hover:${method.bg} hover:border-current hover:scale-102`
+                                                                }
+                                                            `}
+                                                        >
+                                                            {data.payment_method === method.value && (
+                                                                <CheckCircle className="h-4 w-4 mb-1" />
+                                                            )}
+                                                            {method.label}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                                <InputError message={errors.payment_method} className="mt-2" />
+                                            </div>
+
+                                            {/* Dynamic Payment Instructions */}
+                                            {data.payment_method && (
+                                                <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${
+                                                    data.payment_method === 'bkash'  ? 'bg-pink-50 border-pink-200'   :
+                                                    data.payment_method === 'rocket' ? 'bg-purple-50 border-purple-200' :
+                                                                                        'bg-orange-50 border-orange-200'
+                                                }`}>
+                                                    <h4 className={`font-semibold mb-2 ${
+                                                        data.payment_method === 'bkash'  ? 'text-pink-800'   :
+                                                        data.payment_method === 'rocket' ? 'text-purple-800' :
+                                                                                            'text-orange-800'
+                                                    }`}>
+                                                        {data.payment_method === 'bkash'  ? '📱 bKash Payment' :
+                                                         data.payment_method === 'rocket' ? '🚀 Rocket Payment' :
+                                                                                            '💛 Nagad Payment'} Instructions
+                                                    </h4>
+                                                    <p className={`text-sm ${
+                                                        data.payment_method === 'bkash'  ? 'text-pink-700'   :
+                                                        data.payment_method === 'rocket' ? 'text-purple-700' :
+                                                                                            'text-orange-700'
+                                                    }`}>
+                                                        Send money to <strong>01939378080</strong> via{' '}
+                                                        <strong>
+                                                            {data.payment_method === 'bkash'  ? 'bKash'  :
+                                                             data.payment_method === 'rocket' ? 'Rocket' : 'Nagad'}
+                                                        </strong>, then enter your Transaction ID below.
+                                                    </p>
+                                                </div>
+                                            )}
+
+                                            {/* Transaction ID */}
+                                            <div>
+                                                <InputLabel htmlFor="transaction_id" value="Transaction ID" className="text-gray-700 font-medium" />
+                                                <TextInput
+                                                    id="transaction_id"
+                                                    name="transaction_id"
+                                                    value={data.transaction_id}
+                                                    className="mt-2 block w-full rounded-lg border-gray-300 focus:border-teal-500 focus:ring-teal-500"
+                                                    onChange={(e) => setData('transaction_id', e.target.value)}
+                                                    placeholder="Enter your transaction ID"
+                                                    required
+                                                />
+                                                <InputError message={errors.transaction_id} className="mt-2" />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
@@ -757,7 +820,7 @@ export default function Register({ success }) {
                                     ) : (
                                         <>
                                             <CheckCircle className="h-5 w-5 mr-2" />
-                                            Complete Registration
+                                            {data.payment_type === 'online' ? 'Submit & Pay Online' : 'Submit Registration'}
                                         </>
                                     )}
                                 </PrimaryButton>
