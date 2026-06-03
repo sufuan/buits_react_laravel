@@ -209,6 +209,9 @@ class PaymentController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Payment not found'], 200);
             }
 
+            // Determine actual payment status (PipraPay sends payment_status="completed" and status="ok")
+            $actualStatus = $data['payment_status'] ?? $data['status'] ?? 'unknown';
+
             // Update payment record
             $payment->update([
                 'customer_name'         => $data['full_name'] ?? $payment->customer_name,
@@ -220,13 +223,13 @@ class PaymentController extends Controller
                 'transaction_id'        => $data['transaction_id'] ?? null,
                 'sender_number'         => $data['sender'] ?? null,
                 'metadata'              => $data['metadata'] ?? null,
-                'status'                => $data['status'],
+                'status'                => $actualStatus,
                 'paid_at'               => $data['date'] ?? now(),
             ]);
 
             Log::info('Webhook Payment Updated', [
                 'pp_id' => $data['pp_id'],
-                'status' => $data['status'],
+                'status' => $actualStatus,
             ]);
 
         } catch (\Exception $e) {
@@ -242,7 +245,11 @@ class PaymentController extends Controller
         try {
             // Prefer the pending_user_id from payment metadata (most reliable)
             // Webhooks are server-to-server — they have NO browser session; never use session() here
-            $pendingUserId = $data['metadata']['pending_user_id'] ?? null;
+            $webhookMetadata = is_string($data['metadata'] ?? null) 
+                ? json_decode($data['metadata'], true) 
+                : ($data['metadata'] ?? []);
+                
+            $pendingUserId = $webhookMetadata['pending_user_id'] ?? null;
 
             $pendingUser = $pendingUserId
                 ? PendingUser::find($pendingUserId)
@@ -252,7 +259,7 @@ class PaymentController extends Controller
 
             if (!$pendingUser) {
                 // Not a registration payment — nothing to do
-            } elseif ($data['status'] === 'completed') {
+            } elseif ($actualStatus === 'completed') {
                 $memberId = generate_member_id($pendingUser->department, $pendingUser->session);
 
                 User::create([
