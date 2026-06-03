@@ -209,8 +209,8 @@ class PaymentController extends Controller
                 return response()->json(['status' => 'error', 'message' => 'Payment not found'], 200);
             }
 
-            // Determine actual payment status (PipraPay sends payment_status="completed" and status="ok")
-            $actualStatus = $data['payment_status'] ?? $data['status'] ?? 'unknown';
+            // Per PipraPay official docs, webhook payload has "status": "completed" directly
+            $paymentStatus = $data['status'];
 
             // Update payment record
             $payment->update([
@@ -223,13 +223,13 @@ class PaymentController extends Controller
                 'transaction_id'        => $data['transaction_id'] ?? null,
                 'sender_number'         => $data['sender'] ?? null,
                 'metadata'              => $data['metadata'] ?? null,
-                'status'                => $actualStatus,
+                'status'                => $paymentStatus,
                 'paid_at'               => $data['date'] ?? now(),
             ]);
 
             Log::info('Webhook Payment Updated', [
-                'pp_id' => $data['pp_id'],
-                'status' => $actualStatus,
+                'pp_id'  => $data['pp_id'],
+                'status' => $paymentStatus,
             ]);
 
         } catch (\Exception $e) {
@@ -259,7 +259,12 @@ class PaymentController extends Controller
 
             if (!$pendingUser) {
                 // Not a registration payment — nothing to do
-            } elseif ($actualStatus === 'completed') {
+                Log::info('Webhook: no PendingUser found — not a registration payment', [
+                    'pending_user_id' => $pendingUserId,
+                ]);
+
+            } elseif ($paymentStatus === 'completed') {
+                // ✅ Payment successful → promote PendingUser to User immediately
                 $memberId = generate_member_id($pendingUser->department, $pendingUser->session);
 
                 User::create([
@@ -281,29 +286,25 @@ class PaymentController extends Controller
                 ]);
 
                 $pendingUser->delete();
-                // NOTE: Do NOT call session()->forget() here — webhooks are stateless server-to-server
-                // requests and have no access to the user's browser session.
-                Log::info('Registration approved via webhook', [
+                Log::info('✅ Registration approved via webhook — user created', [
                     'email'     => $pendingUser->email,
                     'member_id' => $memberId,
                 ]);
 
-            } elseif ($data['status'] === 'cancelled') {
+            } elseif ($paymentStatus === 'cancelled') {
                 $pendingUser->delete(); // free the email so user can re-register
-                // NOTE: Do NOT call session()->forget() here — no browser session in webhook context.
-                // Browser session cleanup happens in registrationCancelled() on the return_url path.
                 Log::info('Registration PendingUser deleted on webhook cancellation', [
                     'email' => $pendingUser->email,
                 ]);
 
-            } elseif ($data['status'] === 'pending') {
+            } elseif ($paymentStatus === 'pending') {
                 Log::info('Registration payment pending — no action needed', [
-                    'email' => $pendingUser->email ?? 'unknown',
+                    'email' => $pendingUser->email,
                 ]);
 
-            } elseif ($data['status'] === 'failed') {
-                Log::info('Registration payment failed — admin must handle manually', [
-                    'email' => $pendingUser->email ?? 'unknown',
+            } elseif ($paymentStatus === 'failed') {
+                Log::info('Registration payment failed — PendingUser kept for admin review', [
+                    'email' => $pendingUser->email,
                 ]);
             }
 
