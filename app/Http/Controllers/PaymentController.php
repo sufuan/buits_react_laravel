@@ -185,6 +185,15 @@ class PaymentController extends Controller
      */
     public function webhook(Request $request)
     {
+        // ── 0. Log the RAW incoming payload immediately ────────────────────────
+        // This fires before any processing so we can always see if PipraPay hit us.
+        $rawPayload = file_get_contents('php://input');
+        \Log::channel('webhook')->info('=== WEBHOOK HIT ===', [
+            'time'       => now()->toDateTimeString(),
+            'ip'         => $request->ip(),
+            'raw_body'   => $rawPayload,
+        ]);
+
         // ── 1. Validate webhook signature ─────────────────────────────────────
         $validation = $this->pipra->handleWebhook();
 

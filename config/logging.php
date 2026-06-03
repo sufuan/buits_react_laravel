@@ -119,12 +119,19 @@ return [
         ],
 
         'null' => [
-            'driver' => 'monolog',
+            'driver'  => 'monolog',
             'handler' => NullHandler::class,
         ],
 
         'emergency' => [
             'path' => storage_path('logs/laravel.log'),
+        ],
+
+        // Dedicated channel for PipraPay webhooks — plain UTF-8, easy to read
+        'webhook' => [
+            'driver' => 'single',
+            'path'   => storage_path('logs/webhook.log'),
+            'level'  => 'debug',
         ],
 
     ],
