@@ -165,17 +165,18 @@ class PaymentController extends Controller
             return redirect('/');
         }
 
-        // Handle pending status - also redirect to home
-        if ($payment->status === 'pending') {
-            return redirect('/');
+        // Handle successful/pending status
+        // Clean up any lingering registration session data
+        session()->forget(['registration_form_data', 'registration_pending_user_id']);
+
+        // Check if this was a registration payment via metadata
+        $metadata = is_string($payment->metadata) ? json_decode($payment->metadata, true) : ($payment->metadata ?? []);
+        
+        if (isset($metadata['pending_user_id'])) {
+            return redirect()->route('registration.payment.success', ['transaction_id' => $ppId]);
         }
 
-        return response()->json([
-            'status' => 'ok',
-            'message' => 'Payment received. Your payment is being processed.',
-            'pp_id' => $ppId,
-            'payment_status' => $payment->status,
-        ]);
+        return redirect('/')->with('status', 'Payment processed successfully.');
     }
 
     /**

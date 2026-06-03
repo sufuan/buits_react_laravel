@@ -226,4 +226,14 @@ class RegisteredUserController extends Controller
 
         return Inertia::render('Auth/RegistrationCancelled');
     }
+
+    /**
+     * Display the success page for online registration.
+     */
+    public function registrationSuccess(Request $request): Response
+    {
+        return Inertia::render('Auth/RegistrationSuccess', [
+            'transaction_id' => $request->query('transaction_id')
+        ]);
+    }
 }

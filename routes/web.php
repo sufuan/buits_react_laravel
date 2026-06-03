@@ -104,6 +104,8 @@ Route::get('/register/payment', [App\Http\Controllers\Auth\RegisteredUserControl
     ->name('registration.payment.checkout');
 Route::get('/register/cancelled', [App\Http\Controllers\Auth\RegisteredUserController::class, 'registrationCancelled'])
     ->name('registration.payment.cancelled');
+Route::get('/register/success', [App\Http\Controllers\Auth\RegisteredUserController::class, 'registrationSuccess'])
+    ->name('registration.payment.success');
 
 
 
