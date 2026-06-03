@@ -44,12 +44,54 @@ class PaymentController extends Controller
         ]);
 
         $invoiceId = 'INV-' . uniqid();
+        $metadata  = ['invoiceid' => $invoiceId];
 
-        // Build metadata — include pending_user_id if this is a registration payment
-        $pendingUserId = session('registration_pending_user_id');
-        $metadata = ['invoiceid' => $invoiceId];
-        if ($pendingUserId) {
-            $metadata['pending_user_id'] = $pendingUserId;
+        // ── Registration payment: create PendingUser HERE, not in store() ──────
+        // The form data was stored in the encrypted session by RegisteredUserController@store().
+        // We create the DB row only now — so the email was never locked until the
+        // user actually clicked "Proceed to Pay Online".
+        $registrationFormData = session('registration_form_data');
+
+        if ($registrationFormData) {
+            // ── Race-condition guard ──────────────────────────────────────────
+            // Two users could simultaneously pass the step-1 checkEmail() call
+            // and both reach this point. We do a final DB-level check here to
+            // prevent a duplicate pending_users row.
+            $email = $registrationFormData['email'];
+
+            if (PendingUser::where('email', $email)->exists() ||
+                User::where('email', $email)->exists()) {
+                session()->forget('registration_form_data');
+                return redirect()->route('register')
+                    ->withErrors(['email' => 'This email was just taken by another registration. Please register again with a different email.']);
+            }
+
+            // ── Create PendingUser atomically with the PipraPay charge ─────────
+            $pendingUser = PendingUser::create([
+                'name'              => $registrationFormData['name'],
+                'email'             => $registrationFormData['email'],
+                'password'          => $registrationFormData['password'], // already hashed
+                'phone'             => $registrationFormData['phone'],
+                'department'        => $registrationFormData['department'],
+                'session'           => $registrationFormData['session'],
+                'usertype'          => $registrationFormData['usertype'] ?? 'user',
+                'gender'            => $registrationFormData['gender'],
+                'class_roll'        => $registrationFormData['class_roll'],
+                'father_name'       => $registrationFormData['father_name'] ?? null,
+                'mother_name'       => $registrationFormData['mother_name'] ?? null,
+                'current_address'   => $registrationFormData['current_address'] ?? null,
+                'permanent_address' => $registrationFormData['permanent_address'] ?? null,
+                'payment_type'      => 'online',
+                'payment_status'    => 'pending_payment',
+            ]);
+
+            // Embed ID in metadata so the webhook can find this PendingUser
+            $metadata['pending_user_id'] = $pendingUser->id;
+
+            // Swap session keys: form data is no longer needed; the pending user
+            // ID is now the canonical reference for webhook + cancellation flows.
+            session()->forget('registration_form_data');
+            session(['registration_pending_user_id' => $pendingUser->id]);
         }
 
         $response = $this->pipra->createCharge([
@@ -74,6 +116,13 @@ class PaymentController extends Controller
             ]);
 
             return Inertia::location($response['pp_url']);
+        }
+
+        // PipraPay rejected the charge — roll back the PendingUser we just created
+        // so the email is freed and the user can try again.
+        if (isset($pendingUser)) {
+            $pendingUser->delete();
+            session()->forget('registration_pending_user_id');
         }
 
         return back()->withErrors([
@@ -108,7 +157,7 @@ class PaymentController extends Controller
             $payment->update(['status' => 'cancelled']);
 
             // If this is a registration payment, delegate to the cancellation page
-            // (which will delete the PendingUser and clear the session)
+            // which will delete the PendingUser row and clear the session.
             if (session('registration_pending_user_id')) {
                 return redirect()->route('registration.payment.cancelled');
             }

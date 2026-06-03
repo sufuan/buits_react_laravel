@@ -89,27 +89,27 @@ class RegisteredUserController extends Controller
     {
         // Validate the standard user fields
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class, 'unique:pending_users,email'],
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'phone' => ['required', 'string', 'max:255'],
-            'department' => ['required', 'string', 'max:255'],
-            'session' => ['required', 'string', 'regex:/^\d{4}-\d{4}$/'],
-            'gender' => ['required', 'string', 'max:255'],
-            'class_roll' => ['required', 'string'],
-            'father_name' => ['nullable', 'string', 'max:255'],
-            'mother_name' => ['nullable', 'string', 'max:255'],
-            'current_address' => ['nullable', 'string', 'max:255'],
+            'name'              => ['required', 'string', 'max:255'],
+            'email'             => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class, 'unique:pending_users,email'],
+            'password'          => ['required', 'confirmed', Rules\Password::defaults()],
+            'phone'             => ['required', 'string', 'max:255'],
+            'department'        => ['required', 'string', 'max:255'],
+            'session'           => ['required', 'string', 'regex:/^\d{4}-\d{4}$/'],
+            'gender'            => ['required', 'string', 'max:255'],
+            'class_roll'        => ['required', 'string'],
+            'father_name'       => ['nullable', 'string', 'max:255'],
+            'mother_name'       => ['nullable', 'string', 'max:255'],
+            'current_address'   => ['nullable', 'string', 'max:255'],
             'permanent_address' => ['nullable', 'string', 'max:255'],
-            
+
             // Payment fields
-            'payment_type' => ['required', 'string', 'in:online,offline'],
+            'payment_type'   => ['required', 'string', 'in:online,offline'],
             'transaction_id' => Rule::when(
                 $request->payment_type === 'offline',
                 ['required', 'string', 'max:255', 'unique:pending_users,transaction_id', 'unique:users,transaction_id'],
                 ['nullable', 'string', 'max:255']
             ),
-            'to_account' => Rule::when(
+            'to_account'     => Rule::when(
                 $request->payment_type === 'offline',
                 ['required', 'string'],
                 ['nullable', 'string']
@@ -121,40 +121,60 @@ class RegisteredUserController extends Controller
             ),
         ]);
 
-        // Create the pending user
-        $pendingUser = PendingUser::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-            'phone' => $request->phone,
-            'department' => $request->department,
-            'session' => $request->session,
-            'usertype' => 'user', // default value for usertype
-            'gender' => $request->gender,
-            'class_roll' => $request->class_roll,
-            'father_name' => $request->father_name,
-            'mother_name' => $request->mother_name,
-            'current_address' => $request->current_address,
-            'permanent_address' => $request->permanent_address,
-            'transaction_id' => $request->transaction_id,
-            'to_account' => $request->to_account,
-            'payment_method' => $request->payment_method,
-            'payment_type' => $request->payment_type,
-            'payment_status' => 'pending_payment',
-        ]);
-
-        // Notify all admins about the new user registration (commented out for now)
-        // $admins = Admin::all(); // Query the Admin model to get all admins
-        // foreach ($admins as $admin) {
-        //     $admin->notify(new NewUserRegistered($pendingUser)); // Send the notification
-        // }
-
+        // ── OFFLINE PATH ──────────────────────────────────────────────────────
+        // For offline payments we create the PendingUser immediately because
+        // the email reservation is intentional — admin must review the payment.
         if ($request->payment_type === 'offline') {
+            PendingUser::create([
+                'name'              => $request->name,
+                'email'             => $request->email,
+                'password'          => Hash::make($request->password),
+                'phone'             => $request->phone,
+                'department'        => $request->department,
+                'session'           => $request->session,
+                'usertype'          => 'user',
+                'gender'            => $request->gender,
+                'class_roll'        => $request->class_roll,
+                'father_name'       => $request->father_name,
+                'mother_name'       => $request->mother_name,
+                'current_address'   => $request->current_address,
+                'permanent_address' => $request->permanent_address,
+                'transaction_id'    => $request->transaction_id,
+                'to_account'        => $request->to_account,
+                'payment_method'    => $request->payment_method,
+                'payment_type'      => 'offline',
+                'payment_status'    => 'pending_payment',
+            ]);
+
             return redirect()->route('login')->with('status', 'Registration submitted! Your payment is under review.');
         }
 
-        // Online payment: store pending user ID in session, send to checkout
-        session(['registration_pending_user_id' => $pendingUser->id]);
+        // ── ONLINE PATH ───────────────────────────────────────────────────────
+        // Do NOT write to the database yet. The email remains free until the
+        // user actually clicks "Proceed to Pay Online" and hits initiate().
+        // We store all form data in the encrypted server-side session so that
+        // no database row exists — and the email stays available — unless the
+        // user commits to paying.
+        session([
+            'registration_form_data' => [
+                'name'              => $request->name,
+                'email'             => $request->email,
+                'password'          => Hash::make($request->password),
+                'phone'             => $request->phone,
+                'department'        => $request->department,
+                'session'           => $request->session,
+                'usertype'          => 'user',
+                'gender'            => $request->gender,
+                'class_roll'        => $request->class_roll,
+                'father_name'       => $request->father_name,
+                'mother_name'       => $request->mother_name,
+                'current_address'   => $request->current_address,
+                'permanent_address' => $request->permanent_address,
+                'payment_type'      => 'online',
+                'payment_status'    => 'pending_payment',
+            ],
+        ]);
+
         return redirect()->route('registration.payment.checkout');
     }
 
@@ -163,16 +183,21 @@ class RegisteredUserController extends Controller
      */
     public function registrationCheckout(): Response|RedirectResponse
     {
-        $pendingUser = PendingUser::find(session('registration_pending_user_id'));
+        // Read from session — no DB row has been created yet for online registrations.
+        $formData = session('registration_form_data');
 
-        if (!$pendingUser) {
+        if (!$formData) {
             return redirect()->route('register')
-                ->withErrors(['error' => 'Session expired. Please register again.']);
+                ->withErrors(['error' => 'Session expired. Please fill in the registration form again.']);
         }
 
         return Inertia::render('Auth/RegistrationPayment', [
-            'pending_user' => $pendingUser->only(['name', 'email', 'phone']),
-            'amount'       => config('services.piprapay.registration_fee'),
+            'pending_user' => [
+                'name'  => $formData['name'],
+                'email' => $formData['email'],
+                'phone' => $formData['phone'],
+            ],
+            'amount' => config('services.piprapay.registration_fee'),
         ]);
     }
 
@@ -181,13 +206,23 @@ class RegisteredUserController extends Controller
      */
     public function registrationCancelled(): Response
     {
+        // Two possible states when this page is reached:
+        //
+        // A) User abandoned BEFORE clicking "Proceed to Pay Online":
+        //    → registration_form_data is in session, NO PendingUser row exists.
+        //    → Just clear the session; email was never locked.
+        //
+        // B) User clicked "Proceed to Pay Online" then cancelled AT PipraPay:
+        //    → initiate() already created a PendingUser row and stored its ID
+        //      under registration_pending_user_id.
+        //    → We must delete that row NOW so the email is freed immediately,
+        //      rather than waiting for the async webhook to clean up.
         $pendingUserId = session('registration_pending_user_id');
-
         if ($pendingUserId) {
-            PendingUser::find($pendingUserId)?->delete(); // free the email
+            PendingUser::find($pendingUserId)?->delete();
         }
 
-        session()->forget('registration_pending_user_id'); // clean up browser session
+        session()->forget(['registration_form_data', 'registration_pending_user_id']);
 
         return Inertia::render('Auth/RegistrationCancelled');
     }
