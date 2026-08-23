@@ -549,7 +549,7 @@ export default function NewUserRequests({ pendingUsers = [] }) {
                                                     <CreditCard className="h-4 w-4 text-yellow-600" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-xs text-yellow-700 font-medium">Transaction ID</p>
+                                                    <p className="text-xs text-yellow-700 font-medium">Transaction ID ({user.payment_method ? user.payment_method.charAt(0).toUpperCase() + user.payment_method.slice(1) : 'Offline'})</p>
                                                     <p className="text-sm font-mono text-gray-900">{user.transaction_id}</p>
                                                 </div>
                                             </div>
@@ -798,7 +798,7 @@ export default function NewUserRequests({ pendingUsers = [] }) {
                                         </div>
                                         {selectedUser.transaction_id && (
                                             <div className="p-3 bg-yellow-50 rounded-lg">
-                                                <Label className="text-xs text-yellow-700">Transaction ID</Label>
+                                                <Label className="text-xs text-yellow-700">Transaction ID ({selectedUser.payment_method ? selectedUser.payment_method.charAt(0).toUpperCase() + selectedUser.payment_method.slice(1) : 'Offline'})</Label>
                                                 <p className="font-medium text-yellow-900 font-mono">{selectedUser.transaction_id}</p>
                                             </div>
                                         )}
