@@ -50,7 +50,7 @@ function App() {
         <Hero />
         {/* <About /> */}
         <Features />
-        <FirstVideo />
+        {/* <FirstVideo /> */}
         <Jason />
         <BrandSlider />
         <Gallary />

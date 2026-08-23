@@ -174,26 +174,26 @@ export default function Events({ events = [], upcomingEventsCount = 0, ongoingEv
       <Head title="Events - University IT Society" />
       <NavBar />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-blue-950 to-purple-950 relative overflow-hidden">
-        {/* Animated Background Orbs */}
+      <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-blue-50 relative overflow-hidden">
+        {/* Soft Background Orbs */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="floating-orb absolute top-20 left-10 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl"></div>
-          <div className="floating-orb absolute top-40 right-20 w-80 h-80 bg-purple-500/20 rounded-full blur-3xl"></div>
-          <div className="floating-orb absolute bottom-20 left-1/3 w-72 h-72 bg-cyan-500/20 rounded-full blur-3xl"></div>
-          <div className="floating-orb absolute bottom-40 right-1/4 w-64 h-64 bg-pink-500/20 rounded-full blur-3xl"></div>
+          <div className="floating-orb absolute top-20 left-10 w-96 h-96 bg-blue-200/40 rounded-full blur-3xl"></div>
+          <div className="floating-orb absolute top-40 right-20 w-80 h-80 bg-indigo-200/30 rounded-full blur-3xl"></div>
+          <div className="floating-orb absolute bottom-20 left-1/3 w-72 h-72 bg-sky-200/30 rounded-full blur-3xl"></div>
+          <div className="floating-orb absolute bottom-40 right-1/4 w-64 h-64 bg-purple-200/20 rounded-full blur-3xl"></div>
         </div>
 
         {/* Hero Section */}
         <section className="relative pt-32 pb-16 px-6">
           <div ref={heroRef} className="max-w-6xl mx-auto text-center">
             {/* Main Title with Glow Effect */}
-            <h1 className="text-7xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 mb-8 relative">
+            <h1 className="text-7xl md:text-9xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 mb-8 relative">
               EVENTS
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 blur-3xl opacity-30 -z-10"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 blur-3xl opacity-10 -z-10"></div>
             </h1>
 
-            <p className="text-xl md:text-2xl text-gray-300 max-w-3xl mx-auto mb-12 leading-relaxed">
-              Join our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400 font-bold">exciting events</span>, workshops, and competitions designed to enhance your skills and connect with the tech community.
+            <p className="text-xl md:text-2xl text-slate-600 max-w-3xl mx-auto mb-12 leading-relaxed">
+              Join our <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 font-bold">exciting events</span>, workshops, and competitions designed to enhance your skills and connect with the tech community.
             </p>
 
             {/* Enhanced Stats Cards */}
@@ -202,12 +202,12 @@ export default function Events({ events = [], upcomingEventsCount = 0, ongoingEv
                 ref={el => statsRef.current[0] = el}
                 className="relative group"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
-                <div className="relative bg-gradient-to-br from-blue-500/20 to-cyan-500/20 backdrop-blur-xl rounded-2xl p-8 border border-blue-400/30 hover:border-blue-400/60 transition-all duration-500 hover:scale-105 hover:-translate-y-2">
-                  <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-400 to-cyan-400 mb-2">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+                <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl p-8 border border-blue-200/60 hover:border-blue-400/60 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-blue-200">
+                  <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-blue-500 to-indigo-600 mb-2">
                     {upcomingEventsCount}
                   </div>
-                  <div className="text-sm font-semibold text-blue-300 uppercase tracking-wider">Upcoming Events</div>
+                  <div className="text-sm font-semibold text-blue-600 uppercase tracking-wider">Upcoming Events</div>
                   <div className="absolute top-4 right-4 text-4xl">📅</div>
                 </div>
               </div>
@@ -216,12 +216,12 @@ export default function Events({ events = [], upcomingEventsCount = 0, ongoingEv
                 ref={el => statsRef.current[1] = el}
                 className="relative group"
               >
-                <div className="absolute inset-0 bg-gradient-to-r from-orange-600 to-pink-600 rounded-2xl blur-xl opacity-50 group-hover:opacity-75 transition-opacity duration-500"></div>
-                <div className="relative bg-gradient-to-br from-orange-500/20 to-pink-500/20 backdrop-blur-xl rounded-2xl p-8 border border-orange-400/30 hover:border-orange-400/60 transition-all duration-500 hover:scale-105 hover:-translate-y-2">
-                  <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-orange-400 to-pink-400 mb-2">
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-pink-400 rounded-2xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity duration-500"></div>
+                <div className="relative bg-white/80 backdrop-blur-xl rounded-2xl p-8 border border-orange-200/60 hover:border-orange-400/60 transition-all duration-500 hover:scale-105 hover:-translate-y-2 shadow-lg hover:shadow-orange-200">
+                  <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-orange-500 to-pink-500 mb-2">
                     {ongoingEventsCount}
                   </div>
-                  <div className="text-sm font-semibold text-orange-300 uppercase tracking-wider">Ongoing Events</div>
+                  <div className="text-sm font-semibold text-orange-600 uppercase tracking-wider">Ongoing Events</div>
                   <div className="absolute top-4 right-4 text-4xl">🔥</div>
                 </div>
               </div>
@@ -234,11 +234,11 @@ export default function Events({ events = [], upcomingEventsCount = 0, ongoingEv
           <div className="max-w-7xl mx-auto">
             <div ref={calendarRef} className="relative group perspective-1000">
               {/* Multi-layer Glow Effect */}
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 rounded-3xl blur-3xl opacity-20 group-hover:opacity-40 transition-all duration-700"></div>
-              <div className="absolute inset-0 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-3xl blur-2xl opacity-10 group-hover:opacity-20 transition-all duration-700"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-300 via-indigo-300 to-purple-300 rounded-3xl blur-3xl opacity-10 group-hover:opacity-20 transition-all duration-700"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-sky-200 to-blue-300 rounded-3xl blur-2xl opacity-5 group-hover:opacity-10 transition-all duration-700"></div>
 
-              {/* Calendar Container with Enhanced Glassmorphism */}
-              <div className="relative bg-gradient-to-br from-white/10 via-white/5 to-transparent backdrop-blur-2xl rounded-3xl p-8 md:p-12 border-2 border-white/20 hover:border-white/40 transition-all duration-500 shadow-2xl hover:shadow-blue-500/20">
+              {/* Calendar Container */}
+              <div className="relative bg-white/90 backdrop-blur-2xl rounded-3xl p-8 md:p-12 border border-slate-200/80 hover:border-blue-300/60 transition-all duration-500 shadow-xl hover:shadow-2xl hover:shadow-blue-200/40">
                 {/* Decorative Corner Elements */}
                 <div className="absolute top-0 left-0 w-32 h-32 bg-gradient-to-br from-blue-500/20 to-transparent rounded-tl-3xl"></div>
                 <div className="absolute bottom-0 right-0 w-32 h-32 bg-gradient-to-tl from-purple-500/20 to-transparent rounded-br-3xl"></div>

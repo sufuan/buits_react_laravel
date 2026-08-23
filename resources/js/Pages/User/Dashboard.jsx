@@ -28,6 +28,8 @@ import {
   GraduationCap,
   CreditCard
 } from 'lucide-react';
+import ProfilePhotoPrompt from '@/Components/ProfilePhotoPrompt';
+import ProfilePhotoUpload from '@/Components/ProfilePhotoUpload';
 
 export default function Dashboard({ auth }) {
 
@@ -120,6 +122,9 @@ export default function Dashboard({ auth }) {
                 </div>
               </div>
             </div>
+
+            {/* Photo Prompt */}
+            <ProfilePhotoPrompt user={user} />
 
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -266,6 +271,9 @@ export default function Dashboard({ auth }) {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Profile Photo Upload */}
+            <ProfilePhotoUpload user={user} />
 
             {/* Profile Information */}
             <div className="grid gap-6 md:grid-cols-2">

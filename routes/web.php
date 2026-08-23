@@ -59,6 +59,8 @@ Route::get('/find-member', function () {
     return Inertia::render('FindMember');
 })->name('find-member');
 
+Route::post('/api/find-member', [App\Http\Controllers\FindMemberController::class, 'search'])->name('api.find-member');
+
 
 
 Route::get('/museum', [MuseumController::class, 'index'])->name('museum.index');
@@ -78,6 +80,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // Profile Photo Upload / Delete
+    Route::post('/profile/photo', [ProfileController::class, 'uploadPhoto'])->name('profile.photo.upload');
+    Route::delete('/profile/photo', [ProfileController::class, 'deletePhoto'])->name('profile.photo.delete');
 
     // Volunteer Application Routes
     Route::get('/volunteer-application/create', [App\Http\Controllers\VolunteerApplicationController::class, 'create'])->name('volunteer-application.create');
@@ -244,6 +250,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Previous Committees
         Route::get('/committee/previous', [App\Http\Controllers\Admin\CommitteeController::class, 'previous']);
         Route::get('/committee/previous/{number}', [App\Http\Controllers\Admin\CommitteeController::class, 'previousByCommittee']);
+
+        // ================= Executive Member Import =================
+        Route::prefix('executive-import')->name('executive-import.')->group(function () {
+            Route::get('/',         [App\Http\Controllers\Admin\ExecutiveImportController::class, 'showImport'])->name('index');
+            Route::post('/import',  [App\Http\Controllers\Admin\ExecutiveImportController::class, 'import'])->name('import');
+            Route::get('/template', [App\Http\Controllers\Admin\ExecutiveImportController::class, 'template'])->name('template');
+
+            // Advanced Import Routes
+            Route::post('/preview', [App\Http\Controllers\Admin\ExecutiveImportController::class, 'preview'])->name('preview');
+            Route::post('/validate-row', [App\Http\Controllers\Admin\ExecutiveImportController::class, 'validateRow'])->name('validate-row');
+            Route::post('/batch', [App\Http\Controllers\Admin\ExecutiveImportController::class, 'importBatch'])->name('batch');
+            Route::post('/clear-session', [App\Http\Controllers\Admin\ExecutiveImportController::class, 'clearImportSession'])->name('clear-session');
+        });
 
         // Additional Helper Routes (for enhanced functionality)
         Route::prefix('committee')->name('committee.')->group(function () {

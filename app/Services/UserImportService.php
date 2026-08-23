@@ -235,7 +235,7 @@ class UserImportService
                         }
 
                         // Create user
-                        $userData = $this->prepareUserData($row);
+                        $userData = $this->prepareUserData($row, $validation['member_id'] ?? null);
                         User::create($userData);
                         $imported++;
                     }
@@ -321,7 +321,7 @@ class UserImportService
     /**
      * Prepare user data for database insertion
      */
-    protected function prepareUserData(array $row): array
+    protected function prepareUserData(array $row, ?string $memberId = null): array
     {
         return [
             'name' => $row['name'],
@@ -330,6 +330,7 @@ class UserImportService
             'phone' => $row['phone'] ?? '',
             'department' => $row['department'],
             'session' => $row['session'],
+            'member_id' => $memberId,
             'usertype' => 'member', // Default to member for imported users
         ];
     }

@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import Arm1 from "./arm1.jsx";
 import Arm2 from "./arm2.jsx";
 import PeekingArms from "./PeekingArms.jsx";
+import NavBar from '@/Components/HomePage/Navbar';
 import "./Login.css";
 
 export default function Login({ status, canResetPassword }) {
@@ -199,7 +200,8 @@ export default function Login({ status, canResetPassword }) {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center px-4 py-24 sm:px-6 lg:px-8">
+      <NavBar />
       <Head title="Login" />
 
       <animated.div style={containerSpring} className="w-full max-w-md">

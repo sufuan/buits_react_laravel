@@ -4,6 +4,7 @@ import InputLabel from '@/Components/InputLabel';
 import PrimaryButton from '@/Components/PrimaryButton';
 import TextInput from '@/Components/TextInput';
 import GuestLayout from '@/Layouts/GuestLayout';
+import NavBar from '@/Components/HomePage/Navbar';
 import { Head, Link, useForm } from '@inertiajs/react';
 import {
     ChevronLeft,
@@ -221,7 +222,8 @@ export default function Register({ success }) {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 flex items-center justify-center px-4 py-24 sm:px-6 lg:px-8">
+            <NavBar />
             <Head title="Register - Join Us!" />
 
             <style>{`
@@ -248,11 +250,11 @@ export default function Register({ success }) {
                 {/* Header with Progress */}
                 <div className="text-center mb-8">
                     <div className="inline-flex items-center gap-2 mb-4">
-                        
+
                         <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
                             Join Our Community
                         </h1>
-                
+
                     </div>
                     <p className="text-gray-600 text-lg">Let's get you started on this exciting journey!</p>
                 </div>
@@ -296,9 +298,8 @@ export default function Register({ success }) {
                                     </button>
 
                                     {index < steps.length - 1 && (
-                                        <div className={`w-8 h-1 mx-2 rounded-full transition-colors duration-300 ${
-                                            completedSteps.includes(step.id) ? 'bg-green-400' : 'bg-gray-200'
-                                        }`} />
+                                        <div className={`w-8 h-1 mx-2 rounded-full transition-colors duration-300 ${completedSteps.includes(step.id) ? 'bg-green-400' : 'bg-gray-200'
+                                            }`} />
                                     )}
                                 </div>
                             );
@@ -335,7 +336,7 @@ export default function Register({ success }) {
                             {currentStep === 1 && (
                                 <div className="space-y-6 animate-fade-in">
                                     <div className="text-center mb-6">
-                                        <Star className="h-12 w-12 text-yellow-500 mx-auto mb-2 animate-spin-slow" />
+
                                         <h3 className="text-xl font-semibold text-gray-800">Tell us about yourself!</h3>
                                         <p className="text-gray-600">We're excited to get to know you better</p>
                                     </div>
@@ -364,9 +365,8 @@ export default function Register({ success }) {
                                                 type="email"
                                                 name="email"
                                                 value={data.email}
-                                                className={`mt-2 block w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 ${
-                                                    emailError ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''
-                                                }`}
+                                                className={`mt-2 block w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500 ${emailError ? 'border-red-400 focus:border-red-500 focus:ring-red-500' : ''
+                                                    }`}
                                                 autoComplete="username"
                                                 onChange={(e) => { setData('email', e.target.value); setEmailError(''); }}
                                                 placeholder="your.email@example.com"
@@ -674,9 +674,9 @@ export default function Register({ success }) {
                                                 <InputLabel value="Select Payment Method" className="text-gray-700 font-medium mb-3 block" />
                                                 <div className="grid grid-cols-3 gap-3">
                                                     {[
-                                                        { value: 'bkash',  label: 'bKash',  color: 'from-pink-500 to-rose-500',   ring: 'ring-pink-400',   bg: 'bg-pink-50',   border: 'border-pink-400'  },
+                                                        { value: 'bkash', label: 'bKash', color: 'from-pink-500 to-rose-500', ring: 'ring-pink-400', bg: 'bg-pink-50', border: 'border-pink-400' },
                                                         { value: 'rocket', label: 'Rocket', color: 'from-purple-500 to-violet-600', ring: 'ring-purple-400', bg: 'bg-purple-50', border: 'border-purple-400' },
-                                                        { value: 'nagad',  label: 'Nagad',  color: 'from-orange-500 to-amber-500', ring: 'ring-orange-400', bg: 'bg-orange-50', border: 'border-orange-400' },
+                                                        { value: 'nagad', label: 'Nagad', color: 'from-orange-500 to-amber-500', ring: 'ring-orange-400', bg: 'bg-orange-50', border: 'border-orange-400' },
                                                     ].map((method) => (
                                                         <button
                                                             key={method.value}
@@ -702,29 +702,26 @@ export default function Register({ success }) {
 
                                             {/* Dynamic Payment Instructions */}
                                             {data.payment_method && (
-                                                <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${
-                                                    data.payment_method === 'bkash'  ? 'bg-pink-50 border-pink-200'   :
-                                                    data.payment_method === 'rocket' ? 'bg-purple-50 border-purple-200' :
-                                                                                        'bg-orange-50 border-orange-200'
-                                                }`}>
-                                                    <h4 className={`font-semibold mb-2 ${
-                                                        data.payment_method === 'bkash'  ? 'text-pink-800'   :
-                                                        data.payment_method === 'rocket' ? 'text-purple-800' :
-                                                                                            'text-orange-800'
+                                                <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${data.payment_method === 'bkash' ? 'bg-pink-50 border-pink-200' :
+                                                        data.payment_method === 'rocket' ? 'bg-purple-50 border-purple-200' :
+                                                            'bg-orange-50 border-orange-200'
                                                     }`}>
-                                                        {data.payment_method === 'bkash'  ? '📱 bKash Payment' :
-                                                         data.payment_method === 'rocket' ? '🚀 Rocket Payment' :
-                                                                                            '💛 Nagad Payment'} Instructions
+                                                    <h4 className={`font-semibold mb-2 ${data.payment_method === 'bkash' ? 'text-pink-800' :
+                                                            data.payment_method === 'rocket' ? 'text-purple-800' :
+                                                                'text-orange-800'
+                                                        }`}>
+                                                        {data.payment_method === 'bkash' ? '📱 bKash Payment' :
+                                                            data.payment_method === 'rocket' ? '🚀 Rocket Payment' :
+                                                                '💛 Nagad Payment'} Instructions
                                                     </h4>
-                                                    <p className={`text-sm ${
-                                                        data.payment_method === 'bkash'  ? 'text-pink-700'   :
-                                                        data.payment_method === 'rocket' ? 'text-purple-700' :
-                                                                                            'text-orange-700'
-                                                    }`}>
+                                                    <p className={`text-sm ${data.payment_method === 'bkash' ? 'text-pink-700' :
+                                                            data.payment_method === 'rocket' ? 'text-purple-700' :
+                                                                'text-orange-700'
+                                                        }`}>
                                                         Send money to <strong>01939378080</strong> via{' '}
                                                         <strong>
-                                                            {data.payment_method === 'bkash'  ? 'bKash'  :
-                                                             data.payment_method === 'rocket' ? 'Rocket' : 'Nagad'}
+                                                            {data.payment_method === 'bkash' ? 'bKash' :
+                                                                data.payment_method === 'rocket' ? 'Rocket' : 'Nagad'}
                                                         </strong>, then enter your Transaction ID below.
                                                     </p>
                                                 </div>

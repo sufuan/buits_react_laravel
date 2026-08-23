@@ -8,6 +8,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Redirect;
+use Illuminate\Support\Facades\Storage;
+use App\Models\PreviousCommitteeMember;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -59,5 +61,55 @@ class ProfileController extends Controller
         $request->session()->regenerateToken();
 
         return Redirect::to('/');
+    }
+
+    /**
+     * Upload user's profile photo.
+     */
+    public function uploadPhoto(Request $request): RedirectResponse
+    {
+        $request->validate([
+            'photo' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+        ]);
+
+        $user = $request->user();
+
+        if ($user->image) {
+            Storage::disk('public')->delete($user->image);
+        }
+
+        $path = $request->file('photo')->store('profile-photos', 'public');
+
+        $user->update([
+            'image' => $path,
+        ]);
+
+        // Sync to previous_committee_members for this user
+        PreviousCommitteeMember::where('user_id', $user->id)
+            ->update(['photo' => $path]);
+
+        return Redirect::route('profile.edit')->with('status', 'photo-updated');
+    }
+
+    /**
+     * Delete user's profile photo.
+     */
+    public function deletePhoto(Request $request): RedirectResponse
+    {
+        $user = $request->user();
+
+        if ($user->image) {
+            Storage::disk('public')->delete($user->image);
+            
+            $user->update([
+                'image' => null,
+            ]);
+
+            // Sync to previous_committee_members
+            PreviousCommitteeMember::where('user_id', $user->id)
+                ->update(['photo' => null]);
+        }
+
+        return Redirect::route('profile.edit')->with('status', 'photo-deleted');
     }
 }

@@ -18,7 +18,8 @@ const navItems = [
 ];
 
 const NavBar = () => {
-  const { settings, auth } = usePage().props;
+  const { url, props } = usePage();
+  const { settings, auth } = props;
   const isVolunteerEnabled = settings?.volunteer_applications_enabled;
 
   // Dynamically insert Volunteer link if enabled
@@ -26,6 +27,10 @@ const NavBar = () => {
   if (isVolunteerEnabled) {
     // Insert before Login (index 4)
     dynamicNavItems.splice(4, 0, { name: "Become a Volunteer", href: "/volunteer-application/create" });
+  }
+
+  if (url !== '/') {
+    dynamicNavItems.unshift({ name: "Home", href: "/" });
   }
   // Get audio controls from context
   const { isIndicatorActive, toggleAudio } = useAudio();
@@ -178,18 +183,11 @@ const NavBar = () => {
       >
         <header className="absolute top-1/2 w-full -translate-y-1/2">
           <nav className="flex size-full items-center justify-between p-4">
-            {/* Logo and Product button */}
-            <div className="flex items-center gap-7">
-              <img src={isAtTop ? "/img/logo.png" : "/img/logo_white.svg"} alt="logo" className="w-14" />
-              <Button
-                id="product-button"
-                title="BUITS"
-                rightIcon={<TiLocationArrow />}
-                containerClass={clsx("md:flex hidden items-center justify-center gap-1", {
-                  "bg-black text-white": isAtTop,
-                  "bg-blue-50": !isAtTop,
-                })}
-              />
+            {/* Logo */}
+            <div className="flex items-center">
+              <Link href="/">
+                <img src={isAtTop ? "/img/logo.png" : "/img/logo_white.svg"} alt="logo" className="w-14" />
+              </Link>
             </div>
 
             {/* Navigation Links and Audio Button */}

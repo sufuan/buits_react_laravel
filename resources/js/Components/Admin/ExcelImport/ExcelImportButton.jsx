@@ -3,11 +3,25 @@ import ExcelModal from './ExcelModal';
 import { Button } from '@/Components/ui/button';
 import { Upload } from 'lucide-react';
 
-export default function ExcelImportButton({ validationMetadata, onImportComplete }) {
+export default function ExcelImportButton({ 
+    validationMetadata, 
+    onImportComplete,
+    apiRoutes,
+    additionalPayload,
+    columns,
+    buttonText = "Import Excel File",
+    className,
+    disabled = false
+}) {
     const [showModal, setShowModal] = useState(false);
     const [selectedFile, setSelectedFile] = useState(null);
 
     const handleFileSelect = (event) => {
+        if (disabled) {
+            event.preventDefault();
+            return;
+        }
+
         const file = event.target.files[0];
         if (file) {
             // Get file extension
@@ -78,16 +92,18 @@ export default function ExcelImportButton({ validationMetadata, onImportComplete
                     type="file"
                     accept=".xlsx,.xls"
                     onChange={handleFileSelect}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    disabled={disabled}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10 disabled:cursor-not-allowed"
                     id="excel-upload"
                 />
                 <Button variant="outline"
                     asChild
-                    className="cursor-pointer"
+                    disabled={disabled}
+                    className={`cursor-pointer ${disabled ? 'opacity-50 pointer-events-none' : ''} ${className || ''}`}
                 >
                     <label htmlFor="excel-upload">
-                         <Upload className="h-4 w-4" />
-                         Import User Excel File
+                         <Upload className="h-4 w-4 mr-2" />
+                         {buttonText}
                     </label>
                 </Button>
             </div>
@@ -99,6 +115,9 @@ export default function ExcelImportButton({ validationMetadata, onImportComplete
                 file={selectedFile}
                 validationMetadata={validationMetadata}
                 onImport={handleImportComplete}
+                apiRoutes={apiRoutes}
+                additionalPayload={additionalPayload}
+                columns={columns}
             />
         </>
     );

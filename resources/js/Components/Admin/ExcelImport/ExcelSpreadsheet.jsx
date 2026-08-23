@@ -13,19 +13,8 @@ export default function ExcelSpreadsheet({
     const containerRef = useRef(null);
     const inputRef = useRef(null);
 
-    // Define column structure like Excel
-    const excelColumns = [
-        { key: 'row_id', label: '#', width: 60, readOnly: true },
-        { key: 'name', label: 'Name', width: 200, required: true },
-        { key: 'email', label: 'Email', width: 250, required: true },
-        { key: 'phone', label: 'Phone', width: 150, required: true },
-        { key: 'department', label: 'Department', width: 180, required: true },
-        { key: 'session', label: 'Session', width: 120, required: true },
-        { key: 'gender', label: 'Gender', width: 100, required: true },
-        { key: 'class_roll', label: 'Roll', width: 100 },
-        { key: 'blood_group', label: 'Blood Group', width: 120 },
-        { key: 'member_id', label: 'Member ID', width: 150, readOnly: true }
-    ];
+    // Use the provided columns prop or an empty array
+    const excelColumns = columns || [];
 
     useEffect(() => {
         if (editingCell && inputRef.current) {
@@ -169,6 +158,16 @@ export default function ExcelSpreadsheet({
     const getDropdownOptions = (field) => {
         if (!validationMetadata) return null;
 
+        // If the validationMetadata explicitly provides an array for this field, use it.
+        // E.g., validationMetadata[field] or validationMetadata[`${field}s`]
+        if (validationMetadata[field] && Array.isArray(validationMetadata[field])) {
+            return validationMetadata[field];
+        }
+        if (validationMetadata[`${field}s`] && Array.isArray(validationMetadata[`${field}s`])) {
+            return validationMetadata[`${field}s`];
+        }
+
+        // Fallback for hardcoded fields to support backward compatibility
         switch (field) {
             case 'department':
                 return validationMetadata.departments;

@@ -184,7 +184,7 @@ export default function Hero() {
         <div className="hero-1-container" ref={hero1Ref}>
           <div className="hero-main-container" ref={heroMainContainerRef}>
 
-            <img className="hero-main-image" draggable="false" src="/img/ultra_hero.svg" alt="gta logo" ref={heroMainImageRef} />
+            <img className="hero-main-image" draggable="false" src="/img/ultra_hero.svg" alt="hero  logo" ref={heroMainImageRef} />
           </div>
           <div className="hero-text-logo-container">
             <div className="hero-text-logo" ref={heroTextLogoRef}></div>
@@ -228,15 +228,15 @@ export default function Hero() {
 
             <div className="buits-stats-fixed">
               <div className="buits-stat-fixed">
-                <h2>500+</h2>
+                <h2>1500+</h2>
                 <p>MEMBERS</p>
               </div>
               <div className="buits-stat-fixed">
-                <h2>60+</h2>
+                <h2>200+</h2>
                 <p>EVENTS HELD</p>
               </div>
               <div className="buits-stat-fixed">
-                <h2>5+</h2>
+                <h2>10+</h2>
                 <p>YEARS ACTIVE</p>
               </div>
               <div className="buits-stat-fixed">

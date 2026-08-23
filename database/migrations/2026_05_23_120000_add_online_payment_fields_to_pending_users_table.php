@@ -48,6 +48,8 @@ return new class extends Migration
     public function down(): void
     {
         // Restore NOT NULL constraints (only safe if no NULLs exist in those columns)
+        DB::statement("UPDATE pending_users SET transaction_id = '' WHERE transaction_id IS NULL");
+        DB::statement("UPDATE pending_users SET to_account = '' WHERE to_account IS NULL");
         DB::statement('ALTER TABLE pending_users MODIFY transaction_id VARCHAR(255) NOT NULL');
         DB::statement('ALTER TABLE pending_users MODIFY to_account VARCHAR(255) NOT NULL');
 

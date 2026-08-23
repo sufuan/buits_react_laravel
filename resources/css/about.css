@@ -6,9 +6,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
+    /* overflow must NOT be hidden — the expanding card must escape its bounds */
+    overflow: visible;
     background-color: #dfdff2;
-    /* Initial background */
 }
 
 .hero-cover-title {
@@ -30,56 +30,47 @@
     width: 30vw;
     height: 40vh;
     transform: rotate(15deg);
-    /* Initial rotation */
+    /* Initial rotation — GSAP animates to 0 */
     background: linear-gradient(165deg, #9b8bff 0%, #7c6ae8 35%, #6a50e0 65%, #5a3ed4 100%);
     border-radius: 16px;
+    /* overflow:hidden keeps the logo clipped inside as the card scales */
     overflow: hidden;
-    /* GSAP handles scale/rotation */
-    will-change: transform, width, height;
+    will-change: transform;
     box-shadow: 0 30px 60px rgba(90, 69, 201, 0.3);
     z-index: 10;
-    /* Ensure it covers the title */
-    margin-top: 30vh;
-    /* Push down significantly to clear title */
-
-    /* Ensure flex centering for internal content if needed */
+    flex-shrink: 0;
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
-/* Black overlay to fade in */
+/* Black overlay — sibling of hero-card, covers the full container */
 .black-overlay {
     position: absolute;
     inset: 0;
     background-color: #000;
     opacity: 0;
-    z-index: 1;
+    z-index: 20;
     pointer-events: none;
 }
 
-/* Content container - detached from card */
+/* Content container — sibling of hero-card, covers the full container */
 .content-inner {
     position: absolute;
     inset: 0;
-    z-index: 20;
-    /* Above the card */
+    z-index: 30;
     color: white;
     text-align: center;
-    /* Centered text */
     width: 100%;
     height: 100%;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    /* Centered alignment */
     padding: 2vw;
-    /* Reduced padding */
     opacity: 0;
     /* Handled by GSAP */
     pointer-events: none;
-    /* Let clicks pass through to card/scroll */
 }
 
 /* Text styles inside content-inner */

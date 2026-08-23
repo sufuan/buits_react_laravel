@@ -144,6 +144,10 @@ const adminNavData = {
           title: "Previous Committees",
           url: "/admin/committee/previous",
         },
+        {
+          title: "Import Executives",
+          url: "/admin/executive-import",
+        },
       ],
     },
     {

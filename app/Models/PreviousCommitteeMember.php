@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PreviousCommitteeMember extends Model
 {
@@ -27,6 +28,14 @@ class PreviousCommitteeMember extends Model
         'tenure_start' => 'datetime',
         'tenure_end' => 'datetime',
     ];
+
+    /**
+     * Get the user that this member record belongs to.
+     */
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 
     /**
      * Scope to order by member order
@@ -72,7 +81,7 @@ class PreviousCommitteeMember extends Model
      */
     public static function getCommitteeData($committeeNumber = null)
     {
-        $query = static::ordered();
+        $query = static::ordered()->with('user');
         
         if ($committeeNumber) {
             $query->byCommittee($committeeNumber);
@@ -87,7 +96,7 @@ class PreviousCommitteeMember extends Model
                         'id' => $member->id,
                         'name' => $member->name,
                         'designation' => $member->designation,
-                        'photo' => $member->photo,
+                        'photo' => $member->photo ?? optional($member->user)->image,
                         'member_order' => $member->member_order,
                         'email' => $member->email,
                         'tenure_start' => $member->tenure_start,

@@ -233,26 +233,26 @@ const MissionCard = ({ type, title, text, icon: Icon }) => (
 const valuesData = [
   {
     cardType: 'humble',
-    title: 'HUMBLE',
-    description: 'We know that true expertise requires constant learning and growth. We approach every challenge with humility, recognizing that there\'s always more to discover and room to improve.',
+    title: 'STAY HUMBLE',
+    description: 'Technology evolves rapidly. We approach every challenge with curiosity and humility, recognizing that there is always more to learn from each other within our tech community.',
     icon: HumbleIcon
   },
   {
     cardType: 'experiment',
-    title: 'Experiment',
-    description: 'We believe that the best way to learn is by doing. We encourage experimentation, embrace failure as a learning opportunity, and constantly iterate to find better solutions.',
+    title: 'EMBRACE INNOVATION',
+    description: 'We believe the best way to master tech is by building it. We encourage participating in hackathons, exploring new stacks, and embracing failure as a stepping stone to better solutions.',
     icon: ExperimentIcon
   },
   {
     cardType: 'career',
-    title: 'Committed to build career',
-    description: 'We are deeply committed to helping our students achieve their career goals. Every course, every lesson, and every interaction is designed with their professional success in mind.',
+    title: 'CAREER READINESS',
+    description: 'We are committed to bridging the gap between academia and the IT industry. Every workshop, seminar, and project is designed to build real-world skills and professional networks.',
     icon: CareerIcon
   },
   {
     cardType: 'students',
-    title: 'Be part of the student\'s life',
-    description: 'We recognize that learning is not just a transaction - it\'s a transformation. We strive to be meaningful partners in our students\' educational journey and personal growth.',
+    title: 'COMMUNITY FIRST',
+    description: 'We recognize that a society thrives on its members. We strive to be a supportive family that fosters personal growth, leadership, and lifelong friendships during your university journey.',
     icon: StudentsIcon
   }
 ];
@@ -261,17 +261,17 @@ const valuesData = [
 const missionData = {
   why: {
     title: 'WHY',
-    text: 'We are passionate about empowering individuals to transform their lives through the power of coding. We believe that everyone should have access to high-quality, affordable coding education, regardless of their background or experience.',
+    text: 'We are passionate about fostering a thriving tech culture at Barishal University. We believe in empowering students by providing a collaborative ecosystem where technology meets innovation, bridging the gap between academic knowledge and industry demands.',
     icon: WhyIcon
   },
   what: {
     title: 'WHAT',
-    text: 'We provide a comprehensive range of online programming courses, from beginner-level Web Development to advanced CSE Fundamentals and Advanced Programming Courses. Our courses are designed to be engaging, effective, and tailored to the needs of today\'s learners.',
+    text: 'We organize tech festivals, hackathons, skill-development workshops, and industry seminars. From competitive programming and web development to cybersecurity and AI, we provide resources for members to explore diverse tech domains.',
     icon: WhatIcon
   },
   how: {
     title: 'HOW',
-    text: 'We nurture our students in a personalized and supportive environment that fosters confidence and success. Our friendly and dedicated instructors are always available to guide and mentor our students, ensuring they receive the support they need to achieve their coding goals.',
+    text: 'We nurture our community through peer-to-peer learning, alumni mentorship, and collaborative projects. By creating a supportive environment, we ensure every member has the guidance they need to excel in their tech journey.',
     icon: HowIcon
   }
 };
@@ -328,41 +328,39 @@ const HeroCover = () => {
 
   return (
     <div ref={containerRef} className="hero-container">
-      {/* Title (Kept separate or integrated? User snippet didn't include it but need it) */}
+      {/* Title fades/slides up on scroll */}
       <h1 ref={titleRef} className="hero-cover-title" style={{ position: 'absolute', top: '15vh', zIndex: 1, width: '100%', textAlign: 'center' }}>
         ABOUT BUITS
       </h1>
 
+      {/* The card expands to fill screen — logo only inside */}
       <div ref={cardRef} className="hero-card">
-        {/* The Purple Gradient sits on the hero-card CSS */}
         <div className="hero-cover-card-inner">
-          {/* BUITS Logo */}
           <img
             src="/img/logo.png"
             alt="BUITS Logo"
             className="hero-cover-card-logo"
           />
         </div>
+      </div>
 
-        {/* The Black Overlay */}
-        <div ref={overlayRef} className="black-overlay"></div>
+      {/* Black overlay — lives on container, not inside card */}
+      <div ref={overlayRef} className="black-overlay"></div>
 
-        {/* The Content */}
-        <div ref={contentRef} className="content-inner">
-          <p className="hero-cover-label">Our Project</p>
-          <h2 className="hero-cover-heading">
-            <span className="highlight">human-centric</span>
-            <span className="highlight">learning</span>
-            <span className="highlight">platform</span>
-            <span className="sub">operating system for education</span>
-          </h2>
-          <p className="hero-cover-description" style={{ marginTop: '30px' }}>
-            BUITS transforms education into experience, experience into expertise,
-            forging a self-reinforcing infrastructure for accelerating human potential,
-            building careers, and unlocking collective growth through innovative
-            technology and human-centered design.
-          </p>
-        </div>
+      {/* Text content — lives on container, not inside card */}
+      <div ref={contentRef} className="content-inner">
+        <p className="hero-cover-label">Our Vision</p>
+        <h2 className="hero-cover-heading">
+          <span className="highlight">tech-driven</span>
+          <span className="highlight">collaborative</span>
+          <span className="highlight">community</span>
+          <span className="sub">empowering digital leaders</span>
+        </h2>
+        <p className="hero-cover-description" style={{ marginTop: '30px' }}>
+          BUITS is the premier technology hub at Barishal University. We transform
+          tech enthusiasts into industry-ready professionals through innovation,
+          leadership, and a self-reinforcing infrastructure of peer-to-peer learning.
+        </p>
       </div>
     </div>
   );

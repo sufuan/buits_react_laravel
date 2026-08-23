@@ -6,7 +6,10 @@ export default function ExcelModal({
     onClose, 
     file, 
     validationMetadata, 
-    onImport 
+    onImport,
+    apiRoutes,
+    additionalPayload,
+    columns
 }) {
     const [previewData, setPreviewData] = useState(null);
     const [validationErrors, setValidationErrors] = useState({});
@@ -15,6 +18,13 @@ export default function ExcelModal({
     const [importProgress, setImportProgress] = useState({ isImporting: false, current: 0, total: 0, percentage: 0 });
     const modalRef = useRef(null);
     const validationTimeoutRef = useRef(null);
+
+    const routes = apiRoutes || {
+        preview: route('admin.users.import.preview'),
+        validateRow: route('admin.users.import.validate-row'),
+        batch: route('admin.users.import.batch'),
+        clearSession: route('admin.users.import.clear-session')
+    };
 
     useEffect(() => {
         if (isOpen && file) {
@@ -35,9 +45,16 @@ export default function ExcelModal({
         
         const formData = new FormData();
         formData.append('excel_file', file);
+        if (additionalPayload) {
+            Object.keys(additionalPayload).forEach(key => {
+                if (additionalPayload[key] !== undefined && additionalPayload[key] !== null) {
+                    formData.append(key, additionalPayload[key]);
+                }
+            });
+        }
 
         try {
-            const response = await fetch(route('admin.users.import.preview'), {
+            const response = await fetch(routes.preview, {
                 method: 'POST',
                 body: formData,
                 headers: {
@@ -105,7 +122,7 @@ export default function ExcelModal({
 
             // Validate the specific row
             try {
-                const response = await fetch(route('admin.users.import.validate-row'), {
+                const response = await fetch(routes.validateRow, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -114,7 +131,8 @@ export default function ExcelModal({
                     },
                     body: JSON.stringify({
                         row_id: rowId,
-                        data: updatedRow
+                        data: updatedRow,
+                        ...(additionalPayload || {})
                     })
                 });
 
@@ -151,10 +169,8 @@ export default function ExcelModal({
                             if (row.row_id === rowId) {
                                 const updatedRowData = { ...row };
                                 
-                                // Only update member ID if it was generated
-                                if (result.member_id && result.member_id !== row.member_id) {
-                                    updatedRowData.member_id = result.member_id;
-                                }
+                                // Always sync member_id with backend validation result
+                                updatedRowData.member_id = result.member_id || null;
                                 
                                 return updatedRowData;
                             }
@@ -208,7 +224,7 @@ export default function ExcelModal({
                     };
                 });
 
-                const response = await fetch(route('admin.users.import.batch'), {
+                const response = await fetch(routes.batch, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -218,7 +234,8 @@ export default function ExcelModal({
                     body: JSON.stringify({
                         rows: rowsForImport,
                         chunk_size: chunkSize,
-                        session_id: previewData.session_id
+                        session_id: previewData.session_id,
+                        ...(additionalPayload || {})
                     })
                 });
 
@@ -275,7 +292,7 @@ export default function ExcelModal({
     const handleClose = () => {
         // Clear server session when closing
         if (previewData?.session_id) {
-            fetch(route('admin.users.import.clear-session'), {
+            fetch(routes.clearSession, {
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
@@ -437,7 +454,7 @@ export default function ExcelModal({
                     ) : previewData ? (
                         <ExcelSpreadsheet
                             data={previewData.rows}
-                            columns={previewData.columns || []}
+                            columns={columns || previewData.columns || []}
                             errors={validationErrors}
                             onCellEdit={handleCellEdit}
                             validationMetadata={validationMetadata}

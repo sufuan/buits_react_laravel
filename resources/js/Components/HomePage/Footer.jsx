@@ -1,157 +1,227 @@
+import { useEffect, useRef } from "react";
 import {
   FaFacebookF,
   FaYoutube,
   FaMapMarkerAlt,
   FaPhone,
   FaEnvelope,
-  FaGlobe
+  FaGlobe,
+  FaArrowRight,
 } from "react-icons/fa";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
 
 const Footer = () => {
+  const footerRef = useRef(null);
+
   const socialLinks = [
-    { href: "https://facebook.com/buits", icon: <FaFacebookF />, name: "Facebook" },
-    { href: "https://youtube.com/buits", icon: <FaYoutube />, name: "YouTube" },
+    { href: "https://www.facebook.com/buitsorg", icon: <FaFacebookF />, name: "Facebook", color: "from-blue-600 to-blue-700" },
+    { href: "https://www.youtube.com/@buitsorg", icon: <FaYoutube />, name: "YouTube", color: "from-red-600 to-red-700" },
   ];
 
   const quickLinks = [
     { name: "About Us", href: "/about" },
     { name: "Events", href: "/events" },
-    { name: "Committee", href: "/committee" },
-    { name: "Gallery", href: "/gallery" },
-    { name: "Contact", href: "/contact" },
+    { name: "Find Member ID", href: "/find-member" },
+    { name: "Committee Portal", href: "/previous-committee" },
     { name: "Join Us", href: "/register" },
+    { name: "Login", href: "/login" },
   ];
 
   const resources = [
     { name: "Certificates", href: "/certificates" },
-   
     { name: "Blog", href: "/blog" },
-
-
+    { name: "Gallery", href: "/gallery" },
+    { name: "Privacy Policy", href: "/privacy" },
   ];
 
+  useEffect(() => {
+    if (!footerRef.current) return;
+
+    const cols = footerRef.current.querySelectorAll(".footer-col");
+    gsap.fromTo(
+      cols,
+      { y: 40, opacity: 0 },
+      {
+        y: 0,
+        opacity: 1,
+        duration: 0.8,
+        stagger: 0.12,
+        ease: "power3.out",
+        scrollTrigger: {
+          trigger: footerRef.current,
+          start: "top 85%",
+        },
+      }
+    );
+
+    return () => ScrollTrigger.getAll().forEach((t) => t.kill());
+  }, []);
+
   return (
-    <>
-      <footer className="relative bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-hidden">
-        {/* Animated Background Elements */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-10 left-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse"></div>
-          <div className="absolute top-40 right-10 w-72 h-72 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-1000"></div>
-          <div className="absolute bottom-10 left-1/2 w-72 h-72 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl animate-pulse delay-2000"></div>
-        </div>
+    <footer ref={footerRef} className="relative bg-black overflow-hidden">
+      {/* Layered gradient top border */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500 to-transparent" />
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent blur-sm" />
 
-        {/* Main Footer Content */}
-        <div className="relative z-10 max-w-7xl mx-auto px-6 py-16">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+      {/* Ambient glow orbs */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-blue-600/10 rounded-full blur-[100px]" />
+        <div className="absolute -top-20 right-1/4 w-80 h-80 bg-violet-600/10 rounded-full blur-[100px]" />
+        <div className="absolute bottom-0 right-0 w-72 h-72 bg-indigo-600/10 rounded-full blur-[80px]" />
+        {/* Grid overlay */}
+        <div
+          className="absolute inset-0 opacity-[0.03]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
+            backgroundSize: "60px 60px",
+          }}
+        />
+      </div>
 
-            {/* Organization Info */}
-            <div className="lg:col-span-1">
-              <div className="flex items-center mb-6">
+      {/* Main content */}
+      <div className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
+
+          {/* Brand Column */}
+          <div className="footer-col lg:col-span-1">
+            <div className="flex items-center gap-4 mb-7">
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500/30 blur-lg rounded-xl" />
                 <img
                   src="/img/logo.png"
                   alt="BUITS Logo"
-                  className="w-12 h-12 mr-3 rounded-lg shadow-lg"
+                  className="relative w-14 h-14 rounded-xl shadow-2xl object-contain"
                 />
-                <div>
-                  <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-                    Barishal University IT Society
-                  </h3>
-                 
-                </div>
               </div>
-            
-
-              {/* Contact Info */}
-              <div className="space-y-3">
-                <div className="flex items-center text-sm text-gray-300">
-                  <FaMapMarkerAlt className="mr-3 text-blue-400" />
-                  <span>Barishal University, Barishal, Bangladesh</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-300">
-                  <FaPhone className="mr-3 text-green-400" />
-                  <span>+880 1XXX-XXXXXX</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-300">
-                  <FaEnvelope className="mr-3 text-red-400" />
-                  <span>info@buits.org</span>
-                </div>
-                <div className="flex items-center text-sm text-gray-300">
-                  <FaGlobe className="mr-3 text-purple-400" />
-                  <span>www.buits.org</span>
-                </div>
+              <div>
+                <h3 className="text-white font-black text-lg leading-tight tracking-tight">
+                  BUITS
+                </h3>
+                <p className="text-xs text-blue-400/80 font-medium tracking-widest uppercase">
+                  IT Society
+                </p>
               </div>
             </div>
 
-            {/* Quick Links */}
-            <div>
-              <h4 className="text-xl font-semibold mb-6 text-white">Quick Links</h4>
-              <ul className="space-y-3">
-                {quickLinks.map((link, index) => (
-                  <li key={index}>
-                    <a
-                      href={link.href}
-                      className="text-gray-300 hover:text-blue-400 transition-colors duration-300 flex items-center group"
-                    >
-                      <span className="w-2 h-2 bg-blue-400 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                      {link.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+            <p className="text-slate-400 text-sm leading-relaxed mb-8">
+              Empowering the next generation of tech innovators at Barishal University through collaboration, learning, and innovation.
+            </p>
+
+            {/* Contact info */}
+            <div className="space-y-3">
+              {[
+                { icon: <FaMapMarkerAlt />, text: "Barishal University, Bangladesh", color: "text-blue-400" },
+                { icon: <FaPhone />, text: "+8801828-653727", color: "text-emerald-400" },
+                { icon: <FaEnvelope />, text: "info@buits.org", color: "text-violet-400" },
+                { icon: <FaGlobe />, text: "www.buits.org", color: "text-sky-400" },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3 group">
+                  <span className={`${item.color} text-sm flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                    {item.icon}
+                  </span>
+                  <span className="text-slate-400 text-sm group-hover:text-slate-300 transition-colors">{item.text}</span>
+                </div>
+              ))}
             </div>
+          </div>
 
-            {/* Resources */}
-            <div>
-              <h4 className="text-xl font-semibold mb-6 text-white">Resources</h4>
-              <ul className="space-y-3">
-                {resources.map((resource, index) => (
-                  <li key={index}>
-                    <a
-                      href={resource.href}
-                      className="text-gray-300 hover:text-purple-400 transition-colors duration-300 flex items-center group"
-                    >
-                      <span className="w-2 h-2 bg-purple-400 rounded-full mr-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                      {resource.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Social Media & Newsletter */}
-            <div>
-              <h4 className="text-xl font-semibold mb-6 text-white">Connect With Us</h4>
-
-              {/* Social Links */}
-              <div className="flex flex-wrap gap-3 mb-8">
-                {socialLinks.map((social, index) => (
+          {/* Quick Links */}
+          <div className="footer-col">
+            <h4 className="text-white font-bold text-base mb-6 uppercase tracking-widest relative">
+              <span className="relative">
+                Quick Links
+                <span className="absolute -bottom-2 left-0 w-8 h-[2px] bg-gradient-to-r from-blue-500 to-violet-500 rounded-full" />
+              </span>
+            </h4>
+            <ul className="space-y-3">
+              {quickLinks.map((link, i) => (
+                <li key={i}>
                   <a
-                    key={index}
-                    href={social.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-12 h-12 bg-gradient-to-br from-gray-700 to-gray-800 rounded-xl flex items-center justify-center text-white hover:from-blue-500 hover:to-purple-600 transition-all duration-300 transform hover:scale-110 hover:shadow-lg group"
-                    title={social.name}
+                    href={link.href}
+                    className="text-slate-400 hover:text-white text-sm flex items-center gap-2 group transition-all duration-300"
                   >
-                    <span className="text-lg group-hover:scale-110 transition-transform duration-300">
-                      {social.icon}
+                    <span className="w-0 group-hover:w-4 overflow-hidden transition-all duration-300 text-blue-400">
+                      <FaArrowRight className="text-xs" />
                     </span>
+                    <span className="group-hover:translate-x-1 transition-transform duration-300">{link.name}</span>
                   </a>
-                ))}
-              </div>
+                </li>
+              ))}
+            </ul>
+          </div>
 
-              {/* Newsletter Signup */}
-              <div className="bg-gradient-to-r from-gray-800/50 to-gray-700/50 backdrop-blur-sm rounded-2xl p-6 border border-gray-600/30">
-                <h5 className="text-lg font-semibold mb-3 text-white">Stay Updated</h5>
-                <p className="text-sm text-gray-300 mb-4">Get the latest news and updates from BUITS</p>
-                <div className="flex">
+          {/* Resources */}
+          <div className="footer-col">
+            <h4 className="text-white font-bold text-base mb-6 uppercase tracking-widest relative">
+              <span className="relative">
+                Resources
+                <span className="absolute -bottom-2 left-0 w-8 h-[2px] bg-gradient-to-r from-violet-500 to-pink-500 rounded-full" />
+              </span>
+            </h4>
+            <ul className="space-y-3">
+              {resources.map((link, i) => (
+                <li key={i}>
+                  <a
+                    href={link.href}
+                    className="text-slate-400 hover:text-white text-sm flex items-center gap-2 group transition-all duration-300"
+                  >
+                    <span className="w-0 group-hover:w-4 overflow-hidden transition-all duration-300 text-violet-400">
+                      <FaArrowRight className="text-xs" />
+                    </span>
+                    <span className="group-hover:translate-x-1 transition-transform duration-300">{link.name}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Connect & Newsletter */}
+          <div className="footer-col">
+            <h4 className="text-white font-bold text-base mb-6 uppercase tracking-widest relative">
+              <span className="relative">
+                Connect
+                <span className="absolute -bottom-2 left-0 w-8 h-[2px] bg-gradient-to-r from-sky-500 to-blue-500 rounded-full" />
+              </span>
+            </h4>
+
+            {/* Social Icons */}
+            <div className="flex gap-3 mb-8">
+              {socialLinks.map((social, i) => (
+                <a
+                  key={i}
+                  href={social.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title={social.name}
+                  className={`relative group w-11 h-11 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 hover:text-white hover:border-white/30 hover:bg-gradient-to-br ${social.color} transition-all duration-300 hover:scale-110 hover:shadow-lg`}
+                >
+                  <span className="text-base">{social.icon}</span>
+                </a>
+              ))}
+            </div>
+
+            {/* Newsletter */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-violet-600/10 rounded-2xl blur-sm" />
+              <div className="relative bg-white/[0.04] backdrop-blur-sm border border-white/10 rounded-2xl p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  <h5 className="text-white font-bold text-sm">Stay Updated</h5>
+                </div>
+                <p className="text-slate-400 text-xs mb-4 leading-relaxed">
+                  Get the latest news, events, and updates from BUITS delivered to your inbox.
+                </p>
+                <div className="flex flex-col gap-2">
                   <input
                     type="email"
-                    placeholder="Enter your email"
-                    className="flex-1 px-4 py-2 bg-gray-700/50 border border-gray-600 rounded-l-lg text-white placeholder-gray-400 focus:outline-none focus:border-blue-400 transition-colors duration-300"
+                    placeholder="your@email.com"
+                    className="w-full px-4 py-2.5 bg-black/40 border border-white/10 rounded-xl text-white text-sm placeholder-slate-500 focus:outline-none focus:border-blue-500/60 focus:ring-1 focus:ring-blue-500/30 transition-all duration-300"
                   />
-                  <button className="px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-r-lg hover:from-blue-600 hover:to-purple-700 transition-all duration-300 font-medium">
-                    Subscribe
+                  <button className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-violet-600 hover:from-blue-500 hover:to-violet-500 text-white text-sm font-bold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:-translate-y-0.5 active:translate-y-0">
+                    Subscribe →
                   </button>
                 </div>
               </div>
@@ -159,27 +229,43 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="relative z-10 border-t border-gray-700/50 bg-black/20 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-6 py-6">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="flex flex-col md:flex-row items-center gap-4 text-sm text-gray-300">
-                <p>&copy; 2025 Barishal University IT Society. All rights reserved.</p>
-                <div className="flex gap-4">
-                  <a href="/privacy" className="hover:text-blue-400 transition-colors duration-300">Privacy Policy</a>
-                  <a href="/terms" className="hover:text-blue-400 transition-colors duration-300">Terms of Service</a>
-                  <a href="/cookies" className="hover:text-blue-400 transition-colors duration-300">Cookie Policy</a>
-                </div>
-              </div>
-              <div className="text-sm text-gray-400">
-                Made with ❤️ by BUITS Development Team
+        {/* Divider */}
+        <div className="relative my-12">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          </div>
+          <div className="relative flex justify-center">
+            <div className="bg-black px-4">
+              <div className="w-6 h-6 border border-white/10 rounded-full flex items-center justify-center">
+                <div className="w-2 h-2 bg-gradient-to-br from-blue-400 to-violet-400 rounded-full" />
               </div>
             </div>
           </div>
         </div>
 
-      </footer>
-    </>
+        {/* Bottom bar */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+          <p className="text-slate-500 text-xs text-center md:text-left">
+            © {new Date().getFullYear()}{" "}
+            <span className="text-slate-300 font-semibold">Barishal University IT Society</span>. All rights reserved.
+          </p>
+          <div className="flex items-center gap-6">
+            {["Privacy Policy", "Terms", "Cookies"].map((item, i) => (
+              <a
+                key={i}
+                href={`/${item.toLowerCase().replace(" ", "-")}`}
+                className="text-slate-500 hover:text-slate-300 text-xs transition-colors duration-300"
+              >
+                {item}
+              </a>
+            ))}
+          </div>
+          <div className="text-slate-600 text-xs">
+            <span className="text-slate-500 font-medium tracking-wide">BUITS Dev Team</span>
+          </div>
+        </div>
+      </div>
+    </footer>
   );
 };
 

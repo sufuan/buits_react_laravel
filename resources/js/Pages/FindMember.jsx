@@ -1,62 +1,92 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Head } from '@inertiajs/react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Head, Link } from '@inertiajs/react';
 import gsap from 'gsap';
+import axios from 'axios';
+import debounce from 'lodash/debounce';
 import NavBar from '@/Components/HomePage/Navbar';
+import { UserIcon, IdentificationIcon, BuildingOfficeIcon, AcademicCapIcon, EnvelopeIcon, PhoneIcon, DocumentDuplicateIcon, CheckIcon } from '@heroicons/react/24/outline';
 import '../../css/frontend.css';
 
 export default function FindMember() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [isSearching, setIsSearching] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
   const heroRef = useRef(null);
   const searchRef = useRef(null);
+  const resultsRef = useRef(null);
 
   useEffect(() => {
     // Hero animation
     gsap.fromTo(heroRef.current,
-      { y: 100, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1.5, ease: "power3.out" }
+      { y: 50, opacity: 0 },
+      { y: 0, opacity: 1, duration: 1.2, ease: "power3.out" }
     );
 
     gsap.fromTo(searchRef.current,
-      { y: 50, opacity: 0 },
-      { y: 0, opacity: 1, duration: 1, delay: 0.5, ease: "power2.out" }
+      { y: 30, opacity: 0 },
+      { y: 0, opacity: 1, duration: 1, delay: 0.3, ease: "power2.out" }
     );
   }, []);
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
+  // Animate results when they appear
+  useEffect(() => {
+    if (searchResults.length > 0 && resultsRef.current) {
+        gsap.fromTo(resultsRef.current.children,
+            { y: 20, opacity: 0 },
+            { y: 0, opacity: 1, duration: 0.5, stagger: 0.1, ease: "power2.out" }
+        );
+    }
+  }, [searchResults]);
 
-    setIsSearching(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      const mockResults = [
-        {
-          id: 'CS2021001',
-          name: 'John Doe',
-          department: 'Computer Science',
-          session: '2021-2022',
-          email: 'john.doe@university.edu',
-          position: 'President'
-        },
-        {
-          id: 'EEE2020045',
-          name: 'Jane Smith',
-          department: 'Electrical Engineering',
-          session: '2020-2021',
-          email: 'jane.smith@university.edu',
-          position: 'Vice President'
-        }
-      ].filter(member => 
-        member.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        member.id.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+  // Debounced Search API Call
+  const performSearch = useCallback(
+    debounce(async (query) => {
+      if (!query.trim()) {
+        setSearchResults([]);
+        setIsSearching(false);
+        setHasSearched(false);
+        return;
+      }
+
+      setIsSearching(true);
+      setHasSearched(true);
       
-      setSearchResults(mockResults);
-      setIsSearching(false);
-    }, 1000);
+      try {
+        const response = await axios.post('/api/find-member', { query });
+        setSearchResults(response.data);
+      } catch (error) {
+        console.error("Search failed:", error);
+        setSearchResults([]);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 400),
+    []
+  );
+
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setSearchQuery(value);
+    
+    if (value.trim()) {
+        setIsSearching(true);
+    }
+    
+    performSearch(value);
+  };
+
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    performSearch(searchQuery);
+  };
+
+  const copyToClipboard = (id) => {
+      if (id === 'Pending') return;
+      navigator.clipboard.writeText(id);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 2000);
   };
 
   return (
@@ -64,99 +94,146 @@ export default function FindMember() {
       <Head title="Find Member - University IT Society" />
       <NavBar />
       
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-green-900 to-slate-900">
+      <div className="min-h-screen bg-gradient-to-br from-white via-slate-50 to-indigo-50 relative overflow-hidden">
+        {/* Soft Background Elements */}
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-200/40 blur-[120px] rounded-full pointer-events-none"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-indigo-200/40 blur-[120px] rounded-full pointer-events-none"></div>
+
         {/* Hero Section */}
-        <section className="pt-32 pb-20 px-6">
+        <section className="pt-32 pb-12 px-6 relative z-10">
           <div ref={heroRef} className="max-w-4xl mx-auto text-center">
-            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-cyan-400 mb-6">
-              FIND MEMBER
+            <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-100 to-indigo-100 rounded-full mb-6 border border-blue-200/60 shadow-sm">
+                <IdentificationIcon className="w-10 h-10 text-blue-600" />
+            </div>
+            <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-indigo-600 to-slate-800 mb-6 tracking-tight">
+              Member Directory
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-12">
-              Search for IT Society members by name or member ID to connect and collaborate.
+            <p className="text-xl text-slate-500 max-w-2xl mx-auto font-light">
+              Securely verify and look up active members of the University IT Society using their registered email or phone number.
             </p>
           </div>
         </section>
 
         {/* Search Section */}
-        <section className="pb-20 px-6">
-          <div ref={searchRef} className="max-w-2xl mx-auto">
-            <form onSubmit={handleSearch} className="mb-12">
-              <div className="relative">
+        <section className="pb-24 px-6 relative z-10">
+          <div ref={searchRef} className="max-w-3xl mx-auto">
+            <form onSubmit={handleSearchSubmit} className="mb-12 relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-blue-400 to-indigo-400 rounded-3xl blur opacity-15 group-hover:opacity-30 transition duration-500"></div>
+              <div className="relative flex items-center bg-white border border-slate-200 rounded-3xl shadow-lg p-2">
+                <div className="pl-6 pr-4">
+                    {isSearching ? (
+                        <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                    ) : (
+                        <svg className="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    )}
+                </div>
                 <input
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Enter member name or ID..."
-                  className="w-full px-6 py-4 bg-white/10 backdrop-blur-lg rounded-2xl border border-white/20 text-white placeholder-gray-400 focus:border-green-400 focus:outline-none transition-all duration-300"
+                  onChange={handleSearchChange}
+                  placeholder="Enter email address or phone number..."
+                  className="w-full bg-transparent border-none text-slate-700 placeholder-slate-400 focus:ring-0 text-lg md:text-xl py-4 pr-6"
                 />
-                <button
-                  type="submit"
-                  disabled={isSearching}
-                  className="absolute right-2 top-2 px-6 py-2 bg-gradient-to-r from-green-600 to-cyan-600 rounded-xl text-white font-medium hover:from-green-700 hover:to-cyan-700 transition-all duration-300 disabled:opacity-50"
-                >
-                  {isSearching ? 'Searching...' : 'Search'}
-                </button>
               </div>
             </form>
 
             {/* Search Results */}
-            {searchResults.length > 0 && (
-              <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-white mb-6">Search Results</h2>
-                {searchResults.map((member, index) => (
-                  <div
-                    key={member.id}
-                    className="group relative"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-green-600 to-cyan-600 rounded-2xl blur-xl opacity-25 group-hover:opacity-40 transition-opacity duration-500"></div>
-                    <div className="relative bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-white/40 transition-all duration-500">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-xl font-bold text-white">{member.name}</h3>
-                        <span className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm font-medium">
-                          {member.position}
-                        </span>
-                      </div>
-                      
-                      <div className="grid md:grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-400">Member ID:</span>
-                          <span className="text-white ml-2 font-medium">{member.id}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Department:</span>
-                          <span className="text-white ml-2">{member.department}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Session:</span>
-                          <span className="text-white ml-2">{member.session}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Email:</span>
-                          <span className="text-cyan-400 ml-2">{member.email}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-6 flex gap-3">
-                        <button className="px-4 py-2 bg-gradient-to-r from-green-600 to-cyan-600 rounded-lg text-white text-sm font-medium hover:from-green-700 hover:to-cyan-700 transition-all duration-300">
-                          Contact
-                        </button>
-                        <button className="px-4 py-2 bg-white/10 rounded-lg text-white text-sm font-medium border border-white/20 hover:border-white/40 transition-all duration-300">
-                          View Profile
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+            <div ref={resultsRef} className="space-y-6">
+                {searchResults.length > 0 && searchResults.map((member) => (
+                    <div
+                        key={member.id + member.email}
+                        className="group relative bg-white/90 backdrop-blur-xl border border-slate-200/80 hover:border-blue-400/50 rounded-3xl p-6 md:p-8 transition-all duration-300 shadow-md hover:shadow-2xl hover:shadow-blue-200/40 overflow-hidden"
+                    >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100/50 rounded-full blur-3xl group-hover:bg-blue-200/40 transition-colors"></div>
+                        
+                        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center gap-6">
+                            {/* Avatar */}
+                            <div className="flex-shrink-0">
+                                {member.image ? (
+                                    <img src={member.image} alt={member.name} className="w-24 h-24 rounded-2xl object-cover ring-2 ring-slate-700 group-hover:ring-blue-500/50 transition-all shadow-lg" />
+                                ) : (
+                                    <div className="w-24 h-24 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-700 flex items-center justify-center ring-2 ring-slate-700 group-hover:ring-blue-500/50 transition-all shadow-lg">
+                                        <UserIcon className="w-10 h-10 text-slate-400" />
+                                    </div>
+                                )}
+                            </div>
 
-            {searchQuery && searchResults.length === 0 && !isSearching && (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🔍</div>
-                <h3 className="text-xl font-bold text-white mb-2">No members found</h3>
-                <p className="text-gray-400">Try searching with a different name or member ID.</p>
-              </div>
+                            {/* Info */}
+                            <div className="flex-grow">
+                                <div className="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-4">
+                                    <div>
+                                        <h3 className="text-2xl font-bold text-slate-800 mb-1 tracking-tight">{member.name}</h3>
+                                        <span className="inline-block px-3 py-1 bg-blue-100 border border-blue-200 text-blue-700 rounded-full text-xs font-semibold uppercase tracking-wider">
+                                            {member.position}
+                                        </span>
+                                    </div>
+                                    
+                                    {/* Member ID Copy Badge */}
+                                    <button 
+                                        onClick={() => copyToClipboard(member.id)}
+                                        disabled={member.id === 'Pending'}
+                                        className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+                                            copiedId === member.id 
+                                                ? 'bg-green-100 border-green-300 text-green-700' 
+                                                : member.id === 'Pending'
+                                                    ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed'
+                                                    : 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-blue-50 hover:border-blue-300 hover:text-blue-700 cursor-pointer'
+                                        }`}
+                                    >
+                                        <IdentificationIcon className="w-5 h-5 opacity-70" />
+                                        <span className="font-mono font-medium">{member.id}</span>
+                                        {copiedId === member.id ? (
+                                            <CheckIcon className="w-4 h-4 ml-1" />
+                                        ) : member.id !== 'Pending' ? (
+                                            <DocumentDuplicateIcon className="w-4 h-4 ml-1 opacity-50 hover:opacity-100" />
+                                        ) : null}
+                                    </button>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6">
+                                    <div className="flex items-center gap-3 text-slate-600">
+                                        <BuildingOfficeIcon className="w-5 h-5 text-slate-400" />
+                                        <span className="text-sm font-medium">{member.department}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-slate-600">
+                                        <AcademicCapIcon className="w-5 h-5 text-slate-400" />
+                                        <span className="text-sm font-medium">Session: {member.session}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-slate-600">
+                                        <EnvelopeIcon className="w-5 h-5 text-slate-400" />
+                                        <span className="text-sm">{member.email}</span>
+                                    </div>
+                                    <div className="flex items-center gap-3 text-slate-600">
+                                        <PhoneIcon className="w-5 h-5 text-slate-400" />
+                                        <span className="text-sm">{member.phone}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Empty State */}
+            {searchQuery && !isSearching && searchResults.length === 0 && hasSearched && (
+                <div className="text-center py-20 bg-white/80 border border-slate-200 rounded-3xl shadow-sm">
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-2xl mb-4">
+                        <UserIcon className="w-8 h-8 text-slate-400" />
+                    </div>
+                    <h3 className="text-xl font-bold text-slate-800 mb-2">No matching members found</h3>
+                    <p className="text-slate-400">We couldn't find any member matching that email or phone number.</p>
+                </div>
             )}
+            
+            {/* Initial State Hint */}
+            {!searchQuery && !hasSearched && (
+                <div className="text-center mt-12 opacity-60">
+                    <p className="text-slate-500 text-sm">Start typing an email or phone number to see live results</p>
+                </div>
+            )}
+            
           </div>
         </section>
       </div>

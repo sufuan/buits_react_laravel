@@ -46,7 +46,8 @@ class PreviousCommitteeController extends Controller
             ->orderBy('committee_number', 'desc')
             ->pluck('committee_number')
             ->map(function ($number) {
-                $members = PreviousCommitteeMember::where('committee_number', $number)
+                $members = PreviousCommitteeMember::with('user')
+                    ->where('committee_number', $number)
                     ->orderBy('member_order')
                     ->get()
                     ->map(function ($member) {
@@ -54,7 +55,7 @@ class PreviousCommitteeController extends Controller
                             'id' => $member->id,
                             'name' => $member->name,
                             'designation' => $member->designation,
-                            'photo' => $member->photo,
+                            'photo' => $member->photo ?? optional($member->user)->image,
                             'member_order' => $member->member_order,
                             'email' => $member->email,
                             'tenure_start' => $member->tenure_start,
@@ -83,7 +84,8 @@ class PreviousCommitteeController extends Controller
      */
     public function show($committeeNumber)
     {
-        $members = PreviousCommitteeMember::getByCommittee($committeeNumber);
+        $committeeData = PreviousCommitteeMember::getCommitteeData($committeeNumber)->first();
+        $members = $committeeData ? $committeeData['members'] : [];
         
         return Inertia::render('PreviousCommittee/Show', [
             'committeeNumber' => $committeeNumber,
@@ -97,9 +99,10 @@ class PreviousCommitteeController extends Controller
     public function getCommitteeData($committeeNumber = null)
     {
         if ($committeeNumber) {
+            $committeeData = PreviousCommitteeMember::getCommitteeData($committeeNumber)->first();
             return response()->json([
                 'committee' => $committeeNumber,
-                'members' => PreviousCommitteeMember::getByCommittee($committeeNumber)
+                'members' => $committeeData ? $committeeData['members'] : []
             ]);
         }
         
