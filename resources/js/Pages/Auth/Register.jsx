@@ -37,13 +37,13 @@ export default function Register({ success }) {
         department: '',
         session: '',
         gender: 'male',
-        class_roll: '',
+        class_roll: 'N/A',
         father_name: '',
         mother_name: '',
         current_address: '',
         permanent_address: '',
         transaction_id: '',
-        to_account: '01939378080',
+        to_account: '01745695614',
         payment_method: '',
         payment_type: '',
     });
@@ -200,12 +200,12 @@ export default function Register({ success }) {
         'Bangla',
     ];
 
-    // Dynamic sessions from 2015 to current year
+    // Dynamic sessions for current year and past 3 years
     const generateSessions = () => {
         const currentYear = new Date().getFullYear();
-        const startYear = 2015;
+        const startYear = currentYear - 3;
         const sessions = [];
-        for (let year = startYear; year <= currentYear; year++) {
+        for (let year = currentYear; year >= startYear; year--) {
             sessions.push(`${year}-${year + 1}`);
         }
         return sessions;
@@ -394,7 +394,7 @@ export default function Register({ success }) {
                                         )}
 
                                         <div>
-                                            <InputLabel htmlFor="password" value="Password" className="text-gray-700 font-medium" />
+                                            <InputLabel htmlFor="password" value="Create a new password" className="text-gray-700 font-medium" />
                                             <TextInput
                                                 id="password"
                                                 type="password"
@@ -403,14 +403,14 @@ export default function Register({ success }) {
                                                 className="mt-2 block w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                                                 autoComplete="new-password"
                                                 onChange={(e) => setData('password', e.target.value)}
-                                                placeholder="Create a strong password"
+                                                placeholder="Create your BUITS password"
                                                 required
                                             />
                                             <InputError message={errors.password} className="mt-2" />
                                         </div>
 
                                         <div>
-                                            <InputLabel htmlFor="password_confirmation" value="Confirm Password" className="text-gray-700 font-medium" />
+                                            <InputLabel htmlFor="password_confirmation" value="Confirm your new password" className="text-gray-700 font-medium" />
                                             <TextInput
                                                 id="password_confirmation"
                                                 type="password"
@@ -419,7 +419,7 @@ export default function Register({ success }) {
                                                 className="mt-2 block w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500"
                                                 autoComplete="new-password"
                                                 onChange={(e) => setData('password_confirmation', e.target.value)}
-                                                placeholder="Confirm your password"
+                                                placeholder="Confirm your BUITS password"
                                                 required
                                             />
                                             <InputError message={errors.password_confirmation} className="mt-2" />
@@ -518,18 +518,7 @@ export default function Register({ success }) {
                                             <InputError message={errors.session} className="mt-2" />
                                         </div>
 
-                                        <div>
-                                            <InputLabel htmlFor="class_roll" value="Class Roll" className="text-gray-700 font-medium" />
-                                            <TextInput
-                                                id="class_roll"
-                                                name="class_roll"
-                                                value={data.class_roll}
-                                                className="mt-2 block w-full rounded-lg border-gray-300 focus:border-purple-500 focus:ring-purple-500"
-                                                onChange={(e) => setData('class_roll', e.target.value)}
-                                                placeholder="Enter your roll number"
-                                            />
-                                            <InputError message={errors.class_roll} className="mt-2" />
-                                        </div>
+
                                     </div>
                                 </div>
                             )}
@@ -540,37 +529,10 @@ export default function Register({ success }) {
                                     <div className="text-center mb-6">
                                         <MapPin className="h-12 w-12 text-orange-500 mx-auto mb-2 animate-pulse" />
                                         <h3 className="text-xl font-semibold text-gray-800">Where do you call home?</h3>
-                                        <p className="text-gray-600">Tell us about your family and address</p>
+                                        <p className="text-gray-600">Tell us your address</p>
                                     </div>
 
                                     <div className="space-y-6">
-                                        <div className="grid md:grid-cols-2 gap-6">
-                                            <div>
-                                                <InputLabel htmlFor="father_name" value="Father's Name" className="text-gray-700 font-medium" />
-                                                <TextInput
-                                                    id="father_name"
-                                                    name="father_name"
-                                                    value={data.father_name}
-                                                    className="mt-2 block w-full rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                                                    onChange={(e) => setData('father_name', e.target.value)}
-                                                    placeholder="Enter father's name"
-                                                />
-                                                <InputError message={errors.father_name} className="mt-2" />
-                                            </div>
-
-                                            <div>
-                                                <InputLabel htmlFor="mother_name" value="Mother's Name" className="text-gray-700 font-medium" />
-                                                <TextInput
-                                                    id="mother_name"
-                                                    name="mother_name"
-                                                    value={data.mother_name}
-                                                    className="mt-2 block w-full rounded-lg border-gray-300 focus:border-orange-500 focus:ring-orange-500"
-                                                    onChange={(e) => setData('mother_name', e.target.value)}
-                                                    placeholder="Enter mother's name"
-                                                />
-                                                <InputError message={errors.mother_name} className="mt-2" />
-                                            </div>
-                                        </div>
 
                                         <div>
                                             <InputLabel htmlFor="current_address" value="Current Address" className="text-gray-700 font-medium" />
@@ -703,22 +665,22 @@ export default function Register({ success }) {
                                             {/* Dynamic Payment Instructions */}
                                             {data.payment_method && (
                                                 <div className={`p-5 rounded-xl border-2 transition-all duration-300 ${data.payment_method === 'bkash' ? 'bg-pink-50 border-pink-200' :
-                                                        data.payment_method === 'rocket' ? 'bg-purple-50 border-purple-200' :
-                                                            'bg-orange-50 border-orange-200'
+                                                    data.payment_method === 'rocket' ? 'bg-purple-50 border-purple-200' :
+                                                        'bg-orange-50 border-orange-200'
                                                     }`}>
                                                     <h4 className={`font-semibold mb-2 ${data.payment_method === 'bkash' ? 'text-pink-800' :
-                                                            data.payment_method === 'rocket' ? 'text-purple-800' :
-                                                                'text-orange-800'
+                                                        data.payment_method === 'rocket' ? 'text-purple-800' :
+                                                            'text-orange-800'
                                                         }`}>
-                                                        {data.payment_method === 'bkash' ? '📱 bKash Payment' :
-                                                            data.payment_method === 'rocket' ? '🚀 Rocket Payment' :
-                                                                '💛 Nagad Payment'} Instructions
+                                                        {data.payment_method === 'bkash' ? 'bKash Payment' :
+                                                            data.payment_method === 'rocket' ? 'Rocket Payment' :
+                                                                'Nagad Payment'} Instructions
                                                     </h4>
                                                     <p className={`text-sm ${data.payment_method === 'bkash' ? 'text-pink-700' :
-                                                            data.payment_method === 'rocket' ? 'text-purple-700' :
-                                                                'text-orange-700'
+                                                        data.payment_method === 'rocket' ? 'text-purple-700' :
+                                                            'text-orange-700'
                                                         }`}>
-                                                        Send money to <strong>01939378080</strong> via{' '}
+                                                        Send <strong>Tk 120</strong> to <strong>01745695614</strong> via{' '}
                                                         <strong>
                                                             {data.payment_method === 'bkash' ? 'bKash' :
                                                                 data.payment_method === 'rocket' ? 'Rocket' : 'Nagad'}
