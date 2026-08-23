@@ -1,40 +1,48 @@
-import React, { useRef } from 'react';
-import { useForm } from '@inertiajs/react';
+import React, { useRef, useState } from 'react';
+import { router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Camera, Upload, Trash2 } from 'lucide-react';
 
 export default function ProfilePhotoUpload({ user }) {
     const fileInputRef = useRef(null);
-    const { data, setData, post, delete: destroy, processing, errors, reset } = useForm({
-        photo: null,
-    });
+    const [processingPhoto, setProcessingPhoto] = useState(false);
+    const [uploadError, setUploadError] = useState(null);
 
     const handlePhotoSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
-            setData('photo', file);
-            // Auto submit when file is selected
-            setTimeout(() => {
-                const formData = new FormData();
-                formData.append('photo', file);
-                
-                // We use inertia router manually since useForm's post doesn't handle FormData perfectly without extra setup sometimes
-                post(route('profile.photo.upload'), {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        reset();
-                        if (fileInputRef.current) fileInputRef.current.value = '';
-                    },
-                });
-            }, 0);
+            router.post(route('profile.photo.upload'), {
+                photo: file
+            }, {
+                preserveScroll: true,
+                onBefore: () => {
+                    setProcessingPhoto(true);
+                    setUploadError(null);
+                },
+                onSuccess: () => {
+                    setProcessingPhoto(false);
+                    if (fileInputRef.current) fileInputRef.current.value = '';
+                },
+                onError: (errs) => {
+                    setProcessingPhoto(false);
+                    if (errs.photo) {
+                        setUploadError(errs.photo);
+                    }
+                },
+                onFinish: () => {
+                    setProcessingPhoto(false);
+                }
+            });
         }
     };
 
     const handleDelete = () => {
         if (confirm('Are you sure you want to delete your profile photo?')) {
-            destroy(route('profile.photo.delete'), {
+            router.delete(route('profile.photo.delete'), {
                 preserveScroll: true,
+                onBefore: () => setProcessingPhoto(true),
+                onFinish: () => setProcessingPhoto(false)
             });
         }
     };
@@ -73,7 +81,7 @@ export default function ProfilePhotoUpload({ user }) {
                         {/* Overlay for quick upload */}
                         <button 
                             onClick={triggerFileInput}
-                            disabled={processing}
+                            disabled={processingPhoto}
                             className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white"
                         >
                             <Upload className="h-6 w-6" />
@@ -92,10 +100,10 @@ export default function ProfilePhotoUpload({ user }) {
                         
                         <Button 
                             onClick={triggerFileInput} 
-                            disabled={processing}
+                            disabled={processingPhoto}
                             className="w-full sm:w-auto"
                         >
-                            {processing ? 'Uploading...' : 'Upload New Photo'}
+                            {processingPhoto ? 'Uploading...' : 'Upload New Photo'}
                         </Button>
 
                         {user?.image && (
@@ -103,14 +111,14 @@ export default function ProfilePhotoUpload({ user }) {
                                 variant="outline" 
                                 className="w-full sm:w-auto text-red-600 hover:text-red-700 hover:bg-red-50"
                                 onClick={handleDelete}
-                                disabled={processing}
+                                disabled={processingPhoto}
                             >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Remove Photo
                             </Button>
                         )}
                         
-                        {errors.photo && <p className="text-sm text-red-600">{errors.photo}</p>}
+                        {uploadError && <p className="text-sm text-red-600">{uploadError}</p>}
                     </div>
                 </div>
             </CardContent>

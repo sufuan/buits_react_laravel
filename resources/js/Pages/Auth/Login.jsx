@@ -208,7 +208,7 @@ export default function Login({ status, canResetPassword }) {
         {/* Header with Animation */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
-         
+
             <h1 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent">
               Welcome Back
             </h1>
@@ -395,7 +395,7 @@ export default function Login({ status, canResetPassword }) {
           </CardHeader>
 
           <CardContent className="space-y-6">
-          
+
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Email Input */}
@@ -498,7 +498,7 @@ export default function Login({ status, canResetPassword }) {
                   </div>
                 ) : (
                   <div className="flex items-center justify-center gap-2">
-                    <Star className="h-5 w-5" />
+
                     Sign In
                   </div>
                 )}

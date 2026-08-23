@@ -88,7 +88,7 @@ class ProfileController extends Controller
         PreviousCommitteeMember::where('user_id', $user->id)
             ->update(['photo' => $path]);
 
-        return Redirect::route('profile.edit')->with('status', 'photo-updated');
+        return redirect()->back()->with('status', 'photo-updated');
     }
 
     /**
@@ -110,6 +110,6 @@ class ProfileController extends Controller
                 ->update(['photo' => null]);
         }
 
-        return Redirect::route('profile.edit')->with('status', 'photo-deleted');
+        return redirect()->back()->with('status', 'photo-deleted');
     }
 }
