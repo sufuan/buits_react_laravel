@@ -131,7 +131,6 @@ export default function Create({ auth, types = [], canAdd = true }) {
     height: '',
     width: '',
     status: 1,
-    status: 1,
     qr_code_student: ['member_id'],
     qr_code_staff: ['staff_id'],
     user_photo_style: 0,
