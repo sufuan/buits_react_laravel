@@ -53,8 +53,27 @@ class CommitteeController extends Controller
             ->select('id', 'name', 'level')
             ->get();
 
-        // No available users needed since all executives are automatically members
-        $availableUsers = collect([]);
+        // Collect user IDs already in the committee
+        $currentMemberUserIds = User::where('usertype', 'executive')
+            ->where('is_approved', true)
+            ->whereNotNull('designation_id')
+            ->where('committee_status', 'active')
+            ->pluck('id');
+
+        // All approved users not already in the current committee (for the add member modal)
+        $availableUsers = User::where('is_approved', true)
+            ->whereNotIn('id', $currentMemberUserIds)
+            ->orderBy('name')
+            ->select('id', 'name', 'email', 'image', 'usertype', 'department')
+            ->get()
+            ->map(fn($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'email' => $u->email,
+                'image' => $u->image,
+                'usertype' => $u->usertype,
+                'department' => $u->department,
+            ]);
 
         // Check if published
         $isPublished = \App\Models\Setting::where('key', 'is_current_committee_published')->value('value') === 'true';
@@ -78,41 +97,36 @@ class CommitteeController extends Controller
         $request->validate([
             'user_id' => 'required|exists:users,id',
             'designation_id' => 'required|exists:designations,id',
-            'member_order' => 'integer|min:1'
+            'member_order' => 'nullable|integer|min:1'
         ]);
 
         try {
             DB::beginTransaction();
 
-            // Check if user is already in current committee
-            $existingAssignment = CommitteeAssignment::current()
-                ->where('user_id', $request->user_id)
-                ->first();
+            $user = User::findOrFail($request->user_id);
+            $designation = Designation::findOrFail($request->designation_id);
 
-            if ($existingAssignment) {
+            // Check if user already in committee (by auto-exec status)
+            $alreadyInCommittee = $user->usertype === 'executive'
+                && $user->is_approved
+                && $user->designation_id
+                && $user->committee_status === 'active';
+
+            if ($alreadyInCommittee) {
                 return back()->with('error', 'This user is already in the current committee.');
             }
 
-            // Get or create current committee number
-            $currentCommitteeNumber = CommitteeAssignment::getCurrentCommitteeNumber() 
-                ?? $this->generateNewCommitteeNumber();
-
-            // Determine member order
-            $memberOrder = $request->member_order ?? $this->getNextMemberOrder();
-
-            // Create committee assignment
-            CommitteeAssignment::create([
-                'user_id' => $request->user_id,
+            // Promote the user to executive with the chosen designation & active committee status
+            $user->update([
+                'usertype' => 'executive',
+                'is_approved' => true,
                 'designation_id' => $request->designation_id,
-                'committee_number' => $currentCommitteeNumber,
-                'tenure_start' => now(),
-                'status' => 'current',
-                'member_order' => $memberOrder
+                'committee_status' => 'active',
             ]);
 
             DB::commit();
 
-            return back()->with('success', 'Member added to current committee successfully.');
+            return back()->with('success', "{$user->name} has been added to the current committee as {$designation->name}.");
 
         } catch (\Exception $e) {
             DB::rollBack();

@@ -80,7 +80,7 @@ export default function Show({ user }) {
                         <CardHeader className="pb-4">
                             <div className="flex items-center space-x-6">
                                 <Avatar className="h-20 w-20">
-                                    <AvatarImage src={user.image} alt={user.name} />
+                                    <AvatarImage src={user.image ? `/storage/${user.image}` : undefined} alt={user.name} />
                                     <AvatarFallback className="text-xl">
                                         {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                                     </AvatarFallback>

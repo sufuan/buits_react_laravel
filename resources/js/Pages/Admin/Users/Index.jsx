@@ -333,7 +333,7 @@ export default function Index({ users }) {
                                         <div className="flex flex-col sm:flex-row items-start justify-between gap-3 sm:gap-0">
                                             <div className="flex items-center space-x-3 sm:space-x-4 w-full">
                                                 <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
-                                                    <AvatarImage src={user.image} alt={user.name} />
+                                                    <AvatarImage src={user.image ? `/storage/${user.image}` : undefined} alt={user.name} />
                                                     <AvatarFallback className="text-xs sm:text-sm">
                                                         {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
                                                     </AvatarFallback>

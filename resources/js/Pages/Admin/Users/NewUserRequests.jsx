@@ -487,7 +487,7 @@ export default function NewUserRequests({ pendingUsers = [] }) {
                                                     <div className="flex items-center gap-3 min-w-0">
                                                         <div className="relative flex-shrink-0">
                                                             <Avatar className="h-14 w-14 avatar-ring">
-                                                                <AvatarImage src={user.image} alt={user.name} />
+                                                                <AvatarImage src={user.image ? `/storage/${user.image}` : undefined} alt={user.name} />
                                                                 <AvatarFallback className="text-white font-bold text-base" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
                                                                     {getInitials(user.name)}
                                                                 </AvatarFallback>
@@ -742,7 +742,7 @@ export default function NewUserRequests({ pendingUsers = [] }) {
                                     </div>
                                     <div className="relative flex items-center gap-4">
                                         <Avatar className="h-16 w-16 shadow-xl" style={{ boxShadow: '0 0 0 3px white, 0 0 0 6px rgba(99,102,241,0.15)' }}>
-                                            <AvatarImage src={selectedUser?.image} alt={selectedUser?.name} />
+                                            <AvatarImage src={selectedUser?.image ? `/storage/${selectedUser.image}` : undefined} alt={selectedUser?.name} />
                                             <AvatarFallback className="text-white font-bold text-xl" style={{ background: 'linear-gradient(135deg, #6366f1, #8b5cf6)' }}>
                                                 {getInitials(selectedUser?.name)}
                                             </AvatarFallback>
