@@ -85,7 +85,7 @@ export function UserDashboardSidebar({ user, onLogout, ...props }) {
           </div>
         </div>
       </SidebarHeader>
-      
+
       <SidebarContent>
         <SidebarMenu>
           {menuItems.map((item) => {
@@ -103,7 +103,7 @@ export function UserDashboardSidebar({ user, onLogout, ...props }) {
           })}
         </SidebarMenu>
       </SidebarContent>
-      
+
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
@@ -152,12 +152,9 @@ export function UserDashboardSidebar({ user, onLogout, ...props }) {
                     Profile Settings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Preferences
-                </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={onLogout}
                   className="cursor-pointer text-red-600 focus:text-red-600"
                 >

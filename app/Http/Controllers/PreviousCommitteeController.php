@@ -42,8 +42,10 @@ class PreviousCommitteeController extends Controller
         $currentCommitteeNumber = \App\Models\CommitteeAssignment::getCurrentCommitteeNumber();
 
         // Get previous committees data
-        $previousCommittees = PreviousCommitteeMember::distinct('committee_number')
-            ->orderBy('committee_number', 'desc')
+        $previousCommittees = PreviousCommitteeMember::select('committee_number')
+            ->selectRaw('MAX(created_at) as max_created_at')
+            ->groupBy('committee_number')
+            ->orderBy('max_created_at', 'desc')
             ->pluck('committee_number')
             ->map(function ($number) {
                 $members = PreviousCommitteeMember::with('user')

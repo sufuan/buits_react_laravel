@@ -21,7 +21,7 @@ import {
     Star
 } from 'lucide-react';
 
-export default function Register({ success }) {
+export default function Register({ success, departments = [], onlinePaymentEnabled = true }) {
     const [currentStep, setCurrentStep] = useState(1);
     const [completedSteps, setCompletedSteps] = useState([]);
     const [isAnimating, setIsAnimating] = useState(false);
@@ -172,33 +172,6 @@ export default function Register({ success }) {
         }
     };
 
-    // Departments from your controller
-    const departments = [
-        'Marketing',
-        'Law',
-        'Mathematics',
-        'Physics',
-        'History & Civilization',
-        'Soil & Environmental Sciences',
-        'Economics',
-        'Geology & Mining',
-        'Management Studies',
-        'Statistics',
-        'Chemistry',
-        'Coastal Studies and Disaster Management',
-        'Accounting & Information Systems',
-        'Computer Science and Engineering',
-        'Sociology',
-        'Botany',
-        'Public Administration',
-        'Philosophy',
-        'Political Science',
-        'Biochemistry and Biotechnology',
-        'Finance and Banking',
-        'Mass Communication and Journalism',
-        'English',
-        'Bangla',
-    ];
 
     // Dynamic sessions for current year and past 3 years
     const generateSessions = () => {
@@ -577,26 +550,42 @@ export default function Register({ success }) {
 
                                     {/* Payment Type Selection */}
                                     <div className="grid md:grid-cols-2 gap-4">
+                                        {/* Online Payment Button */}
                                         <button
                                             type="button"
+                                            disabled={!onlinePaymentEnabled}
                                             onClick={() => {
+                                                if (!onlinePaymentEnabled) return;
                                                 setData('payment_type', 'online');
                                                 setData('payment_method', '');
                                                 setData('transaction_id', '');
                                             }}
                                             className={`
                                                 relative flex flex-col items-center justify-center p-6 rounded-2xl border-2 transition-all duration-300
-                                                ${data.payment_type === 'online'
-                                                    ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-transparent shadow-xl scale-105 ring-4 ring-blue-300 ring-opacity-50'
-                                                    : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:shadow-md'
+                                                ${!onlinePaymentEnabled
+                                                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed opacity-60'
+                                                    : data.payment_type === 'online'
+                                                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-transparent shadow-xl scale-105 ring-4 ring-blue-300 ring-opacity-50'
+                                                        : 'bg-white text-gray-700 border-gray-200 hover:border-blue-400 hover:shadow-md'
                                                 }
                                             `}
                                         >
-                                            <CreditCard className={`h-10 w-10 mb-3 ${data.payment_type === 'online' ? 'text-white' : 'text-blue-500'}`} />
+                                            <CreditCard className={`h-10 w-10 mb-3 ${
+                                                !onlinePaymentEnabled ? 'text-gray-400' :
+                                                data.payment_type === 'online' ? 'text-white' : 'text-blue-500'
+                                            }`} />
                                             <h4 className="text-lg font-bold mb-1">Pay Online</h4>
-                                            <p className={`text-sm text-center ${data.payment_type === 'online' ? 'text-blue-100' : 'text-gray-500'}`}>
-                                                Redirected to payment gateway
+                                            <p className={`text-sm text-center ${
+                                                !onlinePaymentEnabled ? 'text-gray-400' :
+                                                data.payment_type === 'online' ? 'text-blue-100' : 'text-gray-500'
+                                            }`}>
+                                                {onlinePaymentEnabled ? 'Redirected to payment gateway' : 'Currently unavailable'}
                                             </p>
+                                            {!onlinePaymentEnabled && (
+                                                <span className="mt-2 text-xs px-2 py-0.5 bg-gray-200 text-gray-500 rounded-full font-medium">
+                                                    Disabled
+                                                </span>
+                                            )}
                                         </button>
 
                                         <button

@@ -58,8 +58,10 @@ class PreviousCommitteeMember extends Model
      */
     public static function getAllCommitteeNumbers()
     {
-        return static::distinct()
-            ->orderBy('committee_number', 'desc')
+        return static::select('committee_number')
+            ->selectRaw('MAX(created_at) as max_created_at')
+            ->groupBy('committee_number')
+            ->orderBy('max_created_at', 'desc')
             ->pluck('committee_number');
     }
 
@@ -68,7 +70,7 @@ class PreviousCommitteeMember extends Model
      */
     public static function getAllCommittees()
     {
-        $committees = static::orderBy('committee_number', 'desc')
+        $committees = static::orderBy('created_at', 'desc')
             ->orderBy('member_order', 'asc')
             ->get()
             ->groupBy('committee_number');

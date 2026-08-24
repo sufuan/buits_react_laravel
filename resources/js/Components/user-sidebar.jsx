@@ -147,10 +147,7 @@ export function UserSidebar({ user, onLogout, ...props }) {
                     Profile Settings
                   </Link>
                 </DropdownMenuItem>
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Preferences
-                </DropdownMenuItem>
+
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
                   onClick={onLogout}

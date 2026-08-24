@@ -655,7 +655,7 @@ class UserController extends Controller
     {
         $memberId = generate_member_id($pendingUser->department, $pendingUser->session);
 
-        User::create([
+        $user = User::create([
             'name'              => $pendingUser->name,
             'email'             => $pendingUser->email,
             'password'          => $pendingUser->password,
@@ -674,6 +674,12 @@ class UserController extends Controller
             'member_id'         => $memberId,
             'is_approved'       => true,
         ]);
+
+        try {
+            \Illuminate\Support\Facades\Mail::to($user->email)->send(new \App\Mail\UserApprovedMail($user));
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send approval email: ' . $e->getMessage());
+        }
 
         $pendingUser->delete();
 

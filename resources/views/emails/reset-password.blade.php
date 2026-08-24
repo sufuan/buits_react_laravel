@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confirmation of Membership</title>
+    <title>Reset Password</title>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -88,18 +88,16 @@
 <body>
     <div class="container">
       
-
-        <h1>Your Registration is Successful!</h1>
+        <h1>Reset Your Password</h1>
 
         <p>Dear {{ $user->name }},</p>
-        <p>We are pleased to inform you that your registration for membership in the Barishal University IT Society has
-            been successfully completed!</p>
+        <p>You are receiving this email because we received a password reset request for your account.</p>
 
-        <p>For more details, you may visit this URL and login and complete your profile:</p>
-        <a href="{{ route('login') }}" class="btn">Login to My Account</a> 
+        <a href="{{ $url }}" class="btn">Reset Password</a> 
 
-        <p>We will keep you informed about our exclusive workshops, seminars, networking events, and many lucrative
-            opportunities via our official social media channels.</p>
+        <p style="margin-top: 20px;">This password reset link will expire in 60 minutes.</p>
+        <p>If you did not request a password reset, no further action is required.</p>
+        <br>
 
         <p>Facebook page link: <a href="https://www.facebook.com/buitsorg">https://www.facebook.com/buitsorg</a></p>
         <p>Facebook group link: <a
@@ -110,16 +108,8 @@
 
         <div class="footer">
            
-
-            <!-- <div class="social-icons">
-                <a href="https://www.facebook.com/buitsorg/"><img src="https://via.placeholder.com/24/Facebook" alt="Facebook"></a>
-                <a href="#"><img src="https://via.placeholder.com/24/Instagram" alt="Instagram"></a>
-                <a href="#"><img src="https://via.placeholder.com/24/LinkedIn" alt="LinkedIn"></a>
-                <a href="#"><img src="https://via.placeholder.com/24/Pinterest" alt="Pinterest"></a>
-            </div> -->
-
             <div class="copyright">
-                &copy; 2024 Barishal University IT Society. All rights reserved.
+                &copy; {{ date('Y') }} Barishal University IT Society. All rights reserved.
             </div>
         </div>
     </div>

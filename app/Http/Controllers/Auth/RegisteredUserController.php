@@ -48,7 +48,8 @@ class RegisteredUserController extends Controller
         ];
 
         return Inertia::render('Auth/Register', [
-            'departments' => $departments
+            'departments' => $departments,
+            'onlinePaymentEnabled' => \App\Models\Setting::where('key', 'payment_enabled')->value('value') === 'true',
         ]);
     }
 
@@ -103,7 +104,11 @@ class RegisteredUserController extends Controller
             'permanent_address' => ['nullable', 'string', 'max:255'],
 
             // Payment fields
-            'payment_type'   => ['required', 'string', 'in:online,offline'],
+            'payment_type'   => [
+                'required', 
+                'string', 
+                Rule::in(\App\Models\Setting::where('key', 'payment_enabled')->value('value') === 'true' ? ['online', 'offline'] : ['offline'])
+            ],
             'transaction_id' => Rule::when(
                 $request->payment_type === 'offline',
                 ['required', 'string', 'max:255', 'unique:pending_users,transaction_id', 'unique:users,transaction_id'],

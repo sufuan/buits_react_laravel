@@ -238,6 +238,7 @@ class CommitteeController extends Controller
                 PreviousCommitteeMember::create([
                     'user_id' => $user->id,
                     'name' => $user->name,
+                    'email' => $user->email,
                     'designation' => $user->designation->name,
                     'designation_title' => $user->designation->name,
                     'designation_id_snapshot' => $user->designation_id,
@@ -295,8 +296,10 @@ class CommitteeController extends Controller
     public function previousCommittees()
     {
         // Get committee numbers directly from PreviousCommitteeMember table
-        $committeeNumbers = PreviousCommitteeMember::distinct('committee_number')
-            ->orderBy('committee_number', 'desc')
+        $committeeNumbers = PreviousCommitteeMember::select('committee_number')
+            ->selectRaw('MAX(created_at) as max_created_at')
+            ->groupBy('committee_number')
+            ->orderBy('max_created_at', 'desc')
             ->pluck('committee_number');
 
         $previousCommittees = [];
