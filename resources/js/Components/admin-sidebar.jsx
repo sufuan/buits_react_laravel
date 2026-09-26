@@ -21,6 +21,7 @@ import {
   Crown, // Executive Icon
   ShieldCheck, // Roles & Permissions Icon
   Key, // Permission Icon
+  Tag, // Ticketing System Icon
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -163,6 +164,21 @@ const adminNavData = {
     },
 
     {
+      title: "Ticketing System",
+      url: "#",
+      icon: Tag,
+      items: [
+        {
+          title: "Ticketing Events",
+          url: "/admin/ticketing-events",
+        },
+        {
+          title: "Registrations",
+          url: "/admin/event-registrations",
+        },
+      ],
+    },
+    {
       title: "Settings",
       url: "#",
       icon: Settings,
@@ -190,6 +206,7 @@ export function AdminSidebar({
   pendingVolunteerApplications = 0,
   pendingExecutiveApplications = 0,
   upcomingEventsCount = 0,
+  pendingRegistrationsCount = 0,
   ...props
 }) {
   // Create notifications object for the sidebar - only include non-zero counts
@@ -200,6 +217,7 @@ export function AdminSidebar({
   console.log('AdminSidebar - pendingVolunteerApplications:', pendingVolunteerApplications);
   console.log('AdminSidebar - pendingExecutiveApplications:', pendingExecutiveApplications);
   console.log('AdminSidebar - upcomingEventsCount:', upcomingEventsCount);
+  console.log('AdminSidebar - pendingRegistrationsCount:', pendingRegistrationsCount);
 
   // User Management notifications
   if (pendingUsersCount > 0) {
@@ -225,6 +243,12 @@ export function AdminSidebar({
 
   if (pendingExecutiveApplications > 0) {
     notifications["Executive Applications"] = pendingExecutiveApplications;
+  }
+
+  // Ticketing System notifications
+  if (pendingRegistrationsCount > 0) {
+    notifications["Ticketing System"] = pendingRegistrationsCount;
+    notifications["Registrations"] = pendingRegistrationsCount;
   }
 
   console.log('AdminSidebar - notifications:', notifications);

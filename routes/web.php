@@ -65,6 +65,11 @@ Route::post('/api/find-member', [App\Http\Controllers\FindMemberController::clas
 
 Route::get('/museum', [MuseumController::class, 'index'])->name('museum.index');
 
+// ================= Public Ticketing Event Routes =================
+// These MUST be outside any auth middleware — accessible to all visitors.
+Route::get('/t/{slug}',           [\App\Http\Controllers\PublicTicketingEventController::class, 'show'])->name('ticketing-event.show');
+Route::post('/t/{slug}/register', [\App\Http\Controllers\PublicTicketingEventController::class, 'storeRegistration'])->name('ticketing-event.register');
+
 
 // Test route for certificate generation
 Route::get('/test-certificate-generate', function () {
@@ -278,6 +283,19 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::get('check', [\App\Http\Controllers\Admin\NotificationController::class, 'check'])->name('check');
             Route::post('mark-seen', [\App\Http\Controllers\Admin\NotificationController::class, 'markAsSeen'])->name('mark-seen');
         });
+
+        // ================= Ticketing System =================
+        Route::prefix('ticketing-events')->name('ticketing-events.')->group(function () {
+            Route::get('/',                         [App\Http\Controllers\Admin\TicketingEventController::class, 'index'])->name('index');
+            Route::get('/create',                   [App\Http\Controllers\Admin\TicketingEventController::class, 'create'])->name('create');
+            Route::post('/',                        [App\Http\Controllers\Admin\TicketingEventController::class, 'store'])->name('store');
+            Route::post('/preview',                 [App\Http\Controllers\Admin\TicketingEventController::class, 'preview'])->name('preview'); // BEFORE /{ticketingEvent}
+            Route::get('/{ticketingEvent}/edit',    [App\Http\Controllers\Admin\TicketingEventController::class, 'edit'])->name('edit');
+            Route::put('/{ticketingEvent}',         [App\Http\Controllers\Admin\TicketingEventController::class, 'update'])->name('update');
+            Route::delete('/{ticketingEvent}',      [App\Http\Controllers\Admin\TicketingEventController::class, 'destroy'])->name('destroy');
+        });
+
+        Route::get('/event-registrations', [App\Http\Controllers\Admin\EventRegistrationController::class, 'index'])->name('event-registrations.index');
 
         // ================= Event Management =================
         Route::prefix('events')->name('events.')->group(function () {

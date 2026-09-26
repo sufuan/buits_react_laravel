@@ -12,7 +12,8 @@ export default function AdminAuthenticatedLayout({
     pendingUsersCount = 0,
     pendingVolunteerApplications = 0,
     pendingExecutiveApplications = 0,
-    upcomingEventsCount = 0
+    upcomingEventsCount = 0,
+    pendingRegistrationsCount = 0,
 }) {
     const admin = usePage().props.auth.admin;
 
@@ -30,6 +31,7 @@ export default function AdminAuthenticatedLayout({
                 pendingVolunteerApplications={pendingVolunteerApplications}
                 pendingExecutiveApplications={pendingExecutiveApplications}
                 upcomingEventsCount={upcomingEventsCount}
+                pendingRegistrationsCount={pendingRegistrationsCount}
             />
             <SidebarInset>
                 <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
