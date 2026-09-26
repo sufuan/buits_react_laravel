@@ -1,472 +1,588 @@
-import React, { useState } from 'react';
-import { Head, useForm } from '@inertiajs/react';
+import { useState, useEffect } from 'react';
+import { Head, useForm, usePage } from '@inertiajs/react';
+import { toast } from 'sonner';
+import NavBar from '@/Components/HomePage/Navbar';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
+import { Button } from '@/Components/ui/button';
+import { Input } from '@/Components/ui/input';
+import { Label } from '@/Components/ui/label';
+import { Textarea } from '@/Components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
+import { AlertCircle, CheckCircle2, Lock, Upload } from 'lucide-react';
 
-/**
- * Public ticketing event page with enhanced form display
- * Updated for Steps 5-8 to show custom form fields in preview
- */
-export default function Show({ event, htmlContent, formSchema, isClosed, isPreview }) {
+function InputError({ message }) {
+    if (!message) return null;
+    return (
+        <p className="mt-1.5 flex items-center gap-1.5 text-sm text-red-600">
+            <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            {message}
+        </p>
+    );
+}
+
+export default function TicketingEventShow({ event, htmlContent, formSchema, isClosed, isPreview }) {
+    const { flash } = usePage().props;
+    const [showForm, setShowForm] = useState(true);
+    
+    // Member verification states
+    const [memberChoice, setMemberChoice] = useState(null); // 'yes' | 'no' | null
+    const [verificationStatus, setVerificationStatus] = useState(null); // null | 'verified' | 'failed'
+    const [verifiedMemberName, setVerifiedMemberName] = useState(null);
+    const [isVerifying, setIsVerifying] = useState(false);
+    const [currentFee, setCurrentFee] = useState(null);
+    const [paymentFieldsEnabled, setPaymentFieldsEnabled] = useState(!event.requires_payment);
+
+    // Handle flash success message
+    useEffect(() => {
+        if (flash?.success) {
+            setShowForm(false);
+        }
+    }, [flash]);
+
+    // Initialize custom_fields keyed by each custom field's label
+    const initialCustomFields = {};
+    formSchema.forEach(f => { initialCustomFields[f.label] = ''; });
+
     const { data, setData, post, processing, errors } = useForm({
         name: '',
         email: '',
         phone: '',
-        ...Object.fromEntries((formSchema || []).map(field => [field.id, field.type === 'checkbox' ? [] : '']))
+        payment_method: '',
+        transaction_id: '',
+        sender_number: '',
+        member_id: '',
+        custom_fields: initialCustomFields,
     });
+
+    const handleMemberChoiceChange = (choice) => {
+        setMemberChoice(choice);
+        setVerificationStatus(null);
+        setVerifiedMemberName(null);
+        
+        if (choice === 'no') {
+            // Non-member path - unlock payment fields immediately
+            setCurrentFee(event.non_member_fee);
+            setPaymentFieldsEnabled(true);
+            setData('member_id', '');
+        } else if (choice === 'yes') {
+            // Member path - lock payment fields until verification
+            setCurrentFee(null);
+            setPaymentFieldsEnabled(false);
+        }
+    };
+
+    const handleVerifyMember = async () => {
+        if (!data.member_id || !data.member_id.trim()) {
+            toast.error('Please enter your Member ID');
+            return;
+        }
+
+        setIsVerifying(true);
+
+        try {
+            const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+            const response = await fetch('/verify-member', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                body: JSON.stringify({ member_id: data.member_id }),
+            });
+
+            const result = await response.json();
+
+            if (result.valid) {
+                // Valid member - apply member fee and unlock payment fields
+                setVerificationStatus('verified');
+                setVerifiedMemberName(result.name);
+                setCurrentFee(event.member_fee);
+                setPaymentFieldsEnabled(true);
+                toast.success(`Verified: ${result.name}`);
+            } else {
+                // Invalid member - apply non-member fee and unlock payment fields
+                setVerificationStatus('failed');
+                setCurrentFee(event.non_member_fee);
+                setPaymentFieldsEnabled(true);
+                toast.error('Verification failed. You will be charged the non-member fee.');
+            }
+        } catch (error) {
+            toast.error('Verification failed. Please try again.');
+            setVerificationStatus('failed');
+            setCurrentFee(event.non_member_fee);
+            setPaymentFieldsEnabled(true);
+        } finally {
+            setIsVerifying(false);
+        }
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!isPreview) {
-            post(route('ticketing-event.register', event.slug));
-        } else {
-            alert('This is preview mode - registration is not functional.');
-        }
+        post(route('ticketing-event.register', event.slug), {
+            onSuccess: () => {
+                setShowForm(false);
+                toast.success('Registration submitted successfully!');
+            },
+            onError: () => {
+                toast.error('Please fix the errors below.');
+            },
+        });
     };
 
-    const renderCustomField = (field) => {
-        const fieldValue = data[field.id] || (field.type === 'checkbox' ? [] : '');
-        
-        switch (field.type) {
-            case 'textarea':
-                return (
-                    <textarea
-                        value={fieldValue}
-                        onChange={(e) => setData(field.id, e.target.value)}
-                        placeholder={field.placeholder}
-                        required={field.required}
-                        rows={parseInt(field.rows) || 3}
-                        maxLength={field.maxLength ? parseInt(field.maxLength) : undefined}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            fontFamily: 'inherit',
-                            resize: 'vertical'
-                        }}
-                    />
-                );
+    const paymentMethods = [
+        { value: 'bkash', label: 'bKash' },
+        { value: 'nagad', label: 'Nagad' },
+        { value: 'rocket', label: 'Rocket' },
+        { value: 'bank', label: 'Bank Transfer' },
+    ];
 
-            case 'select':
-                return (
-                    <select
-                        value={fieldValue}
-                        onChange={(e) => setData(field.id, e.target.value)}
-                        required={field.required}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            fontFamily: 'inherit',
-                            backgroundColor: 'white'
-                        }}
-                    >
-                        <option value="">{field.placeholder || 'Select an option'}</option>
-                        {(field.options || []).map((option, idx) => (
-                            <option key={idx} value={option}>{option}</option>
-                        ))}
-                    </select>
-                );
+    // Filter payment methods based on event settings
+    const enabledPaymentMethods = event.enabled_payment_methods && event.enabled_payment_methods.length > 0
+        ? paymentMethods.filter(method => event.enabled_payment_methods.includes(method.value))
+        : paymentMethods;
 
-            case 'radio':
-                return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {(field.options || []).map((option, idx) => (
-                            <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                <input
-                                    type="radio"
-                                    name={field.id}
-                                    value={option}
-                                    checked={fieldValue === option}
-                                    onChange={(e) => setData(field.id, e.target.value)}
-                                    required={field.required}
-                                    style={{ margin: 0 }}
-                                />
-                                <span style={{ fontSize: '14px' }}>{option}</span>
-                            </label>
-                        ))}
-                    </div>
-                );
-
-            case 'checkbox':
-                return (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        {(field.options || []).map((option, idx) => (
-                            <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                                <input
-                                    type="checkbox"
-                                    value={option}
-                                    checked={Array.isArray(fieldValue) && fieldValue.includes(option)}
-                                    onChange={(e) => {
-                                        const current = Array.isArray(fieldValue) ? fieldValue : [];
-                                        if (e.target.checked) {
-                                            setData(field.id, [...current, option]);
-                                        } else {
-                                            setData(field.id, current.filter(v => v !== option));
-                                        }
-                                    }}
-                                    style={{ margin: 0 }}
-                                />
-                                <span style={{ fontSize: '14px' }}>{option}</span>
-                            </label>
-                        ))}
-                    </div>
-                );
-
-            case 'file':
-                return (
-                    <div>
-                        <input
-                            type="file"
-                            onChange={(e) => setData(field.id, e.target.files[0])}
-                            required={field.required}
-                            accept={field.accept}
-                            style={{
-                                width: '100%',
-                                padding: '12px',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                fontFamily: 'inherit',
-                                backgroundColor: 'white'
-                            }}
-                        />
-                        {field.accept && (
-                            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                                Accepted files: {field.accept}
-                            </div>
-                        )}
-                        {field.maxSize && (
-                            <div style={{ fontSize: '12px', color: '#6b7280', marginTop: '4px' }}>
-                                Maximum size: {field.maxSize}MB
-                            </div>
-                        )}
-                    </div>
-                );
-
-            case 'range':
-                return (
-                    <div>
-                        <input
-                            type="range"
-                            value={fieldValue}
-                            onChange={(e) => setData(field.id, e.target.value)}
-                            min={field.min}
-                            max={field.max}
-                            step={field.step}
-                            required={field.required}
-                            style={{ width: '100%', margin: '8px 0' }}
-                        />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#6b7280' }}>
-                            <span>{field.min || 0}</span>
-                            <span>Current: {fieldValue || field.min || 0}</span>
-                            <span>{field.max || 100}</span>
-                        </div>
-                    </div>
-                );
-
-            case 'color':
-                return (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <input
-                            type="color"
-                            value={fieldValue || '#000000'}
-                            onChange={(e) => setData(field.id, e.target.value)}
-                            required={field.required}
-                            style={{ width: '50px', height: '40px', border: 'none', borderRadius: '4px' }}
-                        />
-                        <input
-                            type="text"
-                            value={fieldValue || '#000000'}
-                            onChange={(e) => setData(field.id, e.target.value)}
-                            placeholder="#000000"
-                            style={{
-                                flex: 1,
-                                padding: '12px',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                fontSize: '14px',
-                                fontFamily: 'monospace'
-                            }}
-                        />
-                    </div>
-                );
-
-            default:
-                return (
-                    <input
-                        type={field.type}
-                        value={fieldValue}
-                        onChange={(e) => setData(field.id, e.target.value)}
-                        placeholder={field.placeholder}
-                        required={field.required}
-                        min={field.min}
-                        max={field.max}
-                        step={field.step}
-                        maxLength={field.maxLength ? parseInt(field.maxLength) : undefined}
-                        style={{
-                            width: '100%',
-                            padding: '12px',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '6px',
-                            fontSize: '14px',
-                            fontFamily: 'inherit'
-                        }}
-                    />
-                );
-        }
-    };
+    // Determine if submit button should be enabled
+    const canSubmit = !event.requires_payment || 
+                      memberChoice === 'no' || 
+                      (memberChoice === 'yes' && verificationStatus !== null);
 
     return (
         <>
-            <Head title={event?.title ?? 'Event'} />
+            <Head title={event.title} />
+            <NavBar />
 
-            {/* Preview Mode Banner */}
-            {isPreview && (
-                <div
-                    style={{
-                        background: '#f59e0b',
-                        color: '#fff',
-                        textAlign: 'center',
-                        padding: '12px',
-                        fontWeight: '600',
-                        fontSize: '15px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                    }}
-                >
-                    PREVIEW MODE — This page has not been published yet
-                </div>
-            )}
-
-            <div style={{ maxWidth: '800px', margin: '40px auto', padding: '0 20px', fontFamily: 'system-ui, sans-serif' }}>
-                {/* Event Header */}
-                <div style={{ marginBottom: '32px', textAlign: 'center' }}>
-                    <h1 style={{ fontSize: '2.5rem', fontWeight: 'bold', marginBottom: '16px', color: '#111827' }}>
-                        {event?.title ?? 'Untitled Event'}
-                    </h1>
-
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '24px', marginBottom: '16px' }}>
-                        {event?.fee && (
-                            <div style={{ 
-                                background: '#dcfce7', 
-                                color: '#166534', 
-                                padding: '8px 16px', 
-                                borderRadius: '20px',
-                                fontWeight: '600',
-                                fontSize: '14px'
-                            }}>
-                                Registration Fee: ৳{event.fee}
-                            </div>
-                        )}
-
-                        {event?.deadline && (
-                            <div style={{ 
-                                background: '#fef3c7', 
-                                color: '#92400e', 
-                                padding: '8px 16px', 
-                                borderRadius: '20px',
-                                fontWeight: '600',
-                                fontSize: '14px'
-                            }}>
-                                Deadline: {new Date(event.deadline).toLocaleDateString()}
-                            </div>
-                        )}
+            <div className="min-h-screen bg-gray-50">
+                {/* Preview Banner */}
+                {isPreview && (
+                    <div className="bg-amber-500 text-white text-center py-3 font-semibold shadow-md">
+                        Preview Mode — This page has not been published yet
                     </div>
-                </div>
+                )}
 
                 {/* HTML Content Section */}
                 {htmlContent && (
-                    <div
-                        className="event-content"
-                        dangerouslySetInnerHTML={{ __html: htmlContent }}
-                        style={{ 
-                            marginBottom: '40px',
-                            lineHeight: '1.6',
-                            color: '#374151'
-                        }}
-                    />
+                    <section className="bg-white py-12 border-b">
+                        <div className="container mx-auto px-4 max-w-5xl">
+                            <div
+                                className="ticketing-event-content prose prose-lg max-w-none"
+                                dangerouslySetInnerHTML={{ __html: htmlContent }}
+                            />
+                            
+                            {/* CTA Button */}
+                            {!isClosed && (
+                                <div className="mt-12 text-center">
+                                    <a
+                                        href="#registration-form"
+                                        className="inline-flex items-center justify-center px-8 py-4 bg-gray-900 text-white font-semibold rounded-lg shadow-lg hover:bg-gray-800 transition-colors"
+                                    >
+                                        Register Now
+                                        <svg className="ml-2 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                        </svg>
+                                    </a>
+                                </div>
+                            )}
+                        </div>
+                    </section>
                 )}
 
-                {/* Registration Form */}
-                <div style={{ 
-                    background: '#f9fafb',
-                    border: '1px solid #e5e7eb',
-                    borderRadius: '12px',
-                    padding: '32px',
-                    marginTop: '32px'
-                }}>
-                    <h2 style={{ 
-                        fontSize: '1.5rem', 
-                        fontWeight: 'bold', 
-                        marginBottom: '24px',
-                        color: '#111827',
-                        textAlign: 'center'
-                    }}>
-                        Event Registration
-                    </h2>
+                {/* Registration Form Section */}
+                <section id="registration-form" className="py-16">
+                    <div className="container mx-auto px-4 max-w-3xl">
+                        <Card className="shadow-xl border-2 border-gray-200">
+                            <CardHeader className="bg-gradient-to-r from-gray-50 to-white border-b">
+                                <CardTitle className="text-2xl font-bold text-gray-900">
+                                    Register for {event.title}
+                                </CardTitle>
+                                <CardDescription className="flex items-center gap-3 mt-2">
+                                    {!event.requires_payment ? (
+                                        <span className="inline-flex items-center px-3 py-1 bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm font-semibold rounded-full">
+                                            Free Registration
+                                        </span>
+                                    ) : currentFee !== null ? (
+                                        <span className="inline-flex items-center px-3 py-1 bg-gray-100 border border-gray-300 text-gray-900 text-sm font-semibold rounded-full">
+                                            {verificationStatus === 'verified' ? 'Member Fee' : 'Non-Member Fee'}: ৳ {parseFloat(currentFee).toFixed(2)}
+                                        </span>
+                                    ) : (
+                                        <span className="inline-flex items-center px-3 py-1 bg-blue-50 border border-blue-200 text-blue-700 text-sm font-semibold rounded-full">
+                                            Fee: TBD
+                                        </span>
+                                    )}
+                                    {event.deadline && (
+                                        <span className="text-sm text-gray-600">
+                                            Deadline: {new Date(event.deadline).toLocaleDateString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                year: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </span>
+                                    )}
+                                </CardDescription>
+                            </CardHeader>
 
-                    {isClosed ? (
-                        <div style={{
-                            background: '#fef2f2',
-                            border: '1px solid #fecaca',
-                            borderRadius: '8px',
-                            padding: '16px',
-                            textAlign: 'center',
-                            color: '#dc2626',
-                            fontWeight: '600'
-                        }}>
-                            Registration is now closed
-                        </div>
-                    ) : (
-                        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                            {/* Default Fields */}
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151' }}>
-                                        Full Name <span style={{ color: '#dc2626' }}>*</span>
-                                    </label>
-                                    <input
-                                        type="text"
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        required
-                                        placeholder="Enter your full name"
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            border: '1px solid #d1d5db',
-                                            borderRadius: '6px',
-                                            fontSize: '14px',
-                                            fontFamily: 'inherit'
-                                        }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151' }}>
-                                        Email Address <span style={{ color: '#dc2626' }}>*</span>
-                                    </label>
-                                    <input
-                                        type="email"
-                                        value={data.email}
-                                        onChange={(e) => setData('email', e.target.value)}
-                                        required
-                                        placeholder="your.email@example.com"
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            border: '1px solid #d1d5db',
-                                            borderRadius: '6px',
-                                            fontSize: '14px',
-                                            fontFamily: 'inherit'
-                                        }}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label style={{ display: 'block', marginBottom: '6px', fontWeight: '600', color: '#374151' }}>
-                                        Phone Number <span style={{ color: '#dc2626' }}>*</span>
-                                    </label>
-                                    <input
-                                        type="tel"
-                                        value={data.phone}
-                                        onChange={(e) => setData('phone', e.target.value)}
-                                        required
-                                        placeholder="+880 1XXX-XXXXXX"
-                                        style={{
-                                            width: '100%',
-                                            padding: '12px',
-                                            border: '1px solid #d1d5db',
-                                            borderRadius: '6px',
-                                            fontSize: '14px',
-                                            fontFamily: 'inherit'
-                                        }}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Custom Fields */}
-                            {formSchema && formSchema.length > 0 && (
-                                <div style={{ marginTop: '20px' }}>
-                                    <div style={{ 
-                                        borderTop: '1px solid #e5e7eb', 
-                                        paddingTop: '20px',
-                                        marginBottom: '20px'
-                                    }}>
-                                        <h3 style={{ 
-                                            fontSize: '1.1rem', 
-                                            fontWeight: '600', 
-                                            color: '#374151',
-                                            marginBottom: '16px'
-                                        }}>
-                                            Additional Information
-                                        </h3>
+                            <CardContent className="p-8">
+                                {/* Closed State */}
+                                {isClosed && (
+                                    <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 text-center">
+                                        <Lock className="h-12 w-12 text-red-600 mx-auto mb-3" />
+                                        <h3 className="text-lg font-semibold text-red-900 mb-2">Registration Closed</h3>
+                                        <p className="text-red-700">
+                                            This event is no longer accepting registrations.
+                                        </p>
                                     </div>
-                                    
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                        {formSchema.map((field, index) => (
-                                            <div key={field.id || index}>
-                                                <label style={{ 
-                                                    display: 'block', 
-                                                    marginBottom: '6px', 
-                                                    fontWeight: '600', 
-                                                    color: '#374151' 
-                                                }}>
-                                                    {field.label || `Field ${index + 1}`}
-                                                    {field.required && <span style={{ color: '#dc2626' }}> *</span>}
-                                                </label>
-                                                {renderCustomField(field)}
-                                                {field.helpText && (
-                                                    <div style={{ 
-                                                        fontSize: '12px', 
-                                                        color: '#6b7280', 
-                                                        marginTop: '4px' 
-                                                    }}>
-                                                        {field.helpText}
+                                )}
+
+                                {/* Success State */}
+                                {!isClosed && flash?.success && !showForm && (
+                                    <div className="bg-emerald-50 border-2 border-emerald-200 rounded-lg p-8 text-center">
+                                        <CheckCircle2 className="h-16 w-16 text-emerald-600 mx-auto mb-4" />
+                                        <h3 className="text-2xl font-bold text-emerald-900 mb-3">Registration Submitted Successfully!</h3>
+                                        {event.requires_payment ? (
+                                            <>
+                                                <p className="text-emerald-800 mb-2 leading-relaxed">
+                                                    Your registration is pending payment verification.
+                                                </p>
+                                                <p className="text-emerald-700 text-sm">
+                                                    You will receive a confirmation email with your ticket once your payment is verified by our team.
+                                                </p>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <p className="text-emerald-800 mb-2 leading-relaxed">
+                                                    Your registration has been confirmed!
+                                                </p>
+                                                <p className="text-emerald-700 text-sm">
+                                                    You will receive a confirmation email with your ticket shortly.
+                                                </p>
+                                            </>
+                                        )}
+                                    </div>
+                                )}
+
+                                {/* Form */}
+                                {!isClosed && showForm && (
+                                    <form onSubmit={handleSubmit} className="space-y-6">
+                                        {/* Required Information Section */}
+                                        <div className="space-y-5">
+                                            <div className="flex items-center gap-2 pb-2">
+                                                <div className="h-px flex-1 bg-gray-200"></div>
+                                                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2">
+                                                    Required Information
+                                                </span>
+                                                <div className="h-px flex-1 bg-gray-200"></div>
+                                            </div>
+
+                                            {/* Full Name */}
+                                            <div className="space-y-2">
+                                                <Label htmlFor="name" className="text-sm font-semibold text-gray-700">
+                                                    Full Name
+                                                    <span className="text-red-600 ml-1">*</span>
+                                                </Label>
+                                                <Input
+                                                    id="name"
+                                                    type="text"
+                                                    value={data.name}
+                                                    onChange={e => setData('name', e.target.value)}
+                                                    placeholder="Enter your full name"
+                                                    className="h-11"
+                                                    required
+                                                />
+                                                <InputError message={errors.name} />
+                                            </div>
+
+                                            {/* Email & Phone Grid */}
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
+                                                        Email Address
+                                                        <span className="text-red-600 ml-1">*</span>
+                                                    </Label>
+                                                    <Input
+                                                        id="email"
+                                                        type="email"
+                                                        value={data.email}
+                                                        onChange={e => setData('email', e.target.value)}
+                                                        placeholder="your.email@example.com"
+                                                        className="h-11"
+                                                        required
+                                                    />
+                                                    <InputError message={errors.email} />
+                                                </div>
+
+                                                <div className="space-y-2">
+                                                    <Label htmlFor="phone" className="text-sm font-semibold text-gray-700">
+                                                        Phone Number
+                                                        <span className="text-red-600 ml-1">*</span>
+                                                    </Label>
+                                                    <Input
+                                                        id="phone"
+                                                        type="tel"
+                                                        value={data.phone}
+                                                        onChange={e => setData('phone', e.target.value)}
+                                                        placeholder="+880 1XXX-XXXXXX"
+                                                        className="h-11"
+                                                        required
+                                                    />
+                                                    <InputError message={errors.phone} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Member Verification & Payment Section - Only if payment required */}
+                                        {event.requires_payment && (
+                                            <div className="space-y-5 pt-2">
+                                                <div className="flex items-center gap-2 pb-2">
+                                                    <div className="h-px flex-1 bg-gray-200"></div>
+                                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2">
+                                                        Payment Information
+                                                    </span>
+                                                    <div className="h-px flex-1 bg-gray-200"></div>
+                                                </div>
+
+                                                {/* Member Question */}
+                                                <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                                                    <Label className="text-sm font-semibold text-gray-800">
+                                                        Are you a member of DYTS?
+                                                        <span className="text-red-600 ml-1">*</span>
+                                                    </Label>
+                                                    <div className="flex gap-4">
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleMemberChoiceChange('yes')}
+                                                            className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                                                                memberChoice === 'yes'
+                                                                    ? 'bg-blue-600 border-blue-600 text-white'
+                                                                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
+                                                            }`}
+                                                        >
+                                                            Yes, I'm a Member
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleMemberChoiceChange('no')}
+                                                            className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
+                                                                memberChoice === 'no'
+                                                                    ? 'bg-blue-600 border-blue-600 text-white'
+                                                                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
+                                                            }`}
+                                                        >
+                                                            No, I'm Not a Member
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Member ID Verification - shown only if 'Yes' */}
+                                                {memberChoice === 'yes' && (
+                                                    <div className="space-y-3 p-4 bg-white border border-gray-300 rounded-lg">
+                                                        <Label htmlFor="member_id" className="text-sm font-semibold text-gray-700">
+                                                            Member ID
+                                                            <span className="text-red-600 ml-1">*</span>
+                                                        </Label>
+                                                        <div className="flex gap-2">
+                                                            <Input
+                                                                id="member_id"
+                                                                type="text"
+                                                                value={data.member_id}
+                                                                onChange={e => setData('member_id', e.target.value)}
+                                                                placeholder="Enter your Member ID"
+                                                                className="h-11 flex-1"
+                                                                disabled={verificationStatus !== null}
+                                                            />
+                                                            <Button
+                                                                type="button"
+                                                                onClick={handleVerifyMember}
+                                                                disabled={isVerifying || verificationStatus !== null}
+                                                                className="h-11 px-6"
+                                                            >
+                                                                {isVerifying ? 'Verifying...' : verificationStatus !== null ? 'Verified' : 'Verify'}
+                                                            </Button>
+                                                        </div>
+                                                        <InputError message={errors.member_id} />
+
+                                                        {/* Verification Status Messages */}
+                                                        {verificationStatus === 'verified' && (
+                                                            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                                <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" />
+                                                                <div className="flex-1">
+                                                                    <p className="text-sm font-semibold text-green-900">Verified: {verifiedMemberName}</p>
+                                                                    <p className="text-xs text-green-700">Member fee will be applied</p>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {verificationStatus === 'failed' && (
+                                                            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                                                <AlertCircle className="h-5 w-5 text-red-600 shrink-0" />
+                                                                <div className="flex-1">
+                                                                    <p className="text-sm font-semibold text-red-900">Verification Failed</p>
+                                                                    <p className="text-xs text-red-700">Non-member fee will be applied</p>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
+
+                                                {/* Payment Fields - Gated behind verification resolution */}
+                                                <div className={`space-y-5 ${!paymentFieldsEnabled ? 'opacity-50 pointer-events-none' : ''}`}>
+
+                                                    {/* Payment Method */}
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="payment_method" className="text-sm font-semibold text-gray-700">
+                                                            Payment Method
+                                                            <span className="text-red-600 ml-1">*</span>
+                                                        </Label>
+                                                        <Select
+                                                            value={data.payment_method}
+                                                            onValueChange={value => setData('payment_method', value)}
+                                                            disabled={!paymentFieldsEnabled}
+                                                        >
+                                                            <SelectTrigger className="h-11">
+                                                                <SelectValue placeholder="Select payment method" />
+                                                            </SelectTrigger>
+                                                            <SelectContent>
+                                                                {enabledPaymentMethods.map(method => (
+                                                                    <SelectItem key={method.value} value={method.value}>
+                                                                        {method.label}
+                                                                    </SelectItem>
+                                                                ))}
+                                                            </SelectContent>
+                                                        </Select>
+                                                        <InputError message={errors.payment_method} />
+                                                    </div>
+
+                                                    {/* Transaction ID */}
+                                                    <div className="space-y-2">
+                                                        <Label htmlFor="transaction_id" className="text-sm font-semibold text-gray-700">
+                                                            Transaction ID
+                                                            <span className="text-red-600 ml-1">*</span>
+                                                        </Label>
+                                                        <Input
+                                                            id="transaction_id"
+                                                            type="text"
+                                                            value={data.transaction_id}
+                                                            onChange={e => setData('transaction_id', e.target.value)}
+                                                            placeholder="Enter payment transaction ID"
+                                                            className="h-11 font-mono"
+                                                            disabled={!paymentFieldsEnabled}
+                                                        />
+                                                        <p className="text-xs text-gray-500 mt-1">
+                                                            Enter the TrxID from your bKash/Nagad/Rocket payment
+                                                        </p>
+                                                        <InputError message={errors.transaction_id} />
+                                                    </div>
+                                                </div>
                                             </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
+                                        )}
 
-                            {/* Submit Button */}
-                                            <button
+                                        {/* Custom Fields Section */}
+                                        {formSchema.length > 0 && (
+                                            <div className="space-y-5 pt-2">
+                                                {formSchema.map(field => (
+                                                    <div key={field.id} className="space-y-2">
+                                                        <Label className="text-sm font-semibold text-gray-700">
+                                                            {field.label}
+                                                            {field.required && <span className="text-red-600 ml-1">*</span>}
+                                                            {!field.required && <span className="text-gray-400 text-xs font-normal ml-1.5">(Optional)</span>}
+                                                        </Label>
+
+                                                        {/* Text Input */}
+                                                        {field.type === 'text' && (
+                                                            <Input
+                                                                value={data.custom_fields[field.label]}
+                                                                onChange={e => setData('custom_fields', {
+                                                                    ...data.custom_fields,
+                                                                    [field.label]: e.target.value
+                                                                })}
+                                                                placeholder={field.placeholder || `Enter ${field.label}`}
+                                                                className="h-11"
+                                                                required={field.required}
+                                                            />
+                                                        )}
+
+                                                        {/* Select Dropdown */}
+                                                        {field.type === 'select' && (
+                                                            <Select
+                                                                value={data.custom_fields[field.label]}
+                                                                onValueChange={v => setData('custom_fields', {
+                                                                    ...data.custom_fields,
+                                                                    [field.label]: v
+                                                                })}
+                                                            >
+                                                                <SelectTrigger className="h-11">
+                                                                    <SelectValue placeholder={field.placeholder || 'Select an option'} />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {(field.options || []).filter(o => o.trim()).map((opt, oi) => (
+                                                                        <SelectItem key={oi} value={opt}>
+                                                                            {opt}
+                                                                        </SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        )}
+
+                                                        {/* Number Input */}
+                                                        {field.type === 'number' && (
+                                                            <Input
+                                                                type="number"
+                                                                value={data.custom_fields[field.label]}
+                                                                onChange={e => setData('custom_fields', {
+                                                                    ...data.custom_fields,
+                                                                    [field.label]: e.target.value
+                                                                })}
+                                                                placeholder={field.placeholder || 'Enter number'}
+                                                                className="h-11"
+                                                                required={field.required}
+                                                            />
+                                                        )}
+
+                                                        {/* Textarea */}
+                                                        {field.type === 'textarea' && (
+                                                            <Textarea
+                                                                value={data.custom_fields[field.label]}
+                                                                onChange={e => setData('custom_fields', {
+                                                                    ...data.custom_fields,
+                                                                    [field.label]: e.target.value
+                                                                })}
+                                                                placeholder={field.placeholder || 'Enter your response'}
+                                                                rows={4}
+                                                                className="resize-none"
+                                                                required={field.required}
+                                                            />
+                                                        )}
+
+                                                        <InputError message={errors[`custom_fields.${field.label}`]} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
+                                        {/* Submit Button */}
+                                        <div className="pt-6 border-t border-gray-200">
+                                            <Button
                                                 type="submit"
-                                                disabled={processing || isPreview}
-                                                style={{
-                                                    marginTop: '24px',
-                                                    padding: '14px 28px',
-                                                    background: isPreview ? '#6b7280' : '#3b82f6',
-                                                    color: 'white',
-                                                    border: 'none',
-                                                    borderRadius: '8px',
-                                                    fontSize: '16px',
-                                                    fontWeight: '600',
-                                                    cursor: isPreview ? 'not-allowed' : 'pointer',
-                                                    transition: 'all 0.2s',
-                                                    alignSelf: 'flex-start'
-                                                }}
+                                                disabled={processing || (event.requires_payment && !canSubmit)}
+                                                className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-semibold text-base shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
-                                                {isPreview ? 'Preview Mode' : processing ? 'Submitting...' : 'Register for Event'}
-                                            </button>
-
-                            {isPreview && (
-                                <div style={{ 
-                                    fontSize: '14px', 
-                                    color: '#6b7280', 
-                                    fontStyle: 'italic',
-                                    marginTop: '8px'
-                                }}>
-                                    * Registration form is not functional in preview mode
-                                </div>
-                            )}
-                        </form>
-                    )}
-                </div>
+                                                {processing ? 'Submitting...' : 'Complete Registration'}
+                                                {currentFee && (
+                                                    <span className="ml-2 font-normal opacity-90">
+                                                        • Pay ৳ {parseFloat(currentFee).toFixed(2)}
+                                                    </span>
+                                                )}
+                                            </Button>
+                                            <p className="text-xs text-center text-gray-500 mt-3">
+                                                By registering, you agree to the event terms and conditions
+                                            </p>
+                                        </div>
+                                    </form>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </div>
+                </section>
             </div>
         </>
     );

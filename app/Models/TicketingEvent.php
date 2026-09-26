@@ -18,12 +18,20 @@ class TicketingEvent extends Model
         'deadline',
         'status',
         'created_by',
+        'requires_payment',
+        'member_fee',
+        'non_member_fee',
+        'enabled_payment_methods',
     ];
 
     protected $casts = [
-        'deadline'    => 'datetime',
-        'fee'         => 'decimal:2',
-        'form_schema' => 'array',   // same pattern as Payment::metadata
+        'deadline'                => 'datetime',
+        'fee'                     => 'decimal:2',
+        'form_schema'             => 'array',
+        'requires_payment'        => 'boolean',
+        'member_fee'              => 'decimal:2',
+        'non_member_fee'          => 'decimal:2',
+        'enabled_payment_methods' => 'array',
     ];
 
     /**

@@ -1,58 +1,80 @@
-import React from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
-import { router } from '@inertiajs/react';
+import { useState } from 'react';
+import { Head, Link, router } from '@inertiajs/react';
+import { toast } from 'sonner';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
-import { Alert, AlertDescription } from '@/Components/ui/alert';
-import { Tag, Plus, Edit, Trash2, Calendar, DollarSign, Users, AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
+import { Calendar, CheckCircle2, XCircle, Plus, Edit, Users, Trash2, ExternalLink } from 'lucide-react';
 
 export default function TicketingEventsIndex({ events, stats }) {
-    const { flash } = usePage().props;
+    const [deleteLoading, setDeleteLoading] = useState(null);
 
     const handleDelete = (event) => {
-        if (confirm(`Are you sure you want to delete "${event.title}"? This will also delete all registrations for this event.`)) {
-            router.delete(route('admin.ticketing-events.destroy', event.slug));
+        setDeleteLoading(event.id);
+        router.delete(route('admin.ticketing-events.destroy', event.slug), {
+            onSuccess: () => {
+                toast.success('Event deleted successfully');
+                setDeleteLoading(null);
+            },
+            onError: () => {
+                toast.error('Failed to delete event');
+                setDeleteLoading(null);
+            },
+            onFinish: () => setDeleteLoading(null)
+        });
+    };
+
+    const formatDeadline = (deadline) => {
+        if (!deadline) return 'No deadline';
+        return new Date(deadline).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    };
+
+    const formatFee = (fee) => {
+        if (!fee || fee === 0) {
+            return <Badge variant="secondary" className="bg-gray-100 text-gray-600">Free</Badge>;
         }
+        return <span className="font-medium">৳{parseFloat(fee).toFixed(2)}</span>;
     };
 
     const getStatusBadge = (status) => {
-        const variants = {
-            active: { variant: 'success', icon: CheckCircle, text: 'Active' },
-            closed: { variant: 'destructive', icon: XCircle, text: 'Closed' }
-        };
+        if (status === 'active') {
+            return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Active</Badge>;
+        }
+        return <Badge variant="secondary" className="bg-gray-100 text-gray-600">Closed</Badge>;
+    };
 
-        const { variant, icon: Icon, text } = variants[status] || variants.active;
-        
-        return (
-            <Badge variant={variant} className="flex items-center gap-1">
-                <Icon className="h-3 w-3" />
-                {text}
-            </Badge>
-        );
+    const getCustomFieldsBadge = (count) => {
+        if (count === 0) {
+            return <Badge variant="outline" className="text-gray-500">No custom fields</Badge>;
+        }
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">{count} field{count !== 1 ? 's' : ''}</Badge>;
+    };
+
+    const openPublicUrl = (slug) => {
+        const url = window.location.origin + `/t/${slug}`;
+        window.open(url, '_blank');
     };
 
     return (
         <AdminAuthenticatedLayout
             header={
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="relative">
-                            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg blur-xl opacity-50 animate-pulse"></div>
-                            <Tag className="relative h-10 w-10 text-blue-600" />
-                        </div>
-                        <div>
-                            <h2 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                Ticketing Events
-                            </h2>
-                            <p className="text-sm text-gray-500 mt-1">Manage event registrations and ticketing</p>
-                        </div>
-                    </div>
+                <div className="flex justify-between items-center">
+                    <h2 className="font-semibold text-xl text-gray-800 leading-tight">
+                        Ticketing Events
+                    </h2>
                     <Link href={route('admin.ticketing-events.create')}>
-                        <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                        <Button className="bg-blue-600 hover:bg-blue-700">
                             <Plus className="h-4 w-4 mr-2" />
-                            Create Event
+                            Create New Event
                         </Button>
                     </Link>
                 </div>
@@ -60,191 +82,224 @@ export default function TicketingEventsIndex({ events, stats }) {
         >
             <Head title="Ticketing Events" />
 
-            <div className="p-6 space-y-6">
-                {flash?.success && (
-                    <Alert className="border-green-200 bg-green-50">
-                        <CheckCircle className="h-4 w-4 text-green-600" />
-                        <AlertDescription className="text-green-800">
-                            {flash.success}
-                        </AlertDescription>
-                    </Alert>
-                )}
+            <div className="py-6">
+                <div className="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+                    {/* Stats Cards */}
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <Card className="bg-blue-50 border-blue-200">
+                            <CardContent className="p-6">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <Calendar className="h-8 w-8 text-blue-600" />
+                                    </div>
+                                    <div className="ml-4">
+                                        <CardDescription className="text-blue-600 font-medium">Total Events</CardDescription>
+                                        <CardTitle className="text-3xl font-bold text-blue-700">{stats.total}</CardTitle>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
 
-                {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card className="border-0 shadow-lg">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600">Total Events</p>
-                                    <p className="text-3xl font-bold text-gray-900">{stats.total}</p>
+                        <Card className="bg-green-50 border-green-200">
+                            <CardContent className="p-6">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <CheckCircle2 className="h-8 w-8 text-green-600" />
+                                    </div>
+                                    <div className="ml-4">
+                                        <CardDescription className="text-green-600 font-medium">Active Events</CardDescription>
+                                        <CardTitle className="text-3xl font-bold text-green-700">{stats.active}</CardTitle>
+                                    </div>
                                 </div>
-                                <div className="p-3 bg-blue-100 rounded-full">
-                                    <Calendar className="h-6 w-6 text-blue-600" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
 
-                    <Card className="border-0 shadow-lg">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600">Active Events</p>
-                                    <p className="text-3xl font-bold text-green-600">{stats.active}</p>
+                        <Card className="bg-gray-50 border-gray-200">
+                            <CardContent className="p-6">
+                                <div className="flex items-center">
+                                    <div className="flex-shrink-0">
+                                        <XCircle className="h-8 w-8 text-gray-600" />
+                                    </div>
+                                    <div className="ml-4">
+                                        <CardDescription className="text-gray-600 font-medium">Closed Events</CardDescription>
+                                        <CardTitle className="text-3xl font-bold text-gray-700">{stats.closed}</CardTitle>
+                                    </div>
                                 </div>
-                                <div className="p-3 bg-green-100 rounded-full">
-                                    <CheckCircle className="h-6 w-6 text-green-600" />
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                            </CardContent>
+                        </Card>
+                    </div>
 
-                    <Card className="border-0 shadow-lg">
-                        <CardContent className="p-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <p className="text-sm text-gray-600">Closed Events</p>
-                                    <p className="text-3xl font-bold text-red-600">{stats.closed}</p>
+                    {/* Events Table */}
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>All Events</CardTitle>
+                            <CardDescription>
+                                Manage your ticketing events and view registration statistics
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            {events.data.length === 0 ? (
+                                <div className="text-center py-12">
+                                    <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                                    <h3 className="text-lg font-medium text-gray-900 mb-2">No events created yet</h3>
+                                    <p className="text-gray-500 mb-6">Get started by creating your first ticketing event.</p>
+                                    <Link href={route('admin.ticketing-events.create')}>
+                                        <Button>
+                                            <Plus className="h-4 w-4 mr-2" />
+                                            Create Your First Event
+                                        </Button>
+                                    </Link>
                                 </div>
-                                <div className="p-3 bg-red-100 rounded-full">
-                                    <XCircle className="h-6 w-6 text-red-600" />
-                                </div>
-                            </div>
+                            ) : (
+                                <>
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow>
+                                                <TableHead className="w-[300px]">Title</TableHead>
+                                                <TableHead>Slug</TableHead>
+                                                <TableHead>Fee</TableHead>
+                                                <TableHead>Deadline</TableHead>
+                                                <TableHead>Status</TableHead>
+                                                <TableHead>Custom Fields</TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {events.data.map((event) => (
+                                                <TableRow key={event.id} className="hover:bg-gray-50">
+                                                    <TableCell>
+                                                        <div>
+                                                            <div className="font-medium text-gray-900">{event.title}</div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <button
+                                                            onClick={() => openPublicUrl(event.slug)}
+                                                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                                                        >
+                                                            {event.slug}
+                                                            <ExternalLink className="h-3 w-3" />
+                                                        </button>
+                                                    </TableCell>
+                                                    <TableCell>{formatFee(event.fee)}</TableCell>
+                                                    <TableCell>
+                                                        <span className={event.deadline ? "text-gray-700" : "text-gray-500 italic"}>
+                                                            {formatDeadline(event.deadline)}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell>{getStatusBadge(event.status)}</TableCell>
+                                                    <TableCell>{getCustomFieldsBadge(event.custom_fields_count)}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center justify-end gap-2">
+                                                            <Link href={route('admin.ticketing-events.edit', event.slug)}>
+                                                                <Button variant="outline" size="sm">
+                                                                    <Edit className="h-4 w-4 mr-1" />
+                                                                    Edit
+                                                                </Button>
+                                                            </Link>
+                                                            <Link href={route('admin.event-registrations.index', { event_id: event.id })}>
+                                                                <Button variant="outline" size="sm">
+                                                                    <Users className="h-4 w-4 mr-1" />
+                                                                    Registrations
+                                                                </Button>
+                                                            </Link>
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button 
+                                                                        variant="outline" 
+                                                                        size="sm"
+                                                                        className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+                                                                        disabled={deleteLoading === event.id}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4 mr-1" />
+                                                                        Delete
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Delete Event?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            Are you sure you want to delete "{event.title}"? All registrations for this event will also be deleted. This cannot be undone.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                                        <AlertDialogAction
+                                                                            onClick={() => handleDelete(event)}
+                                                                            className="bg-red-600 hover:bg-red-700"
+                                                                            disabled={deleteLoading === event.id}
+                                                                        >
+                                                                            {deleteLoading === event.id ? 'Deleting...' : 'Delete Event'}
+                                                                        </AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </TableBody>
+                                    </Table>
+
+                                    {/* Pagination */}
+                                    {events.links && events.links.length > 3 && (
+                                        <div className="flex items-center justify-between px-2 py-4">
+                                            <div className="flex-1 flex justify-between sm:hidden">
+                                                {events.prev_page_url && (
+                                                    <Link 
+                                                        href={events.prev_page_url}
+                                                        className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                                    >
+                                                        Previous
+                                                    </Link>
+                                                )}
+                                                {events.next_page_url && (
+                                                    <Link 
+                                                        href={events.next_page_url}
+                                                        className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
+                                                    >
+                                                        Next
+                                                    </Link>
+                                                )}
+                                            </div>
+                                            <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                                                <div>
+                                                    <p className="text-sm text-gray-700">
+                                                        Showing <span className="font-medium">{events.from}</span> to{' '}
+                                                        <span className="font-medium">{events.to}</span> of{' '}
+                                                        <span className="font-medium">{events.total}</span> results
+                                                    </p>
+                                                </div>
+                                                <div>
+                                                    <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                                                        {events.links.map((link, index) => (
+                                                            <Link
+                                                                key={index}
+                                                                href={link.url || '#'}
+                                                                className={`relative inline-flex items-center px-2 py-2 border text-sm font-medium ${
+                                                                    link.active
+                                                                        ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                                                        : link.url
+                                                                        ? 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                                                                        : 'bg-gray-100 border-gray-300 text-gray-400 cursor-not-allowed'
+                                                                } ${
+                                                                    index === 0 ? 'rounded-l-md' : ''
+                                                                } ${
+                                                                    index === events.links.length - 1 ? 'rounded-r-md' : ''
+                                                                }`}
+                                                                dangerouslySetInnerHTML={{ __html: link.label }}
+                                                            />
+                                                        ))}
+                                                    </nav>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
-
-                {/* Events List */}
-                <Card className="border-0 shadow-lg">
-                    <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b">
-                        <CardTitle className="text-xl">All Events</CardTitle>
-                        <CardDescription>
-                            Manage your ticketing events and registrations
-                        </CardDescription>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                        {events.data.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center py-12 text-center">
-                                <div className="p-4 bg-gray-50 rounded-full mb-4">
-                                    <Tag className="h-12 w-12 text-gray-400" />
-                                </div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-2">No events yet</h3>
-                                <p className="text-gray-600 mb-4">Create your first ticketing event to get started.</p>
-                                <Link href={route('admin.ticketing-events.create')}>
-                                    <Button>
-                                        <Plus className="h-4 w-4 mr-2" />
-                                        Create Event
-                                    </Button>
-                                </Link>
-                            </div>
-                        ) : (
-                            <div className="overflow-hidden">
-                                <div className="overflow-x-auto">
-                                    <table className="w-full">
-                                        <thead className="bg-gray-50 border-b">
-                                            <tr>
-                                                <th className="text-left py-3 px-6 font-semibold text-gray-700">Event</th>
-                                                <th className="text-left py-3 px-6 font-semibold text-gray-700">Status</th>
-                                                <th className="text-left py-3 px-6 font-semibold text-gray-700">Fee</th>
-                                                <th className="text-left py-3 px-6 font-semibold text-gray-700">Deadline</th>
-                                                <th className="text-left py-3 px-6 font-semibold text-gray-700">Custom Fields</th>
-                                                <th className="text-left py-3 px-6 font-semibold text-gray-700">Creator</th>
-                                                <th className="text-right py-3 px-6 font-semibold text-gray-700">Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {events.data.map((event) => (
-                                                <tr key={event.id} className="border-b hover:bg-gray-50 transition-colors">
-                                                    <td className="py-4 px-6">
-                                                        <div>
-                                                            <h3 className="font-semibold text-gray-900">{event.title}</h3>
-                                                            <p className="text-sm text-gray-500">/{event.slug}</p>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-6">
-                                                        {getStatusBadge(event.status)}
-                                                    </td>
-                                                    <td className="py-4 px-6">
-                                                        {event.fee ? (
-                                                            <div className="flex items-center gap-1 text-green-600">
-                                                                <DollarSign className="h-4 w-4" />
-                                                                <span className="font-medium">{event.fee}</span>
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-gray-500">Free</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-4 px-6">
-                                                        {event.deadline ? (
-                                                            <div className="text-sm">
-                                                                {new Date(event.deadline).toLocaleDateString()}
-                                                            </div>
-                                                        ) : (
-                                                            <span className="text-gray-500">No deadline</span>
-                                                        )}
-                                                    </td>
-                                                    <td className="py-4 px-6">
-                                                        <div className="flex items-center gap-1 text-blue-600">
-                                                            <Users className="h-4 w-4" />
-                                                            <span className="font-medium">{event.custom_fields_count}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="py-4 px-6">
-                                                        <span className="text-sm text-gray-600">{event.creator_name}</span>
-                                                    </td>
-                                                    <td className="py-4 px-6">
-                                                        <div className="flex items-center gap-2 justify-end">
-                                                            <Link href={route('admin.ticketing-events.edit', event.slug)}>
-                                                                <Button variant="outline" size="sm">
-                                                                    <Edit className="h-4 w-4" />
-                                                                </Button>
-                                                            </Link>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => handleDelete(event)}
-                                                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-
-                                {/* Pagination */}
-                                {events.links && events.links.length > 3 && (
-                                    <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50">
-                                        <div className="text-sm text-gray-600">
-                                            Showing {events.from} to {events.to} of {events.total} results
-                                        </div>
-                                        <div className="flex items-center gap-2">
-                                            {events.links.map((link, index) => (
-                                                <button
-                                                    key={index}
-                                                    onClick={() => link.url && router.get(link.url)}
-                                                    disabled={!link.url}
-                                                    className={`px-3 py-1 text-sm rounded-md ${
-                                                        link.active
-                                                            ? 'bg-blue-600 text-white'
-                                                            : link.url
-                                                            ? 'bg-white border hover:bg-gray-50'
-                                                            : 'text-gray-400 cursor-not-allowed'
-                                                    }`}
-                                                    dangerouslySetInnerHTML={{ __html: link.label }}
-                                                />
-                                            ))}
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
             </div>
         </AdminAuthenticatedLayout>
     );

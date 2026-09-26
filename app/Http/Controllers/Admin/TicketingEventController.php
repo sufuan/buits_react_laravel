@@ -16,36 +16,46 @@ class TicketingEventController extends Controller
     private function validationRules(?int $ignoreId = null): array
     {
         return [
-            'title'              => 'required|string|max:255',
-            'slug'               => [
+            'title'                   => 'required|string|max:255',
+            'slug'                    => [
                 'required',
                 'string',
                 'max:255',
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
                 Rule::unique('ticketing_events', 'slug')->ignore($ignoreId),
             ],
-            'fee'                => 'nullable|numeric|min:0',
-            'deadline'           => 'nullable|date',
-            'status'             => 'required|in:active,closed',
-            'event_html_content' => 'nullable|string',
-            'html_file'          => 'nullable|file|mimes:html,txt|max:512',
-            'form_schema'        => 'nullable|string',
+            'fee'                     => 'nullable|numeric|min:0',
+            'deadline'                => 'nullable|date',
+            'status'                  => 'required|in:active,closed',
+            'event_html_content'      => 'nullable|string',
+            'html_file'               => 'nullable|file|mimes:html,txt|max:512',
+            'form_schema'             => 'nullable|string',
+            'requires_payment'        => 'boolean',
+            'member_fee'              => 'nullable|numeric|min:0',
+            'non_member_fee'          => 'nullable|numeric|min:0',
+            'enabled_payment_methods' => 'nullable|array',
+            'enabled_payment_methods.*' => 'in:bkash,nagad,rocket,bank',
         ];
     }
 
     private function validationMessages(): array
     {
         return [
-            'title.required'   => 'Event title is required.',
-            'slug.required'    => 'A URL slug is required.',
-            'slug.unique'      => 'This slug is already taken. Please choose another.',
-            'slug.regex'       => 'Slug may only contain lowercase letters, numbers, and hyphens.',
-            'fee.numeric'      => 'Fee must be a valid number.',
-            'fee.min'          => 'Fee cannot be negative.',
-            'deadline.date'    => 'Deadline must be a valid date.',
-            'status.in'        => 'Status must be either active or closed.',
-            'html_file.mimes'  => 'Only .html or .txt files are accepted.',
-            'html_file.max'    => 'HTML file must be smaller than 512 KB.',
+            'title.required'                     => 'Event title is required.',
+            'slug.required'                      => 'A URL slug is required.',
+            'slug.unique'                        => 'This slug is already taken. Please choose another.',
+            'slug.regex'                         => 'Slug may only contain lowercase letters, numbers, and hyphens.',
+            'fee.numeric'                        => 'Fee must be a valid number.',
+            'fee.min'                            => 'Fee cannot be negative.',
+            'deadline.date'                      => 'Deadline must be a valid date.',
+            'status.in'                          => 'Status must be either active or closed.',
+            'html_file.mimes'                    => 'Only .html or .txt files are accepted.',
+            'html_file.max'                      => 'HTML file must be smaller than 512 KB.',
+            'member_fee.numeric'                 => 'Member fee must be a valid number.',
+            'member_fee.min'                     => 'Member fee cannot be negative.',
+            'non_member_fee.numeric'             => 'Non-member fee must be a valid number.',
+            'non_member_fee.min'                 => 'Non-member fee cannot be negative.',
+            'enabled_payment_methods.*.in'       => 'Invalid payment method selected.',
         ];
     }
 
@@ -128,14 +138,18 @@ class TicketingEventController extends Controller
         );
 
         TicketingEvent::create([
-            'title'              => $validated['title'],
-            'slug'               => $validated['slug'],
-            'fee'                => $validated['fee'] ?? null,
-            'deadline'           => $validated['deadline'] ?? null,
-            'status'             => $validated['status'],
-            'event_html_content' => $this->resolveHtmlContent($request),
-            'form_schema'        => $this->resolveFormSchema($request),
-            'created_by'         => Auth::guard('admin')->id(),
+            'title'                   => $validated['title'],
+            'slug'                    => $validated['slug'],
+            'fee'                     => $validated['fee'] ?? null,
+            'deadline'                => $validated['deadline'] ?? null,
+            'status'                  => $validated['status'],
+            'event_html_content'      => $this->resolveHtmlContent($request),
+            'form_schema'             => $this->resolveFormSchema($request),
+            'created_by'              => Auth::guard('admin')->id(),
+            'requires_payment'        => $validated['requires_payment'] ?? false,
+            'member_fee'              => $validated['member_fee'] ?? null,
+            'non_member_fee'          => $validated['non_member_fee'] ?? null,
+            'enabled_payment_methods' => $validated['enabled_payment_methods'] ?? null,
         ]);
 
         return redirect()
@@ -151,14 +165,18 @@ class TicketingEventController extends Controller
     {
         return Inertia::render('Admin/TicketingEvents/Edit', [
             'ticketingEvent' => [
-                'id'                 => $ticketingEvent->id,
-                'title'              => $ticketingEvent->title,
-                'slug'               => $ticketingEvent->slug,
-                'fee'                => $ticketingEvent->fee,
-                'deadline'           => $ticketingEvent->deadline?->format('Y-m-d\TH:i'),
-                'status'             => $ticketingEvent->status,
-                'event_html_content' => $ticketingEvent->event_html_content,
-                'form_schema'        => $ticketingEvent->form_schema ?? [],
+                'id'                      => $ticketingEvent->id,
+                'title'                   => $ticketingEvent->title,
+                'slug'                    => $ticketingEvent->slug,
+                'fee'                     => $ticketingEvent->fee,
+                'deadline'                => $ticketingEvent->deadline?->format('Y-m-d\TH:i'),
+                'status'                  => $ticketingEvent->status,
+                'event_html_content'      => $ticketingEvent->event_html_content,
+                'form_schema'             => $ticketingEvent->form_schema ?? [],
+                'requires_payment'        => $ticketingEvent->requires_payment ?? false,
+                'member_fee'              => $ticketingEvent->member_fee,
+                'non_member_fee'          => $ticketingEvent->non_member_fee,
+                'enabled_payment_methods' => $ticketingEvent->enabled_payment_methods ?? [],
             ],
         ]);
     }
@@ -175,13 +193,17 @@ class TicketingEventController extends Controller
         );
 
         $ticketingEvent->update([
-            'title'              => $validated['title'],
-            'slug'               => $validated['slug'],
-            'fee'                => $validated['fee'] ?? null,
-            'deadline'           => $validated['deadline'] ?? null,
-            'status'             => $validated['status'],
-            'event_html_content' => $this->resolveHtmlContent($request),
-            'form_schema'        => $this->resolveFormSchema($request),
+            'title'                   => $validated['title'],
+            'slug'                    => $validated['slug'],
+            'fee'                     => $validated['fee'] ?? null,
+            'deadline'                => $validated['deadline'] ?? null,
+            'status'                  => $validated['status'],
+            'event_html_content'      => $this->resolveHtmlContent($request),
+            'form_schema'             => $this->resolveFormSchema($request),
+            'requires_payment'        => $validated['requires_payment'] ?? false,
+            'member_fee'              => $validated['member_fee'] ?? null,
+            'non_member_fee'          => $validated['non_member_fee'] ?? null,
+            'enabled_payment_methods' => $validated['enabled_payment_methods'] ?? null,
         ]);
 
         return redirect()
@@ -218,14 +240,18 @@ class TicketingEventController extends Controller
         $previewId = 'preview_' . Auth::guard('admin')->id() . '_' . time();
         
         session()->put('ticketing_event_preview_' . $previewId, [
-            'title'              => $request->input('title', 'Preview'),
-            'slug'               => $previewId,
-            'event_html_content' => $this->resolveHtmlContent($request),
-            'form_schema'        => $formSchema ?? [],
-            'fee'                => $request->input('fee'),
-            'deadline'           => $request->input('deadline'),
-            'status'             => 'active',
-            'is_preview'         => true,
+            'title'                   => $request->input('title', 'Preview'),
+            'slug'                    => $previewId,
+            'event_html_content'      => $this->resolveHtmlContent($request),
+            'form_schema'             => $formSchema ?? [],
+            'fee'                     => $request->input('fee'),
+            'deadline'                => $request->input('deadline'),
+            'status'                  => 'active',
+            'requires_payment'        => $request->input('requires_payment', false),
+            'member_fee'              => $request->input('member_fee'),
+            'non_member_fee'          => $request->input('non_member_fee'),
+            'enabled_payment_methods' => $request->input('enabled_payment_methods', []),
+            'is_preview'              => true,
         ]);
 
         $previewUrl = route('ticketing-event.show', $previewId) . '?preview=1';

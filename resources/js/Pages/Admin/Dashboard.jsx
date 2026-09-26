@@ -1,12 +1,14 @@
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import NewUserRequestNotification from '@/components/NewUserRequestNotification';
+import { Tag } from 'lucide-react';
 
 export default function AdminDashboard({ 
     pendingUsersCount = 0, 
     pendingVolunteerApplications = 0, 
-    pendingExecutiveApplications = 0 
+    pendingExecutiveApplications = 0,
+    pendingRegistrationsCount = 0
 }) {
     const [showNotificationModal, setShowNotificationModal] = useState(false);
 
@@ -104,6 +106,22 @@ export default function AdminDashboard({
                                         </div>
                                     </div>
                                 </div>
+
+                                {/* Pending Registrations Card */}
+                                <Link href="/admin/event-registrations?status=pending">
+                                    <div className="bg-amber-50 p-6 rounded-lg border border-amber-200 hover:border-amber-400 transition-colors cursor-pointer">
+                                        <div className="flex items-center">
+                                            <div className="flex-shrink-0">
+                                                <Tag className="h-8 w-8 text-amber-600" />
+                                            </div>
+                                            <div className="ml-4">
+                                                <h4 className="text-lg font-medium text-amber-900">Pending Registrations</h4>
+                                                <p className="text-3xl font-bold text-amber-700">{pendingRegistrationsCount}</p>
+                                                <p className="text-sm text-amber-600">Awaiting payment verification</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Link>
                             </div>
 
                             <div className="mt-8 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">

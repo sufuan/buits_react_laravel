@@ -69,6 +69,7 @@ Route::get('/museum', [MuseumController::class, 'index'])->name('museum.index');
 // These MUST be outside any auth middleware — accessible to all visitors.
 Route::get('/t/{slug}',           [\App\Http\Controllers\PublicTicketingEventController::class, 'show'])->name('ticketing-event.show');
 Route::post('/t/{slug}/register', [\App\Http\Controllers\PublicTicketingEventController::class, 'storeRegistration'])->name('ticketing-event.register');
+Route::post('/verify-member',     [\App\Http\Controllers\PublicTicketingEventController::class, 'verifyMember'])->name('verify-member');
 
 
 // Test route for certificate generation
@@ -295,7 +296,12 @@ Route::prefix('admin')->name('admin.')->group(function () {
             Route::delete('/{ticketingEvent}',      [App\Http\Controllers\Admin\TicketingEventController::class, 'destroy'])->name('destroy');
         });
 
-        Route::get('/event-registrations', [App\Http\Controllers\Admin\EventRegistrationController::class, 'index'])->name('event-registrations.index');
+        // ================= Event Registrations =================
+        Route::prefix('event-registrations')->name('event-registrations.')->controller(App\Http\Controllers\Admin\EventRegistrationController::class)->group(function () {
+            Route::get('/',                           'index')->name('index');
+            Route::post('/{registration}/verify',     'verify')->name('verify');
+            Route::post('/{registration}/reject',     'reject')->name('reject');
+        });
 
         // ================= Event Management =================
         Route::prefix('events')->name('events.')->group(function () {

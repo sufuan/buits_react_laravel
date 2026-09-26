@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
             ],
             // Share notification counts globally for admin pages
             'upcomingEventsCount' => $admin ? \App\Models\Event::upcoming()->count() : 0,
+            'pendingRegistrationsCount' => $admin ? \App\Models\EventRegistration::where('status', 'pending')->count() : 0,
 
             'settings' => [
                 'volunteer_applications_enabled' => \App\Models\Setting::where('key', 'volunteer_applications_enabled')->value('value') === 'true',

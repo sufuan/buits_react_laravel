@@ -20,10 +20,15 @@ class EventRegistration extends Model
         'custom_field_responses',
         'status',
         'ticket_no',
+        'is_member',
+        'member_id',
+        'fee_charged',
     ];
 
     protected $casts = [
-        'custom_field_responses' => 'array',   // same pattern as Payment::metadata
+        'custom_field_responses' => 'array',
+        'is_member'              => 'boolean',
+        'fee_charged'            => 'decimal:2',
     ];
 
     // ─── Relationships ────────────────────────────────────────────────────────
