@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Head, useForm } from '@inertiajs/react';
 import { toast } from 'sonner';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
@@ -10,26 +10,39 @@ import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/Components/ui/tabs';
-import { Checkbox } from '@/Components/ui/checkbox';
 import { Tag, ArrowLeft, Save, Eye, Upload, AlertCircle, Plus, Trash2, X } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
-export default function TicketingEventsEdit({ ticketingEvent }) {
-    const [formSchema, setFormSchema] = useState(ticketingEvent.form_schema || []);
+export default function TicketingEventsCreate() {
+    const [formSchema, setFormSchema] = useState([]);
 
     const { data, setData, post, processing, errors, transform } = useForm({
-        title: ticketingEvent.title || '',
-        slug: ticketingEvent.slug || '',
-        fee: ticketingEvent.fee || '',
-        deadline: ticketingEvent.deadline || '',
-        status: ticketingEvent.status || 'active',
-        event_html_content: ticketingEvent.event_html_content || '',
+        title: '',
+        slug: '',
+        fee: '',
+        deadline: '',
+        status: 'active',
+        event_html_content: '',
         html_file: null,
-        form_schema: JSON.stringify(ticketingEvent.form_schema || []),
-        _method: 'PUT',
+        form_schema: '',
     });
 
-    // Handle form schema updates
+    // STEP 5: Auto-generate slug from title
+    const handleTitleChange = (e) => {
+        const title = e.target.value;
+        const slugify = (str) => str.toLowerCase().trim()
+            .replace(/[^\w\s-]/g, '')
+            .replace(/[\s_-]+/g, '-')
+            .replace(/^-+|-+$/g, '');
+        
+        setData(prev => ({
+            ...prev,
+            title,
+            slug: slugify(title)
+        }));
+    };
+
+    // STEP 7: Handle form schema updates
     const updateFormSchema = (newSchema) => {
         setFormSchema(newSchema);
         setData('form_schema', JSON.stringify(newSchema));
@@ -40,18 +53,9 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
             id: crypto.randomUUID(),
             type: 'text',
             label: '',
-            placeholder: '',
-            helpText: '',
             required: false,
-            validate: false,
-            options: [],
-            min: '',
-            max: '',
-            step: '',
-            accept: '',
-            maxSize: '',
-            rows: '3',
-            maxLength: ''
+            placeholder: '',
+            options: []
         };
         updateFormSchema([...formSchema, newField]);
     };
@@ -67,7 +71,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
         updateFormSchema(updated);
     };
 
-    // Handle file upload
+    // STEP 6: Handle file upload
     const handleFileUpload = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -75,7 +79,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
         }
     };
 
-    // Transform data before submission to handle file uploads
+    // Transform data before submission
     transform((data) => {
         const formData = new FormData();
         
@@ -94,15 +98,16 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Serialize form schema before submit
+        // STEP 7: Serialize form schema before submit
         setData('form_schema', JSON.stringify(formSchema));
-        post(route('admin.ticketing-events.update', ticketingEvent.slug), {
+        post(route('admin.ticketing-events.store'), {
             forceFormData: true,
-            onSuccess: () => toast.success('Event updated successfully!'),
+            onSuccess: () => toast.success('Event created successfully!'),
             onError: () => toast.error('Please fix the errors below.'),
         });
     };
 
+    // STEP 8: Handle preview functionality
     const handlePreview = async () => {
         // Build FormData with current form values
         const formData = new FormData();
@@ -151,9 +156,9 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                             </div>
                             <div>
                                 <h2 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                                    Edit: {ticketingEvent.title}
+                                    Create Ticketing Event
                                 </h2>
-                                <p className="text-sm text-gray-500">Modify event settings and registration forms</p>
+                                <p className="text-sm text-gray-500">Set up a new event with custom registration forms</p>
                             </div>
                         </div>
                     </div>
@@ -169,18 +174,18 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                         </Button>
                         <Button
                             type="submit"
-                            form="event-form"
+                            form="ticketing-event-form"
                             disabled={processing}
                             className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                         >
                             <Save className="h-4 w-4 mr-2" />
-                            {processing ? 'Updating...' : 'Update Event'}
+                            {processing ? 'Creating...' : 'Save Event'}
                         </Button>
                     </div>
                 </div>
             }
         >
-            <Head title={`Edit ${ticketingEvent.title}`} />
+            <Head title="Create Ticketing Event" />
 
             <div className="p-6 max-w-6xl mx-auto">
                 <form id="event-form" onSubmit={handleSubmit}>
@@ -190,8 +195,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                             <TabsTrigger value="content">Event Content</TabsTrigger>
                             <TabsTrigger value="form">Registration Form</TabsTrigger>
                         </TabsList>
-
-                        {/* Basic Information Tab */}
+                        {/* STEP 5: Basic Information Tab */}
                         <TabsContent value="basic" className="space-y-6">
                             <Card className="border-0 shadow-lg">
                                 <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b">
@@ -207,7 +211,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                             <Input
                                                 id="title"
                                                 value={data.title}
-                                                onChange={(e) => setData('title', e.target.value)}
+                                                onChange={handleTitleChange}
                                                 placeholder="Enter event title"
                                                 className={errors.title ? 'border-red-500' : ''}
                                             />
@@ -263,6 +267,14 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                                     className={`pl-8 ${errors.fee ? 'border-red-500' : ''}`}
                                                 />
                                             </div>
+                                            {errors.fee && (
+                                                <Alert className="border-red-200 bg-red-50 mt-2">
+                                                    <AlertCircle className="h-4 w-4 text-red-600" />
+                                                    <AlertDescription className="text-red-800">
+                                                        {errors.fee}
+                                                    </AlertDescription>
+                                                </Alert>
+                                            )}
                                         </div>
 
                                         <div className="space-y-2">
@@ -274,6 +286,14 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                                 onChange={(e) => setData('deadline', e.target.value)}
                                                 className={errors.deadline ? 'border-red-500' : ''}
                                             />
+                                            {errors.deadline && (
+                                                <Alert className="border-red-200 bg-red-50 mt-2">
+                                                    <AlertCircle className="h-4 w-4 text-red-600" />
+                                                    <AlertDescription className="text-red-800">
+                                                        {errors.deadline}
+                                                    </AlertDescription>
+                                                </Alert>
+                                            )}
                                         </div>
                                     </div>
 
@@ -292,8 +312,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                 </CardContent>
                             </Card>
                         </TabsContent>
-
-                        {/* Event Content Tab */}
+                        {/* STEP 6: Event Content Tab */}
                         <TabsContent value="content" className="space-y-6">
                             <Card className="border-0 shadow-lg">
                                 <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b">
@@ -305,8 +324,8 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                 <CardContent className="p-6 space-y-6">
                                     <Tabs defaultValue="paste" className="space-y-4">
                                         <TabsList className="grid w-full grid-cols-2">
-                                            <TabsTrigger value="paste">Edit HTML Code</TabsTrigger>
-                                            <TabsTrigger value="upload">Replace with File</TabsTrigger>
+                                            <TabsTrigger value="paste">Paste HTML Code</TabsTrigger>
+                                            <TabsTrigger value="upload">Upload HTML File</TabsTrigger>
                                         </TabsList>
 
                                         <TabsContent value="paste" className="space-y-4">
@@ -318,6 +337,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                                     value={data.event_html_content}
                                                     onChange={(e) => {
                                                         setData('event_html_content', e.target.value);
+                                                        // Clear file when typing in textarea
                                                         if (data.html_file) {
                                                             setData('html_file', null);
                                                             const fileInput = document.getElementById('html_file');
@@ -327,23 +347,35 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                                     placeholder="<!-- Paste your HTML content here -->\n<h2>Event Description</h2>\n<p>Your event description goes here...</p>\n\n<style>\n/* Custom CSS can be included */\n.event-highlight { color: #2563eb; }\n</style>"
                                                     className="font-mono text-sm"
                                                 />
+                                                <p className="text-sm text-gray-500">
+                                                    You can include custom HTML, CSS, and basic JavaScript. This will be displayed on the public event page.
+                                                </p>
                                             </div>
                                         </TabsContent>
 
                                         <TabsContent value="upload" className="space-y-4">
                                             <div className="space-y-4">
                                                 <div className="space-y-2">
-                                                    <Label htmlFor="html_file">HTML File (replaces current content)</Label>
+                                                    <Label htmlFor="html_file">HTML File</Label>
                                                     <Input
                                                         id="html_file"
                                                         type="file"
                                                         accept=".html,.txt"
                                                         onChange={(e) => {
                                                             handleFileUpload(e);
+                                                            // Clear textarea when file is selected
                                                             setData('event_html_content', '');
                                                         }}
                                                         className={errors.html_file ? 'border-red-500' : ''}
                                                     />
+                                                    {errors.html_file && (
+                                                        <Alert className="border-red-200 bg-red-50 mt-2">
+                                                            <AlertCircle className="h-4 w-4 text-red-600" />
+                                                            <AlertDescription className="text-red-800">
+                                                                {errors.html_file}
+                                                            </AlertDescription>
+                                                        </Alert>
+                                                    )}
                                                 </div>
                                                 
                                                 {data.html_file && (
@@ -367,14 +399,17 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                                         </Button>
                                                     </div>
                                                 )}
+
+                                                <p className="text-sm text-gray-500">
+                                                    Upload an HTML file (max 512KB). Accepted formats: .html, .txt
+                                                </p>
                                             </div>
                                         </TabsContent>
                                     </Tabs>
                                 </CardContent>
                             </Card>
                         </TabsContent>
-
-                        {/* Registration Form Tab */}
+                        {/* STEP 7: Registration Form Tab */}
                         <TabsContent value="form" className="space-y-6">
                             <Card className="border-0 shadow-lg">
                                 <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 border-b">
@@ -402,13 +437,14 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                             <div className="h-4 w-4 text-gray-400">🔒</div>
                                         </h4>
                                         <div className="flex flex-wrap gap-2">
-                                            {['Name', 'Email', 'Phone'].map((field) => (
+                                            {['Name', 'Email', 'Phone', 'Payment Method', 'Transaction ID', 'Sender Number'].map((field) => (
                                                 <div key={field} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-sm flex items-center gap-1">
                                                     <span>{field}</span>
                                                     <div className="h-3 w-3 text-gray-500">🔒</div>
                                                 </div>
                                             ))}
                                         </div>
+                                        <p className="text-sm text-gray-500">These fields are automatically included in all registration forms.</p>
                                     </div>
 
                                     {/* Custom Fields */}
