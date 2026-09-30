@@ -18,7 +18,7 @@ class FindMemberController extends Controller
 
         $members = User::where('email', 'like', "%{$query}%")
             ->orWhere('phone', 'like', "%{$query}%")
-            ->select('id', 'name', 'member_id', 'department', 'session', 'email', 'phone', 'image', 'usertype', 'designation_id')
+            ->select('id', 'name', 'member_id', 'department', 'email', 'image', 'usertype', 'designation_id')
             ->with('designation')
             ->limit(10)
             ->get();
@@ -29,9 +29,7 @@ class FindMemberController extends Controller
                 'id' => $member->member_id ?? 'Pending',
                 'name' => $member->name,
                 'department' => $member->department ?? 'N/A',
-                'session' => $member->session ?? 'N/A',
                 'email' => $member->email,
-                'phone' => $member->phone ?? 'N/A',
                 'position' => $member->designation ? $member->designation->name : ($member->usertype === 'executive' ? 'Executive Member' : 'General Member'),
                 'image' => $member->image ? '/storage/' . $member->image : null,
                 'usertype' => $member->usertype,

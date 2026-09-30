@@ -4,7 +4,7 @@ import gsap from 'gsap';
 import axios from 'axios';
 import debounce from 'lodash/debounce';
 import NavBar from '@/Components/HomePage/Navbar';
-import { UserIcon, IdentificationIcon, BuildingOfficeIcon, AcademicCapIcon, EnvelopeIcon, PhoneIcon, DocumentDuplicateIcon, CheckIcon } from '@heroicons/react/24/outline';
+import { UserIcon, IdentificationIcon, BuildingOfficeIcon, EnvelopeIcon, DocumentDuplicateIcon, CheckIcon } from '@heroicons/react/24/outline';
 import '../../css/frontend.css';
 
 export default function FindMember() {
@@ -198,16 +198,8 @@ export default function FindMember() {
                                         <span className="text-sm font-medium">{member.department}</span>
                                     </div>
                                     <div className="flex items-center gap-3 text-slate-600">
-                                        <AcademicCapIcon className="w-5 h-5 text-slate-400" />
-                                        <span className="text-sm font-medium">Session: {member.session}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-slate-600">
                                         <EnvelopeIcon className="w-5 h-5 text-slate-400" />
                                         <span className="text-sm">{member.email}</span>
-                                    </div>
-                                    <div className="flex items-center gap-3 text-slate-600">
-                                        <PhoneIcon className="w-5 h-5 text-slate-400" />
-                                        <span className="text-sm">{member.phone}</span>
                                     </div>
                                 </div>
                             </div>
