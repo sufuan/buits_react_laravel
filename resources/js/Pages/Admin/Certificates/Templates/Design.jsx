@@ -1,4 +1,5 @@
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
+import { getImageUrl } from '@/utils/imageUrl';
 import { useState, useEffect, useRef } from 'react';
 import { Rnd } from 'react-rnd';
 import { router } from '@inertiajs/react';
@@ -79,7 +80,7 @@ export default function CertificateDesigner({ editData, auth }) {
         templateElements.push({
           id: 'logo',
           type: 'image',
-          src: `/storage/${editData.logo_image}`,
+          src: getImageUrl(editData.logo_image),
           x: 30,
           y: 30,
           width: 80,
@@ -92,7 +93,7 @@ export default function CertificateDesigner({ editData, auth }) {
         templateElements.push({
           id: 'signature',
           type: 'image',
-          src: `/storage/${editData.signature_image}`,
+          src: getImageUrl(editData.signature_image),
           x: width - 110,
           y: height - 100,
           width: 80,
@@ -797,7 +798,7 @@ export default function CertificateDesigner({ editData, auth }) {
               >
                 {editData?.background_image && (
                   <img
-                    src={`/storage/${editData.background_image}`}
+                    src={getImageUrl(editData.background_image)}
                     alt="Certificate Background"
                     className="absolute top-0 left-0 w-full h-full object-cover z-0"
                     style={{ pointerEvents: 'none' }}

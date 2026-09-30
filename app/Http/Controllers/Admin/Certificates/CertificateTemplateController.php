@@ -112,7 +112,10 @@ class CertificateTemplateController extends Controller
             // Always prefer qr_code_student as that's what the frontend sends now for all types
             // Fallback to defaults if empty
             $qrData = $request->qr_code_student ?: ($request->qr_code_staff ?: ['member_id']);
-            $template->qr_code = json_encode(array_values($qrData));
+            if (is_string($qrData)) {
+                $qrData = json_decode($qrData, true) ?? [];
+            }
+            $template->qr_code = json_encode(array_values((array)$qrData));
 
             $template->qr_image_size = $request->qr_image_size;
             $template->user_photo_style = $request->user_photo_style;
@@ -155,7 +158,7 @@ class CertificateTemplateController extends Controller
                 : 'Certificate Template Created Successfully');
         } catch (\Throwable $th) {
             DB::rollBack();
-
+            \Illuminate\Support\Facades\Log::error('Certificate Template Error: ' . $th->getMessage() . ' - ' . $th->getTraceAsString());
             return redirect()->back()->with('error', $th->getMessage());
         }
     }

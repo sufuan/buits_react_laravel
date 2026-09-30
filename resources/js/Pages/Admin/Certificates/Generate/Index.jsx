@@ -1,4 +1,5 @@
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
+import { getImageUrl } from '@/utils/imageUrl';
 import { Head, router } from '@inertiajs/react';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
@@ -216,7 +217,7 @@ export default function Index({ auth, templates, certificateTypes, departments, 
                         {template.background_image && (
                           <div className="mt-3">
                             <img
-                              src={`/storage/${template.background_image}`}
+                              src={getImageUrl(template.background_image)}
                               alt="Template preview"
                               className="w-full h-20 object-cover rounded border"
                             />

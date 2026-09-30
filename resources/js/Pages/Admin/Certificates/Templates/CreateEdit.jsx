@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, router, usePage } from '@inertiajs/react';
+import axios from 'axios';
 import ReactQuill from 'react-quill';
 // For access to static methods
 const Quill = ReactQuill.Quill;
@@ -307,8 +308,6 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
   function onSubmit(e) {
     e.preventDefault();
 
-
-
     // Validate required fields before submission
     if (!data.content || data.content.trim() === '' || data.content === '<p><br></p>') {
       toast.error('Certificate content is required');
@@ -325,41 +324,50 @@ export default function CertificateTemplateForm({ auth, types = [], editData = n
       return;
     }
 
-    // Create FormData object
+    // Build FormData manually so File objects are correctly included
     const formData = new FormData();
 
-    // Append all form fields
-    Object.keys(data).forEach(key => {
-      if (key === 'qr_code_student' || key === 'qr_code_staff') {
-        // Convert arrays to JSON strings
-        if (data[key] && data[key].length > 0) {
-          formData.append(key, JSON.stringify(data[key]));
-        }
-      } else if (key === 'background_image' || key === 'signature_image' || key === 'logo_image') {
-        // Only append files if they exist and are File objects
-        if (data[key] instanceof File) {
-          formData.append(key, data[key]);
-        }
-      } else {
-        // Append all other fields
-        formData.append(key, data[key] === null ? '' : data[key]);
-      }
-    });
+    // Scalar fields
+    formData.append('id', data.id || '');
+    formData.append('name', data.name);
+    formData.append('type_id', data.type_id);
+    formData.append('layout', data.layout);
+    formData.append('height', data.height);
+    formData.append('width', data.width);
+    formData.append('status', data.status);
+    formData.append('user_photo_style', data.user_photo_style);
+    formData.append('user_image_size', data.user_image_size || '');
+    formData.append('qr_image_size', data.qr_image_size);
+    formData.append('content', data.content);
 
+    // QR code arrays as JSON strings
+    if (data.qr_code_student && data.qr_code_student.length > 0) {
+      formData.append('qr_code_student', JSON.stringify(data.qr_code_student));
+    }
+    if (data.qr_code_staff && data.qr_code_staff.length > 0) {
+      formData.append('qr_code_staff', JSON.stringify(data.qr_code_staff));
+    }
 
+    // File fields — only append when a new File has been selected
+    if (data.background_image instanceof File) {
+      formData.append('background_image', data.background_image);
+    }
+    if (data.signature_image instanceof File) {
+      formData.append('signature_image', data.signature_image);
+    }
+    if (data.logo_image instanceof File) {
+      formData.append('logo_image', data.logo_image);
+    }
 
-    // Both store and update use the same endpoint
-    post(route('admin.certificate.templates.store'), formData, {
-      forceFormData: true,
+    // Use router.post with the FormData directly (bypasses Inertia useForm quirks with files)
+    router.post(route('admin.certificate.templates.store'), formData, {
       preserveScroll: true,
       onSuccess: () => {
-        // Show success message
         toast.success('Certificate template saved successfully!');
-        // Redirect immediately to see the new template
         router.visit(route('admin.certificate.templates.index'));
       },
-      onError: (errors) => {
-        console.error('Form submission errors:', errors);
+      onError: (errs) => {
+        console.error('Form submission errors:', errs);
         toast.error('Failed to save template. Please check the form and try again.');
       }
     });

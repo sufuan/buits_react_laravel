@@ -8,7 +8,8 @@ import { ScrollArea } from '@/Components/ui/scroll-area';
 import { Separator } from '@/Components/ui/separator';
 import { Alert, AlertDescription } from '@/Components/ui/alert';
 import { Badge } from '@/Components/ui/badge';
-  import { toast } from 'sonner';
+import { toast } from 'sonner';
+import { getImageUrl } from '@/utils/imageUrl';
 
 export default function Index({ templates, auth }) {
   const { flash } = usePage().props;
@@ -72,7 +73,7 @@ export default function Index({ templates, auth }) {
                             <div className="aspect-square relative bg-gray-50 rounded-md overflow-hidden">
                               {template.background_image ? (
                                 <img
-                                  src={`/storage/${template.background_image}`}
+                                  src={getImageUrl(template.background_image)}
                                   alt="Background"
                                   className="w-full h-full object-cover"
                                   onError={(e) => {
@@ -91,7 +92,7 @@ export default function Index({ templates, auth }) {
                             <div className="aspect-square relative bg-gray-50 rounded-md overflow-hidden">
                               {template.logo_image ? (
                                 <img
-                                  src={`/storage/${template.logo_image}`}
+                                  src={getImageUrl(template.logo_image)}
                                   alt="Logo"
                                   className="w-full h-full object-contain p-1"
                                   onError={(e) => {
@@ -110,7 +111,7 @@ export default function Index({ templates, auth }) {
                             <div className="aspect-square relative bg-gray-50 rounded-md overflow-hidden">
                               {template.signature_image ? (
                                 <img
-                                  src={`/storage/${template.signature_image}`}
+                                  src={getImageUrl(template.signature_image)}
                                   alt="Signature"
                                   className="w-full h-full object-contain p-1"
                                   onError={(e) => {
