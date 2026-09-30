@@ -31,6 +31,7 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
     const { flash } = usePage().props;
     const [selectedEventId, setSelectedEventId] = useState(filters.event_id || '');
     const [selectedStatus, setSelectedStatus] = useState(filters.status || '');
+    const [selectedMemberType, setSelectedMemberType] = useState(filters.member_type || '');
     const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
     const [selectedRegistration, setSelectedRegistration] = useState(null);
     const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
@@ -40,10 +41,14 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
     if (flash?.success) toast.success(flash.success);
     if (flash?.error) toast.error(flash.error);
 
-    const handleFilterChange = (eventId, status) => {
+    const handleFilterChange = (eventId, status, memberType) => {
         router.get(
             route('admin.event-registrations.index'),
-            { event_id: eventId || undefined, status: status || undefined },
+            { 
+                event_id: eventId || undefined, 
+                status: status || undefined,
+                member_type: memberType || undefined 
+            },
             { preserveState: true, preserveScroll: true }
         );
     };
@@ -130,7 +135,7 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
         >
             <Head title="Event Registrations" />
 
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 min-w-0 w-full">
                 {/* Stats Row */}
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                     <Card className="border-l-4 border-l-blue-500 shadow-md hover:shadow-lg transition-shadow">
@@ -194,29 +199,53 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
                 <Card className="shadow-md">
                     <CardContent className="p-6">
                         <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
-                            {/* Event Filter */}
-                            <div className="w-full lg:w-64">
-                                <label className="text-sm font-medium text-gray-700 mb-2 block">Filter by Event</label>
-                                <Select
-                                    value={selectedEventId || 'all'}
-                                    onValueChange={(value) => {
-                                        const eventId = value === 'all' ? '' : value;
-                                        setSelectedEventId(eventId);
-                                        handleFilterChange(eventId, selectedStatus);
-                                    }}
-                                >
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="All Events" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="all">All Events</SelectItem>
-                                        {ticketingEvents.map((event) => (
-                                            <SelectItem key={event.id} value={event.id.toString()}>
-                                                {event.title}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                            <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+                                {/* Event Filter */}
+                                <div className="w-full sm:w-64">
+                                    <label className="text-sm font-medium text-gray-700 mb-2 block">Filter by Event</label>
+                                    <Select
+                                        value={selectedEventId || 'all'}
+                                        onValueChange={(value) => {
+                                            const eventId = value === 'all' ? '' : value;
+                                            setSelectedEventId(eventId);
+                                            handleFilterChange(eventId, selectedStatus, selectedMemberType);
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="All Events" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Events</SelectItem>
+                                            {ticketingEvents.map((event) => (
+                                                <SelectItem key={event.id} value={event.id.toString()}>
+                                                    {event.title}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                
+                                {/* Member Type Filter */}
+                                <div className="w-full sm:w-48">
+                                    <label className="text-sm font-medium text-gray-700 mb-2 block">Member Type</label>
+                                    <Select
+                                        value={selectedMemberType || 'all'}
+                                        onValueChange={(value) => {
+                                            const memberType = value === 'all' ? '' : value;
+                                            setSelectedMemberType(memberType);
+                                            handleFilterChange(selectedEventId, selectedStatus, memberType);
+                                        }}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="All Types" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="all">All Types</SelectItem>
+                                            <SelectItem value="members">Members Only</SelectItem>
+                                            <SelectItem value="non-members">Non-Members Only</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
                             {/* Status Filter Tabs */}
@@ -228,7 +257,7 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
                                         size="sm"
                                         onClick={() => {
                                             setSelectedStatus(tab.value);
-                                            handleFilterChange(selectedEventId, tab.value);
+                                            handleFilterChange(selectedEventId, tab.value, selectedMemberType);
                                         }}
                                         className="min-w-[90px]"
                                     >
@@ -241,16 +270,15 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
                 </Card>
 
                 {/* Registrations Table */}
-                <Card className="shadow-md">
+                <Card className="shadow-md min-w-0 w-full">
                     <CardHeader className="border-b bg-gray-50">
                         <CardTitle>Registrations List</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-0">
-                        <div className="overflow-x-auto">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow className="bg-gray-50">
-                                        <TableHead className="w-12">#</TableHead>
+                    <CardContent className="p-0 overflow-x-auto w-full">
+                        <Table className="w-full">
+                            <TableHeader>
+                                <TableRow className="bg-gray-50">
+                                    <TableHead className="w-12">#</TableHead>
                                         <TableHead>Name</TableHead>
                                         <TableHead>Email</TableHead>
                                         <TableHead>Phone</TableHead>
@@ -258,17 +286,14 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
                                         <TableHead>Fee Charged</TableHead>
                                         <TableHead>Payment</TableHead>
                                         <TableHead>TrxID</TableHead>
-                                        <TableHead>Event</TableHead>
-                                        <TableHead>Submitted</TableHead>
                                         <TableHead>Status</TableHead>
-                                        <TableHead className="text-center">Details</TableHead>
                                         <TableHead className="text-right">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {registrations.data.length === 0 ? (
                                         <TableRow>
-                                            <TableCell colSpan={13} className="text-center py-12">
+                                            <TableCell colSpan={10} className="text-center py-12">
                                                 <div className="flex flex-col items-center gap-3">
                                                     <ClipboardList className="h-12 w-12 text-gray-400" />
                                                     <p className="text-gray-500">No registrations found</p>
@@ -329,27 +354,9 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
                                                         </Button>
                                                     </div>
                                                 </TableCell>
-                                                <TableCell>
-                                                    <span className="text-sm font-medium truncate max-w-[150px] inline-block">
-                                                        {registration.ticketing_event?.title || 'N/A'}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-sm text-gray-600">
-                                                    {formatDistanceToNow(new Date(registration.created_at), { addSuffix: true })}
-                                                </TableCell>
                                                 <TableCell>{getStatusBadge(registration.status)}</TableCell>
-                                                <TableCell className="text-center">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => showDetails(registration)}
-                                                        disabled={!registration.custom_field_responses || Object.keys(registration.custom_field_responses).length === 0}
-                                                    >
-                                                        <MoreVertical className="h-4 w-4" />
-                                                    </Button>
-                                                </TableCell>
                                                 <TableCell className="text-right">
-                                                    <div className="flex items-center justify-end gap-2">
+                                                    <div className="flex flex-col xl:flex-row items-end justify-end gap-2">
                                                         <Button
                                                             variant="default"
                                                             size="sm"
@@ -380,7 +387,6 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
                                     )}
                                 </TableBody>
                             </Table>
-                        </div>
 
                         {/* Pagination */}
                         {registrations.last_page > 1 && (

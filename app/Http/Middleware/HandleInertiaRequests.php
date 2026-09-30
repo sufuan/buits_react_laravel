@@ -53,6 +53,10 @@ class HandleInertiaRequests extends Middleware
             'settings' => [
                 'volunteer_applications_enabled' => \App\Models\Setting::where('key', 'volunteer_applications_enabled')->value('value') === 'true',
             ],
+            'flash' => [
+                'success' => session('success'),
+                'error' => session('error'),
+            ],
         ];
     }
 }

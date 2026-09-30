@@ -54,7 +54,8 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
     });
 
     const handleSlugChange = (e) => {
-        setData('slug', e.target.value);
+        const val = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-');
+        setData('slug', val);
         if (clientErrors.slug) setClientErrors(p => ({ ...p, slug: null }));
     };
 
@@ -289,6 +290,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                             <div className="space-y-1.5">
                                 <Label htmlFor="deadline">Registration Deadline <span className="text-gray-400 font-normal">(optional)</span></Label>
                                 <Input id="deadline" type="datetime-local" value={data.deadline}
+                                    min={new Date().toISOString().slice(0, 16)}
                                     onChange={(e) => setData('deadline', e.target.value)}
                                     className={errors.deadline ? 'border-red-500' : ''} />
                                 <FieldError message={errors.deadline} />
@@ -379,8 +381,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                                         {[
                                                             { value: 'bkash', label: 'bKash' },
                                                             { value: 'nagad', label: 'Nagad' },
-                                                            { value: 'rocket', label: 'Rocket' },
-                                                            { value: 'bank', label: 'Bank Transfer' }
+                                                            { value: 'rocket', label: 'Rocket' }
                                                         ].map((method) => (
                                                             <div key={method.value} className="flex items-center gap-2 p-3 bg-white border rounded-lg hover:border-blue-300 transition-colors">
                                                                 <Checkbox

@@ -96,15 +96,18 @@ class TicketingEventController extends Controller
             ->latest()
             ->paginate(15)
             ->through(fn ($event) => [
-                'id'                => $event->id,
-                'title'             => $event->title,
-                'slug'              => $event->slug,
-                'fee'               => $event->fee,
-                'deadline'          => $event->deadline?->toIso8601String(),
-                'status'            => $event->status,
-                'custom_fields_count' => is_array($event->form_schema) ? count($event->form_schema) : 0,
-                'created_at'        => $event->created_at->toIso8601String(),
-                'creator_name'      => $event->creator?->name,
+                'id'                      => $event->id,
+                'title'                   => $event->title,
+                'slug'                    => $event->slug,
+                'fee'                     => $event->fee,
+                'requires_payment'        => (bool) $event->requires_payment,
+                'member_fee'              => $event->member_fee,
+                'non_member_fee'          => $event->non_member_fee,
+                'deadline'                => $event->deadline?->toIso8601String(),
+                'status'                  => $event->status,
+                'custom_fields_count'     => is_array($event->form_schema) ? count($event->form_schema) : 0,
+                'created_at'              => $event->created_at->toIso8601String(),
+                'creator_name'            => $event->creator?->name,
             ]);
 
         $stats = [

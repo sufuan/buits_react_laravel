@@ -7,10 +7,19 @@ import { Button } from '@/Components/ui/button';
 import { Badge } from '@/Components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/Components/ui/table';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/Components/ui/alert-dialog';
-import { Calendar, CheckCircle2, XCircle, Plus, Edit, Users, Trash2, ExternalLink } from 'lucide-react';
+import { Calendar, CheckCircle2, XCircle, Plus, Edit, Users, Trash2, ExternalLink, Copy, Check } from 'lucide-react';
 
 export default function TicketingEventsIndex({ events, stats }) {
     const [deleteLoading, setDeleteLoading] = useState(null);
+    const [copiedSlug, setCopiedSlug] = useState(null);
+
+    const handleCopyUrl = (slug) => {
+        const url = window.location.origin + `/t/${slug}`;
+        navigator.clipboard.writeText(url).then(() => {
+            setCopiedSlug(slug);
+            setTimeout(() => setCopiedSlug(null), 1500);
+        });
+    };
 
     const handleDelete = (event) => {
         setDeleteLoading(event.id);
@@ -38,11 +47,29 @@ export default function TicketingEventsIndex({ events, stats }) {
         });
     };
 
-    const formatFee = (fee) => {
-        if (!fee || fee === 0) {
-            return <Badge variant="secondary" className="bg-gray-100 text-gray-600">Free</Badge>;
+    const formatFee = (event) => {
+        if (!event.requires_payment) {
+            return (
+                <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 border-emerald-200">
+                    Free
+                </Badge>
+            );
         }
-        return <span className="font-medium">৳{parseFloat(fee).toFixed(2)}</span>;
+        // Payment is required — show Paid badge with fee info
+        const memberFee    = event.member_fee    ? `৳${parseFloat(event.member_fee).toFixed(0)}` : null;
+        const nonMemberFee = event.non_member_fee ? `৳${parseFloat(event.non_member_fee).toFixed(0)}` : null;
+        return (
+            <div className="flex flex-col gap-1">
+                <Badge className="bg-purple-100 text-purple-800 hover:bg-purple-100 border-purple-200 w-fit">
+                    Paid
+                </Badge>
+                {(memberFee || nonMemberFee) && (
+                    <span className="text-xs text-gray-500">
+                        {memberFee && `M: ${memberFee}`}{memberFee && nonMemberFee && ' / '}{nonMemberFee && `NM: ${nonMemberFee}`}
+                    </span>
+                )}
+            </div>
+        );
     };
 
     const getStatusBadge = (status) => {
@@ -173,15 +200,26 @@ export default function TicketingEventsIndex({ events, stats }) {
                                                         </div>
                                                     </TableCell>
                                                     <TableCell>
-                                                        <button
-                                                            onClick={() => openPublicUrl(event.slug)}
-                                                            className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
-                                                        >
-                                                            {event.slug}
-                                                            <ExternalLink className="h-3 w-3" />
-                                                        </button>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <button
+                                                                onClick={() => openPublicUrl(event.slug)}
+                                                                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                                                            >
+                                                                {event.slug}
+                                                                <ExternalLink className="h-3 w-3" />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleCopyUrl(event.slug)}
+                                                                title="Copy public URL"
+                                                                className="p-1.5 rounded-md text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
+                                                            >
+                                                                {copiedSlug === event.slug
+                                                                    ? <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                                                    : <Copy className="h-3.5 w-3.5" />}
+                                                            </button>
+                                                        </div>
                                                     </TableCell>
-                                                    <TableCell>{formatFee(event.fee)}</TableCell>
+                                                    <TableCell>{formatFee(event)}</TableCell>
                                                     <TableCell>
                                                         <span className={event.deadline ? "text-gray-700" : "text-gray-500 italic"}>
                                                             {formatDeadline(event.deadline)}

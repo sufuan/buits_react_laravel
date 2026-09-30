@@ -23,7 +23,7 @@ function InputError({ message }) {
 export default function TicketingEventShow({ event, htmlContent, formSchema, isClosed, isPreview }) {
     const { flash } = usePage().props;
     const [showForm, setShowForm] = useState(true);
-    
+
     // Member verification states
     const [memberChoice, setMemberChoice] = useState(null); // 'yes' | 'no' | null
     const [verificationStatus, setVerificationStatus] = useState(null); // null | 'verified' | 'failed'
@@ -41,7 +41,8 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
 
     // Initialize custom_fields keyed by each custom field's label
     const initialCustomFields = {};
-    formSchema.forEach(f => { initialCustomFields[f.label] = ''; });
+    formSchema.forEach(f => { initialCustomFields[f.label] = f.type === 'checkbox' ? [] : ''; });
+
 
     const { data, setData, post, processing, errors } = useForm({
         name: '',
@@ -58,7 +59,7 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
         setMemberChoice(choice);
         setVerificationStatus(null);
         setVerifiedMemberName(null);
-        
+
         if (choice === 'no') {
             // Non-member path - unlock payment fields immediately
             setCurrentFee(event.non_member_fee);
@@ -143,9 +144,9 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
         : paymentMethods;
 
     // Determine if submit button should be enabled
-    const canSubmit = !event.requires_payment || 
-                      memberChoice === 'no' || 
-                      (memberChoice === 'yes' && verificationStatus !== null);
+    const canSubmit = !event.requires_payment ||
+        memberChoice === 'no' ||
+        (memberChoice === 'yes' && verificationStatus !== null);
 
     return (
         <>
@@ -168,7 +169,7 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
                                 className="ticketing-event-content prose prose-lg max-w-none"
                                 dangerouslySetInnerHTML={{ __html: htmlContent }}
                             />
-                            
+
                             {/* CTA Button */}
                             {!isClosed && (
                                 <div className="mt-12 text-center">
@@ -331,6 +332,155 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
                                             </div>
                                         </div>
 
+                                        {/* Custom Fields Section - shown after name/email/phone, before payment */}
+                                        {formSchema.length > 0 && (
+                                            <div className="space-y-5 pt-2">
+                                                <div className="flex items-center gap-2">
+                                                    <div className="h-px flex-1 bg-gray-200"></div>
+                                                    <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-2">Additional Information</span>
+                                                    <div className="h-px flex-1 bg-gray-200"></div>
+                                                </div>
+                                                {formSchema.map(field => (
+                                                    <div key={field.id} className="space-y-2">
+                                                        <Label className="text-sm font-semibold text-gray-700">
+                                                            {field.label}
+                                                            {field.required && <span className="text-red-600 ml-1">*</span>}
+                                                            {!field.required && <span className="text-gray-400 text-xs font-normal ml-1.5">(Optional)</span>}
+                                                        </Label>
+
+                                                        {/* Text / Email / Tel / URL */}
+                                                        {['text','email','tel','url'].includes(field.type) && (
+                                                            <Input type={field.type} value={data.custom_fields[field.label] || ''}
+                                                                onChange={e => setData('custom_fields', { ...data.custom_fields, [field.label]: e.target.value })}
+                                                                placeholder={field.placeholder || `Enter ${field.label}`}
+                                                                className="h-11" required={field.required} />
+                                                        )}
+
+                                                        {/* Number */}
+                                                        {field.type === 'number' && (
+                                                            <Input type="number" value={data.custom_fields[field.label] || ''}
+                                                                onChange={e => setData('custom_fields', { ...data.custom_fields, [field.label]: e.target.value })}
+                                                                placeholder={field.placeholder || 'Enter number'}
+                                                                min={field.min} max={field.max} step={field.step}
+                                                                className="h-11" required={field.required} />
+                                                        )}
+
+                                                        {/* Date / Time / DateTime-local */}
+                                                        {['date','time','datetime-local'].includes(field.type) && (
+                                                            <Input type={field.type} value={data.custom_fields[field.label] || ''}
+                                                                onChange={e => setData('custom_fields', { ...data.custom_fields, [field.label]: e.target.value })}
+                                                                className="h-11" required={field.required} />
+                                                        )}
+
+                                                        {/* Textarea */}
+                                                        {field.type === 'textarea' && (
+                                                            <Textarea value={data.custom_fields[field.label] || ''}
+                                                                onChange={e => setData('custom_fields', { ...data.custom_fields, [field.label]: e.target.value })}
+                                                                placeholder={field.placeholder || 'Enter your response'}
+                                                                rows={parseInt(field.rows) || 4}
+                                                                maxLength={field.maxLength ? parseInt(field.maxLength) : undefined}
+                                                                className="resize-none" required={field.required} />
+                                                        )}
+
+                                                        {/* Select Dropdown */}
+                                                        {field.type === 'select' && (
+                                                            <Select value={data.custom_fields[field.label] || ''}
+                                                                onValueChange={v => setData('custom_fields', { ...data.custom_fields, [field.label]: v })}>
+                                                                <SelectTrigger className="h-11">
+                                                                    <SelectValue placeholder={field.placeholder || 'Select an option'} />
+                                                                </SelectTrigger>
+                                                                <SelectContent>
+                                                                    {(field.options || []).filter(o => o.trim()).map((opt, oi) => (
+                                                                        <SelectItem key={oi} value={opt}>{opt}</SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        )}
+
+                                                        {/* Radio Buttons */}
+                                                        {field.type === 'radio' && (
+                                                            <div className="space-y-2 pt-1">
+                                                                {(field.options || []).filter(o => o.trim()).map((opt, oi) => (
+                                                                    <label key={oi} className="flex items-center gap-3 cursor-pointer">
+                                                                        <input type="radio"
+                                                                            name={`custom_radio_${field.label}`}
+                                                                            value={opt}
+                                                                            checked={data.custom_fields[field.label] === opt}
+                                                                            onChange={() => setData('custom_fields', { ...data.custom_fields, [field.label]: opt })}
+                                                                            required={field.required}
+                                                                            className="w-4 h-4 text-gray-900 border-gray-300 focus:ring-gray-900" />
+                                                                        <span className="text-sm text-gray-700">{opt}</span>
+                                                                    </label>
+                                                                ))}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Checkboxes (Multiple Choice) */}
+                                                        {field.type === 'checkbox' && (
+                                                            <div className="space-y-2 pt-1">
+                                                                {(field.options || []).filter(o => o.trim()).map((opt, oi) => {
+                                                                    const currentVal = Array.isArray(data.custom_fields[field.label]) ? data.custom_fields[field.label] : [];
+                                                                    return (
+                                                                        <label key={oi} className="flex items-center gap-3 cursor-pointer">
+                                                                            <input type="checkbox" value={opt}
+                                                                                checked={currentVal.includes(opt)}
+                                                                                onChange={e => {
+                                                                                    const prev = Array.isArray(data.custom_fields[field.label]) ? data.custom_fields[field.label] : [];
+                                                                                    const next = e.target.checked ? [...prev, opt] : prev.filter(v => v !== opt);
+                                                                                    setData('custom_fields', { ...data.custom_fields, [field.label]: next });
+                                                                                }}
+                                                                                className="w-4 h-4 text-gray-900 border-gray-300 rounded focus:ring-gray-900" />
+                                                                            <span className="text-sm text-gray-700">{opt}</span>
+                                                                        </label>
+                                                                    );
+                                                                })}
+                                                            </div>
+                                                        )}
+
+                                                        {/* Range Slider */}
+                                                        {field.type === 'range' && (
+                                                            <div className="space-y-2 pt-1">
+                                                                <input type="range"
+                                                                    min={field.min || 0} max={field.max || 100} step={field.step || 1}
+                                                                    value={data.custom_fields[field.label] || field.min || 0}
+                                                                    onChange={e => setData('custom_fields', { ...data.custom_fields, [field.label]: e.target.value })}
+                                                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer" />
+                                                                <div className="flex justify-between text-xs text-gray-500">
+                                                                    <span>{field.min || 0}</span>
+                                                                    <span className="font-medium text-gray-700">{data.custom_fields[field.label] || field.min || 0}</span>
+                                                                    <span>{field.max || 100}</span>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        {/* Color Picker */}
+                                                        {field.type === 'color' && (
+                                                            <div className="flex items-center gap-3">
+                                                                <input type="color"
+                                                                    value={data.custom_fields[field.label] || '#000000'}
+                                                                    onChange={e => setData('custom_fields', { ...data.custom_fields, [field.label]: e.target.value })}
+                                                                    className="h-11 w-24 rounded border border-gray-300 cursor-pointer" />
+                                                                <span className="text-sm text-gray-500">{data.custom_fields[field.label] || '#000000'}</span>
+                                                            </div>
+                                                        )}
+
+                                                        {/* File Upload */}
+                                                        {field.type === 'file' && (
+                                                            <Input type="file" accept={field.accept || undefined}
+                                                                onChange={e => setData('custom_fields', { ...data.custom_fields, [field.label]: e.target.files[0] || '' })}
+                                                                required={field.required} className="h-11" />
+                                                        )}
+
+                                                        {field.helpText && (
+                                                            <p className="text-xs text-gray-500 mt-1 leading-relaxed">{field.helpText}</p>
+                                                        )}
+
+                                                        <InputError message={errors[`custom_fields.${field.label}`]} />
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+
                                         {/* Member Verification & Payment Section - Only if payment required */}
                                         {event.requires_payment && (
                                             <div className="space-y-5 pt-2">
@@ -345,29 +495,27 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
                                                 {/* Member Question */}
                                                 <div className="space-y-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
                                                     <Label className="text-sm font-semibold text-gray-800">
-                                                        Are you a member of DYTS?
+                                                        Are you a member of BUITS?
                                                         <span className="text-red-600 ml-1">*</span>
                                                     </Label>
                                                     <div className="flex gap-4">
                                                         <button
                                                             type="button"
                                                             onClick={() => handleMemberChoiceChange('yes')}
-                                                            className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
-                                                                memberChoice === 'yes'
-                                                                    ? 'bg-blue-600 border-blue-600 text-white'
-                                                                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
-                                                            }`}
+                                                            className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${memberChoice === 'yes'
+                                                                ? 'bg-blue-600 border-blue-600 text-white'
+                                                                : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
+                                                                }`}
                                                         >
                                                             Yes, I'm a Member
                                                         </button>
                                                         <button
                                                             type="button"
                                                             onClick={() => handleMemberChoiceChange('no')}
-                                                            className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${
-                                                                memberChoice === 'no'
-                                                                    ? 'bg-blue-600 border-blue-600 text-white'
-                                                                    : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
-                                                            }`}
+                                                            className={`flex-1 py-3 px-4 rounded-lg border-2 font-medium transition-all ${memberChoice === 'no'
+                                                                ? 'bg-blue-600 border-blue-600 text-white'
+                                                                : 'bg-white border-gray-300 text-gray-700 hover:border-blue-400'
+                                                                }`}
                                                         >
                                                             No, I'm Not a Member
                                                         </button>
@@ -476,88 +624,7 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
                                             </div>
                                         )}
 
-                                        {/* Custom Fields Section */}
-                                        {formSchema.length > 0 && (
-                                            <div className="space-y-5 pt-2">
-                                                {formSchema.map(field => (
-                                                    <div key={field.id} className="space-y-2">
-                                                        <Label className="text-sm font-semibold text-gray-700">
-                                                            {field.label}
-                                                            {field.required && <span className="text-red-600 ml-1">*</span>}
-                                                            {!field.required && <span className="text-gray-400 text-xs font-normal ml-1.5">(Optional)</span>}
-                                                        </Label>
 
-                                                        {/* Text Input */}
-                                                        {field.type === 'text' && (
-                                                            <Input
-                                                                value={data.custom_fields[field.label]}
-                                                                onChange={e => setData('custom_fields', {
-                                                                    ...data.custom_fields,
-                                                                    [field.label]: e.target.value
-                                                                })}
-                                                                placeholder={field.placeholder || `Enter ${field.label}`}
-                                                                className="h-11"
-                                                                required={field.required}
-                                                            />
-                                                        )}
-
-                                                        {/* Select Dropdown */}
-                                                        {field.type === 'select' && (
-                                                            <Select
-                                                                value={data.custom_fields[field.label]}
-                                                                onValueChange={v => setData('custom_fields', {
-                                                                    ...data.custom_fields,
-                                                                    [field.label]: v
-                                                                })}
-                                                            >
-                                                                <SelectTrigger className="h-11">
-                                                                    <SelectValue placeholder={field.placeholder || 'Select an option'} />
-                                                                </SelectTrigger>
-                                                                <SelectContent>
-                                                                    {(field.options || []).filter(o => o.trim()).map((opt, oi) => (
-                                                                        <SelectItem key={oi} value={opt}>
-                                                                            {opt}
-                                                                        </SelectItem>
-                                                                    ))}
-                                                                </SelectContent>
-                                                            </Select>
-                                                        )}
-
-                                                        {/* Number Input */}
-                                                        {field.type === 'number' && (
-                                                            <Input
-                                                                type="number"
-                                                                value={data.custom_fields[field.label]}
-                                                                onChange={e => setData('custom_fields', {
-                                                                    ...data.custom_fields,
-                                                                    [field.label]: e.target.value
-                                                                })}
-                                                                placeholder={field.placeholder || 'Enter number'}
-                                                                className="h-11"
-                                                                required={field.required}
-                                                            />
-                                                        )}
-
-                                                        {/* Textarea */}
-                                                        {field.type === 'textarea' && (
-                                                            <Textarea
-                                                                value={data.custom_fields[field.label]}
-                                                                onChange={e => setData('custom_fields', {
-                                                                    ...data.custom_fields,
-                                                                    [field.label]: e.target.value
-                                                                })}
-                                                                placeholder={field.placeholder || 'Enter your response'}
-                                                                rows={4}
-                                                                className="resize-none"
-                                                                required={field.required}
-                                                            />
-                                                        )}
-
-                                                        <InputError message={errors[`custom_fields.${field.label}`]} />
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        )}
 
                                         {/* Submit Button */}
                                         <div className="pt-6 border-t border-gray-200">

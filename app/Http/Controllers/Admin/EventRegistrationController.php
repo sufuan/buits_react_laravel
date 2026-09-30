@@ -25,6 +25,13 @@ class EventRegistrationController extends Controller
         if ($request->status && in_array($request->status, ['pending', 'verified', 'rejected'])) {
             $query->where('status', $request->status);
         }
+        if ($request->member_type) {
+            if ($request->member_type === 'members') {
+                $query->where('is_member', true);
+            } elseif ($request->member_type === 'non-members') {
+                $query->where('is_member', false);
+            }
+        }
 
         $registrations = $query->latest()->paginate(20)->withQueryString();
 
@@ -39,7 +46,7 @@ class EventRegistrationController extends Controller
             'registrations'   => $registrations,
             'ticketingEvents' => TicketingEvent::select('id', 'title')->orderBy('title')->get(),
             'stats'           => $stats,
-            'filters'         => $request->only(['event_id', 'status']),
+            'filters'         => $request->only(['event_id', 'status', 'member_type']),
         ]);
     }
 
