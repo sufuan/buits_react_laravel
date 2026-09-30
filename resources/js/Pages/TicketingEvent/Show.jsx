@@ -153,7 +153,7 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
             <Head title={event.title} />
             <NavBar />
 
-            <div className="min-h-screen bg-gray-50">
+            <div className="min-h-screen bg-gray-50 pt-24">
                 {/* Preview Banner */}
                 {isPreview && (
                     <div className="bg-amber-500 text-white text-center py-3 font-semibold shadow-md">
@@ -162,7 +162,7 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
                 )}
 
                 {/* HTML Content Section */}
-                {htmlContent && (
+                {htmlContent && !flash?.success && (
                     <section className="bg-white py-12 border-b">
                         <div className="container mx-auto px-4 max-w-5xl">
                             <div

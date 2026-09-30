@@ -199,14 +199,15 @@ export default function TicketingEventsIndex({ events, stats }) {
                                                             <div className="font-medium text-gray-900">{event.title}</div>
                                                         </div>
                                                     </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex items-center gap-1.5">
+                                                    <TableCell className="max-w-[260px]">
+                                                        <div className="flex min-w-0 items-center gap-1.5">
                                                             <button
                                                                 onClick={() => openPublicUrl(event.slug)}
-                                                                className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors"
+                                                                title={`Open /t/${event.slug}`}
+                                                                className="inline-flex min-w-0 max-w-[220px] items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-2.5 py-1.5 text-left font-mono text-xs text-gray-700 transition-colors hover:border-blue-300 hover:bg-blue-50 hover:text-blue-700"
                                                             >
-                                                                {event.slug}
-                                                                <ExternalLink className="h-3 w-3" />
+                                                                <span className="truncate">/t/{event.slug}</span>
+                                                                <ExternalLink className="h-3 w-3 shrink-0" />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleCopyUrl(event.slug)}
