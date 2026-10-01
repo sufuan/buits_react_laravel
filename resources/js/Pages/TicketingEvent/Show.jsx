@@ -8,7 +8,7 @@ import { Input } from '@/Components/ui/input';
 import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
-import { AlertCircle, CheckCircle2, Lock, Upload } from 'lucide-react';
+import { AlertCircle, Check, CheckCircle2, Copy, Lock, Upload } from 'lucide-react';
 
 function InputError({ message }) {
     if (!message) return null;
@@ -31,6 +31,7 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
     const [isVerifying, setIsVerifying] = useState(false);
     const [currentFee, setCurrentFee] = useState(null);
     const [paymentFieldsEnabled, setPaymentFieldsEnabled] = useState(!event.requires_payment);
+    const [copiedPaymentMethod, setCopiedPaymentMethod] = useState(null);
 
     // Handle flash success message
     useEffect(() => {
@@ -131,6 +132,19 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
         });
     };
 
+    const handleCopyPaymentNumber = async (method) => {
+        const number = paymentNumbers[method];
+
+        try {
+            await navigator.clipboard.writeText(number);
+            setCopiedPaymentMethod(method);
+            toast.success('Payment number copied.');
+            window.setTimeout(() => setCopiedPaymentMethod(null), 2000);
+        } catch {
+            toast.error('Unable to copy the payment number.');
+        }
+    };
+
     const paymentMethods = [
         { value: 'bkash', label: 'bKash' },
         { value: 'nagad', label: 'Nagad' },
@@ -142,6 +156,8 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
     const enabledPaymentMethods = event.enabled_payment_methods && event.enabled_payment_methods.length > 0
         ? paymentMethods.filter(method => event.enabled_payment_methods.includes(method.value))
         : paymentMethods;
+
+    const paymentNumbers = event.payment_numbers || {};
 
     // Determine if submit button should be enabled
     const canSubmit = !event.requires_payment ||
@@ -528,6 +544,12 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
                                                         <Label htmlFor="member_id" className="text-sm font-semibold text-gray-700">
                                                             Member ID
                                                             <span className="text-red-600 ml-1">*</span>
+                                                            <a
+                                                                href="https://buits.org/find-member"
+                                                                className="ml-2 text-xs font-normal text-blue-600 hover:text-blue-800 hover:underline"
+                                                            >
+                                                                Find your Member ID
+                                                            </a>
                                                         </Label>
                                                         <div className="flex gap-2">
                                                             <Input
@@ -598,6 +620,23 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
                                                             </SelectContent>
                                                         </Select>
                                                         <InputError message={errors.payment_method} />
+                                                        {data.payment_method && paymentNumbers[data.payment_method] && (
+                                                            <div className="rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">
+                                                                Send money to <span className="font-semibold">{enabledPaymentMethods.find(method => method.value === data.payment_method)?.label}</span> number:{' '}
+                                                                <span className="font-mono font-semibold">{paymentNumbers[data.payment_method]}</span>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleCopyPaymentNumber(data.payment_method)}
+                                                                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-blue-700 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                                    title="Copy payment number"
+                                                                    aria-label={`Copy ${enabledPaymentMethods.find(method => method.value === data.payment_method)?.label} payment number`}
+                                                                >
+                                                                    {copiedPaymentMethod === data.payment_method
+                                                                        ? <Check className="h-4 w-4" />
+                                                                        : <Copy className="h-4 w-4" />}
+                                                                </button>
+                                                            </div>
+                                                        )}
                                                     </div>
 
                                                     {/* Transaction ID */}
@@ -634,11 +673,6 @@ export default function TicketingEventShow({ event, htmlContent, formSchema, isC
                                                 className="w-full h-12 bg-gray-900 hover:bg-gray-800 text-white font-semibold text-base shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
                                             >
                                                 {processing ? 'Submitting...' : 'Complete Registration'}
-                                                {currentFee && (
-                                                    <span className="ml-2 font-normal opacity-90">
-                                                        • Pay ৳ {parseFloat(currentFee).toFixed(2)}
-                                                    </span>
-                                                )}
                                             </Button>
                                             <p className="text-xs text-center text-gray-500 mt-3">
                                                 By registering, you agree to the event terms and conditions

@@ -9,7 +9,6 @@ import { Label } from '@/Components/ui/label';
 import { Textarea } from '@/Components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
 import { Switch } from '@/Components/ui/switch';
-import { Checkbox } from '@/Components/ui/checkbox';
 import { ArrowLeft, Save, Eye, Upload, AlertCircle, Plus, Trash2, X, ChevronRight, ChevronLeft, Check } from 'lucide-react';
 import { Link } from '@inertiajs/react';
 
@@ -50,6 +49,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
         member_fee:              ticketingEvent.member_fee || '',
         non_member_fee:          ticketingEvent.non_member_fee || '',
         enabled_payment_methods: ticketingEvent.enabled_payment_methods || [],
+        payment_numbers:          ticketingEvent.payment_numbers || {},
         _method:                 'PUT',
     });
 
@@ -63,9 +63,14 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
         const current = data.enabled_payment_methods || [];
         if (current.includes(method)) {
             setData('enabled_payment_methods', current.filter(m => m !== method));
+            setData('payment_numbers', { ...data.payment_numbers, [method]: '' });
         } else {
             setData('enabled_payment_methods', [...current, method]);
         }
+    };
+
+    const updatePaymentNumber = (method, number) => {
+        setData('payment_numbers', { ...data.payment_numbers, [method]: number });
     };
 
     const updateFormSchema = (s) => { setFormSchema(s); setData('form_schema', JSON.stringify(s)); };
@@ -116,6 +121,9 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                 fd.append(`enabled_payment_methods[${index}]`, method);
             });
         }
+        Object.entries(data.payment_numbers || {}).forEach(([method, number]) => {
+            if (number) fd.append(`payment_numbers[${method}]`, number);
+        });
         
         if (data.html_file instanceof File) fd.append('html_file', data.html_file);
 
@@ -124,7 +132,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
             forceFormData: true,
             onSuccess: () => toast.success('Event updated successfully!'),
             onError: (errs) => {
-                if (errs.title || errs.slug || errs.fee || errs.deadline || errs.status) setCurrentStep(1);
+                if (errs.title || errs.slug || errs.fee || errs.deadline || errs.status || errs.member_fee || errs.non_member_fee || Object.keys(errs).some(key => key.startsWith('payment_numbers.'))) setCurrentStep(1);
                 else if (errs.event_html_content || errs.html_file) setCurrentStep(2);
                 toast.error('Please fix the errors below.');
             },
@@ -149,6 +157,9 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                 fd.append(`enabled_payment_methods[${index}]`, method);
             });
         }
+        Object.entries(data.payment_numbers || {}).forEach(([method, number]) => {
+            if (number) fd.append(`payment_numbers[${method}]`, number);
+        });
         
         if (data.html_file instanceof File) fd.append('html_file', data.html_file);
         try {
@@ -189,7 +200,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
         </div>
     );
 
-    const stepFieldMap = { 1: ['title','slug','fee','deadline','status'], 2: ['event_html_content','html_file'], 3: ['form_schema'] };
+    const stepFieldMap = { 1: ['title','slug','fee','deadline','status','member_fee','non_member_fee','enabled_payment_methods'], 2: ['event_html_content','html_file'], 3: ['form_schema'] };
     const stepErrors   = (stepFieldMap[currentStep] || []).filter(f => errors[f]).map(f => errors[f]);
 
     const NavButtons = () => (
@@ -329,6 +340,7 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                                         setData('member_fee', '');
                                                         setData('non_member_fee', '');
                                                         setData('enabled_payment_methods', []);
+                                                        setData('payment_numbers', {});
                                                     }
                                                 }}
                                             />
@@ -376,22 +388,39 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                                 </div>
 
                                                 <div className="space-y-2">
-                                                    <Label>Enabled Payment Methods</Label>
-                                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                                    <Label>Payment Methods</Label>
+                                                    <div className="space-y-3">
                                                         {[
                                                             { value: 'bkash', label: 'bKash' },
                                                             { value: 'nagad', label: 'Nagad' },
-                                                            { value: 'rocket', label: 'Rocket' }
+                                                            { value: 'rocket', label: 'Rocket' },
+                                                            { value: 'bank', label: 'Bank Transfer' }
                                                         ].map((method) => (
-                                                            <div key={method.value} className="flex items-center gap-2 p-3 bg-white border rounded-lg hover:border-blue-300 transition-colors">
-                                                                <Checkbox
+                                                            <div key={method.value} className="p-3 bg-white border rounded-lg transition-colors">
+                                                                <div className="flex items-center justify-between gap-3">
+                                                                <Label htmlFor={`method-${method.value}`} className="cursor-pointer font-normal flex-1">
+                                                                    {method.label}
+                                                                </Label>
+                                                                <Switch
                                                                     id={`method-${method.value}`}
                                                                     checked={(data.enabled_payment_methods || []).includes(method.value)}
                                                                     onCheckedChange={() => togglePaymentMethod(method.value)}
                                                                 />
-                                                                <Label htmlFor={`method-${method.value}`} className="cursor-pointer font-normal flex-1">
-                                                                    {method.label}
-                                                                </Label>
+                                                                </div>
+                                                                {(data.enabled_payment_methods || []).includes(method.value) && (
+                                                                    <div className="mt-3 space-y-1.5">
+                                                                        <Label htmlFor={`payment-number-${method.value}`}>{method.value === 'bank' ? 'Account number' : 'Payment number'}</Label>
+                                                                        <Input
+                                                                            id={`payment-number-${method.value}`}
+                                                                            type="tel"
+                                                                            value={data.payment_numbers?.[method.value] || ''}
+                                                                            onChange={(e) => updatePaymentNumber(method.value, e.target.value)}
+                                                                            placeholder={method.value === 'bank' ? 'Enter account number' : `Enter ${method.label} number`}
+                                                                            className={errors[`payment_numbers.${method.value}`] ? 'border-red-500' : ''}
+                                                                        />
+                                                                        <FieldError message={errors[`payment_numbers.${method.value}`]} />
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         ))}
                                                     </div>

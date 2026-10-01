@@ -2,6 +2,7 @@
 import { Head, router, usePage } from '@inertiajs/react';
 import { toast } from 'sonner';
 import AdminAuthenticatedLayout from '@/Layouts/AdminAuthenticatedLayout';
+import BarcodeScanner from '@/Components/Admin/BarcodeScanner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/Components/ui/card';
 import { Button } from '@/Components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/Components/ui/select';
@@ -14,7 +15,7 @@ import {
     Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/Components/ui/dialog';
 import { Badge } from '@/Components/ui/badge';
-import { ClipboardList, Clock, CheckCircle2, XCircle, Copy, FileSpreadsheet, Download } from 'lucide-react';
+import { ClipboardList, Clock, CheckCircle2, XCircle, Copy, FileSpreadsheet, Download, ScanLine, Search, LoaderCircle } from 'lucide-react';
 
 const BASE_COLUMNS = [
     { key: 'name',           label: 'Full Name' },
@@ -43,6 +44,11 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
     const [exportOpen, setExportOpen]                   = useState(false);
     const [exportLoading, setExportLoading]             = useState(false);
     const [selectedColumns, setSelectedColumns]         = useState(['name','email','phone','status','created_at']);
+    const [scanDialogOpen, setScanDialogOpen]             = useState(false);
+    const [scanResult, setScanResult]                     = useState(null);
+    const [scanError, setScanError]                       = useState('');
+    const [scanLoading, setScanLoading]                   = useState(false);
+    const [manualTicketNo, setManualTicketNo]             = useState('');
 
     if (flash?.success) toast.success(flash.success);
     if (flash?.error)   toast.error(flash.error);
@@ -77,6 +83,39 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
         router.post(route('admin.event-registrations.reject', selectedRegistration.id), {},
             { preserveScroll: true, onSuccess: () => { toast.success('Registration rejected.'); setRejectDialogOpen(false); setSelectedRegistration(null); } }
         );
+    };
+
+    const lookupTicket = async (ticketNo) => {
+        const normalizedTicketNo = ticketNo.trim();
+        if (!normalizedTicketNo) {
+            setScanError('Scan a barcode or enter a ticket number.');
+            return;
+        }
+
+        setScanLoading(true);
+        setScanError('');
+
+        try {
+            const response = await fetch(`${route('admin.event-registrations.scan')}?ticket_no=${encodeURIComponent(normalizedTicketNo)}`, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest', Accept: 'application/json' },
+            });
+            const result = await response.json();
+
+            if (!response.ok) throw new Error(result.message || 'Registration not found.');
+            setScanResult(result.registration);
+        } catch (error) {
+            setScanResult(null);
+            setScanError(error.message || 'Could not look up this ticket.');
+        } finally {
+            setScanLoading(false);
+        }
+    };
+
+    const openScanDialog = () => {
+        setScanResult(null);
+        setScanError('');
+        setManualTicketNo('');
+        setScanDialogOpen(true);
     };
 
     const copyToClipboard = (text) => { navigator.clipboard.writeText(text); toast.success('Copied to clipboard'); };
@@ -126,6 +165,9 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
                             <p className="text-sm text-gray-500 mt-1">Verify payments and manage ticket issuance</p>
                         </div>
                     </div>
+                    <Button type="button" onClick={openScanDialog} className="bg-blue-600 hover:bg-blue-700">
+                        <ScanLine className="h-4 w-4 mr-2" /> Scan Ticket
+                    </Button>
                 </div>
             }
         >
@@ -322,6 +364,70 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
                     </CardContent>
                 </Card>
             </div>
+
+            <Dialog open={scanDialogOpen} onOpenChange={(open) => {
+                setScanDialogOpen(open);
+                if (!open) {
+                    setScanResult(null);
+                    setScanError('');
+                }
+            }}>
+                <DialogContent className="max-w-lg">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2">
+                            <ScanLine className="h-5 w-5 text-blue-600" />
+                            {scanResult ? 'Ticket Details' : 'Scan Registration Ticket'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            {scanResult ? 'Review the registration and payment status.' : 'Scan the Code 128 barcode from the approval email.'}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    {!scanResult ? (
+                        <div className="space-y-5">
+                            <BarcodeScanner onDetected={lookupTicket} />
+                            <div className="flex items-center gap-3 text-xs text-gray-400">
+                                <div className="h-px flex-1 bg-gray-200" />
+                                <span>OR ENTER MANUALLY</span>
+                                <div className="h-px flex-1 bg-gray-200" />
+                            </div>
+                            <form onSubmit={(event) => { event.preventDefault(); lookupTicket(manualTicketNo); }} className="flex gap-2">
+                                <input
+                                    value={manualTicketNo}
+                                    onChange={(event) => setManualTicketNo(event.target.value)}
+                                    placeholder="BUITS-TICK-0001"
+                                    className="h-10 min-w-0 flex-1 rounded-md border border-gray-300 px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                />
+                                <Button type="submit" disabled={scanLoading}>
+                                    {scanLoading ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4 mr-1" />}
+                                    Find
+                                </Button>
+                            </form>
+                            {scanError && <p className="text-sm text-red-600">{scanError}</p>}
+                        </div>
+                    ) : (
+                        <div className="space-y-4">
+                            <div className={`rounded-lg border p-4 ${scanResult.status === 'verified' ? 'border-green-200 bg-green-50' : scanResult.status === 'pending' ? 'border-amber-200 bg-amber-50' : 'border-red-200 bg-red-50'}`}>
+                                <p className="text-sm font-semibold uppercase tracking-wide">{scanResult.status}</p>
+                                <p className="mt-1 font-mono text-lg font-bold">{scanResult.ticket_no}</p>
+                            </div>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+                                <span className="text-gray-500">Registrant</span><span className="font-medium text-right">{scanResult.name}</span>
+                                <span className="text-gray-500">Email</span><span className="font-medium text-right break-all">{scanResult.email}</span>
+                                <span className="text-gray-500">Phone</span><span className="font-medium text-right">{scanResult.phone}</span>
+                                <span className="text-gray-500">Event</span><span className="font-medium text-right">{scanResult.event_title}</span>
+                                <span className="text-gray-500">Transaction ID</span><span className="font-mono text-right">{scanResult.transaction_id || 'N/A'}</span>
+                            </div>
+                            <DialogFooter>
+                                <Button type="button" variant="outline" onClick={() => { setScanResult(null); setScanError(''); }}>
+                                    Scan Another
+                                </Button>
+                                <Button type="button" onClick={() => setScanDialogOpen(false)}>Done</Button>
+                            </DialogFooter>
+                        </div>
+                    )}
+                </DialogContent>
+            </Dialog>
 
             {/* ═══ Export Modal ═══════════════════════════════════════════════════ */}
             <Dialog open={exportOpen} onOpenChange={setExportOpen}>

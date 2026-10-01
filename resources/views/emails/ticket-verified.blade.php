@@ -1,188 +1,88 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Your Ticket — {{ $registration->ticketingEvent->title }}</title>
-  <style>
-    /* ---- Screen styles ---- */
-    body { 
-        font-family: Arial, sans-serif; 
-        background: #f4f4f4; 
-        margin: 0; 
-        padding: 0; 
-    }
-    .wrapper { 
-        max-width: 600px; 
-        margin: 20px auto; 
-        background: #fff; 
-        border-radius: 8px;
-        padding: 30px; 
-        box-shadow: 0 0 10px rgba(0,0,0,0.1); 
-    }
-    .logo { 
-        text-align: center; 
-        margin-bottom: 20px; 
-    }
-    .ticket-card { 
-        border: 2px solid #333; 
-        border-radius: 8px; 
-        padding: 24px;
-        margin: 24px 0; 
-        background: #fafafa; 
-    }
-    .ticket-title { 
-        font-size: 22px; 
-        font-weight: bold; 
-        color: #1a1a1a; 
-        margin-bottom: 8px; 
-    }
-    .ticket-field { 
-        font-size: 14px; 
-        color: #555; 
-        margin: 4px 0; 
-    }
-    .ticket-field strong { 
-        color: #222; 
-    }
-    .tear-line { 
-        border-top: 2px dashed #999; 
-        margin: 20px 0; 
-    }
-    .ticket-number { 
-        font-size: 32px; 
-        font-weight: 900; 
-        color: #0066cc;
-        text-align: center; 
-        letter-spacing: 2px; 
-        margin: 12px 0; 
-    }
-    .venue-note { 
-        text-align: center; 
-        font-size: 13px; 
-        color: #666; 
-    }
-    .custom-fields-table { 
-        width: 100%; 
-        border-collapse: collapse; 
-        margin-top: 10px; 
-        font-size: 13px; 
-    }
-    .custom-fields-table td { 
-        padding: 4px 8px; 
-        border-bottom: 1px solid #eee; 
-    }
-    .custom-fields-table td:first-child { 
-        font-weight: bold; 
-        color: #444; 
-        width: 40%; 
-    }
-    .print-btn { 
-        display: block; 
-        width: fit-content; 
-        margin: 20px auto 0;
-        padding: 10px 24px; 
-        background: #0066cc; 
-        color: #fff;
-        text-decoration: none; 
-        border-radius: 5px; 
-        font-size: 15px;
-        cursor: pointer; 
-        border: none; 
-    }
-    .footer { 
-        border-top: 1px solid #e0e0e0; 
-        padding-top: 16px; 
-        margin-top: 24px;
-        font-size: 12px; 
-        color: #888; 
-        text-align: center; 
-    }
-
-    /* ---- Print styles ---- */
-    @media print {
-      body > *                 { display: none !important; }
-      .ticket-card             { display: block !important; }
-      .no-print                { display: none !important; }
-      .ticket-card {
-        border: 2px solid #000;
-        padding: 20mm;
-        max-width: 100%;
-        page-break-inside: avoid;
-        box-shadow: none;
-      }
-      @page { size: A5; margin: 10mm; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Registration Confirmation | BUITS</title>
+<style>
+  body{margin:0;padding:0;background:#f1f4f9}
+  table{border-collapse:collapse}
+  img{border:0;display:block}
+  .f{font-family:'Segoe UI',Helvetica,Arial,sans-serif}
+  .lbl{padding:12px 16px;font-size:14px;color:#5a6577;border-top:1px solid #e3e8f0;width:45%}
+  .val{padding:12px 16px;font-size:14px;color:#111c34;font-weight:bold;text-align:right;border-top:1px solid #e3e8f0}
+  @media only screen and (max-width:620px){
+    .wrap{width:100%!important}
+    .pad{padding-left:18px!important;padding-right:18px!important}
+    .brand{font-size:13px!important}
+    .bar img{width:112px!important;height:auto!important}
+    .barcell{width:120px!important}
+    .h1{font-size:22px!important}
+  }
+</style>
 </head>
-<body>
-  <div class="wrapper no-print">
-    <div class="logo">
-      <img src="https://www.buits.org/assets/img/logo.png" width="100" height="100" alt="BUITS Logo">
-    </div>
+<body class="f" style="margin:0;padding:0;background:#f1f4f9;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Your payment has been received and your registration is confirmed.</div>
 
-    <h1 style="text-align:center; color:#333;">Your Ticket is Confirmed!</h1>
-    <p style="text-align:center; color:#555;">
-      Dear {{ $registration->name }}, your payment has been verified.
-      Your ticket for <strong>{{ $registration->ticketingEvent->title }}</strong> is ready.
-    </p>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" bgcolor="#f1f4f9">
+<tr><td align="center" style="padding:24px 10px;">
+<table role="presentation" class="wrap" width="600" cellpadding="0" cellspacing="0" bgcolor="#ffffff" style="width:600px;max-width:600px;background:#ffffff;border:1px solid #dde3ee;">
+  <tr>
+    <td class="pad" style="padding:22px 28px;border-bottom:3px solid #14213d;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>
+        <td valign="middle">
+          <table role="presentation" cellpadding="0" cellspacing="0"><tr>
+            <td><img src="{{ asset('img/logo.png') }}" width="44" height="44" alt="BUITS" style="display:block;object-fit:contain;"></td>
+            <td class="f" style="padding-left:12px;">
+              <div class="brand" style="font-size:15px;font-weight:bold;color:#14213d;line-height:1.3;">Barishal University<br>IT Society</div>
+            </td>
+          </tr></table>
+        </td>
+        <td class="barcell bar" valign="middle" align="right" width="170">
+          <img src="{{ $barcode_url }}" width="150" height="46" alt="Registration barcode" style="width:150px;height:46px;margin-left:auto;">
+          <div class="f" style="font-size:11px;letter-spacing:1px;color:#111c34;text-align:right;padding-top:3px;font-weight:bold;">{{ $registration_id }}</div>
+        </td>
+      </tr></table>
+    </td>
+  </tr>
 
-    <a href="javascript:window.print()" class="print-btn no-print">Print Your Ticket</a>
-  </div>
+  <tr>
+    <td class="pad" style="padding:30px 28px 6px 28px;">
+      <p class="f" style="margin:0 0 6px 0;font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#5a6577;font-weight:bold;">Registration Confirmation</p>
+      <h1 class="f h1" style="margin:0;font-size:26px;line-height:1.3;color:#111c34;">Registration Successful</h1>
+      <p class="f" style="margin:6px 0 0 0;font-size:14px;color:#5a6577;">{{ $registration->ticketingEvent->title }}</p>
+    </td>
+  </tr>
 
-  {{-- The ticket card — visible on screen AND in print --}}
-  <div class="ticket-card">
-    <div class="ticket-title">{{ $registration->ticketingEvent->title }}</div>
+  <tr>
+    <td class="pad" style="padding:22px 28px 8px 28px;">
+      <p class="f" style="margin:0 0 10px 0;font-size:15px;color:#111c34;">Dear <b>{{ $registration->name }}</b>,</p>
+      <p class="f" style="margin:0 0 24px 0;font-size:15px;line-height:1.75;color:#3d4859;">Your registration has been approved and your payment has been received successfully. Please find your payment details below.</p>
 
-    <div class="ticket-field"><strong>Registrant:</strong> {{ $registration->name }}</div>
-    <div class="ticket-field"><strong>Email:</strong> {{ $registration->email }}</div>
-    <div class="ticket-field"><strong>Phone:</strong> {{ $registration->phone }}</div>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #dde3ee;margin-bottom:22px;">
+        <tr><td colspan="2" class="f" bgcolor="#f6f8fc" style="background:#f6f8fc;padding:11px 16px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:#14213d;font-weight:bold;">Payment Summary</td></tr>
+        <tr><td class="lbl f">Registration ID</td><td class="val f">{{ $registration_id }}</td></tr>
+        <tr><td class="lbl f">Amount Paid</td><td class="val f">BDT {{ $amount }}</td></tr>
+        <tr><td class="lbl f">Payment Method</td><td class="val f">{{ $payment_method }}</td></tr>
+        <tr><td class="lbl f">Transaction ID</td><td class="val f">{{ $registration->transaction_id ?: 'N/A' }}</td></tr>
+        <tr><td class="lbl f">Payment Date</td><td class="val f">{{ $payment_date }}</td></tr>
+        <tr><td class="lbl f">Status</td><td class="val f" style="color:#1e7145;">PAID &#10003;</td></tr>
+      </table>
 
-    @if($registration->is_member)
-    <div class="ticket-field">
-      <strong>Member Status:</strong> Verified Member
-      @if($registration->member_id)
-        (ID: {{ $registration->member_id }})
-      @endif
-    </div>
-    @else
-    <div class="ticket-field"><strong>Member Status:</strong> Non-Member</div>
-    @endif
+      <p class="f" style="margin:0 0 24px 0;font-size:14px;line-height:1.7;color:#3d4859;"><b>Instructions:</b> Please keep the barcode in this email with you at the event. It can be scanned to verify your registration and payment status.</p>
 
-    @if($registration->fee_charged)
-    <div class="ticket-field">
-      <strong>Fee Paid:</strong> ৳{{ number_format($registration->fee_charged, 2) }}
-    </div>
-    @else
-    <div class="ticket-field"><strong>Fee Paid:</strong> Free</div>
-    @endif
+      <p class="f" style="margin:0 0 26px 0;font-size:15px;line-height:1.7;color:#111c34;">Regards,<br><b>Barishal University IT Society (BUITS)</b></p>
+    </td>
+  </tr>
 
-    @if($registration->ticketingEvent->deadline)
-    <div class="ticket-field">
-      <strong>Deadline:</strong>
-      {{ $registration->ticketingEvent->deadline->format('d M Y, h:i A') }}
-    </div>
-    @endif
-
-    {{-- Custom field responses --}}
-    @if($registration->custom_field_responses && count($registration->custom_field_responses) > 0)
-    <table class="custom-fields-table">
-      @foreach($registration->custom_field_responses as $key => $value)
-      <tr>
-        <td>{{ $key }}</td>
-        <td>{{ $value }}</td>
-      </tr>
-      @endforeach
-    </table>
-    @endif
-
-    <div class="tear-line"></div>
-
-    <div class="ticket-number">{{ $registration->ticket_no }}</div>
-    <div class="venue-note">Present this ticket at the venue for check-in</div>
-  </div>
-
-  <div class="footer no-print">
-    &copy; {{ date('Y') }} Barishal University IT Society. All rights reserved.
-  </div>
+  <tr>
+    <td class="pad f" bgcolor="#f6f8fc" style="background:#f6f8fc;border-top:1px solid #dde3ee;padding:18px 28px;text-align:center;">
+      <p style="margin:0 0 4px 0;font-size:12px;color:#5a6577;">Contact: {{ $contact_email }}@if($contact_phone) &nbsp;|&nbsp; {{ $contact_phone }}@endif</p>
+      <p style="margin:0;font-size:11px;color:#8b95a8;">This is an automated email. Barishal University IT Society</p>
+    </td>
+  </tr>
+</table>
+</td></tr>
+</table>
 </body>
 </html>

@@ -300,6 +300,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::prefix('event-registrations')->name('event-registrations.')->controller(App\Http\Controllers\Admin\EventRegistrationController::class)->group(function () {
             Route::get('/',                           'index')->name('index');
             Route::get('/export',                     'export')->name('export');
+            Route::get('/scan',                       'scan')->name('scan');
             Route::post('/{registration}/verify',     'verify')->name('verify');
             Route::post('/{registration}/reject',     'reject')->name('reject');
         });

@@ -13,9 +13,9 @@ class TicketingEventController extends Controller
 {
     // ─── Shared validation rules ──────────────────────────────────────────────
 
-    private function validationRules(?int $ignoreId = null): array
+    private function validationRules(?int $ignoreId = null, array $enabledPaymentMethods = []): array
     {
-        return [
+        $rules = [
             'title'                   => 'required|string|max:255',
             'slug'                    => [
                 'required',
@@ -35,7 +35,15 @@ class TicketingEventController extends Controller
             'non_member_fee'          => 'nullable|numeric|min:0',
             'enabled_payment_methods' => 'nullable|array',
             'enabled_payment_methods.*' => 'in:bkash,nagad,rocket,bank',
+            'payment_numbers'         => 'nullable|array',
+            'payment_numbers.*'       => 'nullable|string|max:30|regex:/^[0-9+()\s-]+$/',
         ];
+
+        foreach ($enabledPaymentMethods as $method) {
+            $rules["payment_numbers.{$method}"] = 'required|string|max:30|regex:/^[0-9+()\s-]+$/';
+        }
+
+        return $rules;
     }
 
     private function validationMessages(): array
@@ -56,6 +64,7 @@ class TicketingEventController extends Controller
             'non_member_fee.numeric'             => 'Non-member fee must be a valid number.',
             'non_member_fee.min'                 => 'Non-member fee cannot be negative.',
             'enabled_payment_methods.*.in'       => 'Invalid payment method selected.',
+            'payment_numbers.*.regex'             => 'Payment number may only contain numbers, spaces, +, -, and parentheses.',
         ];
     }
 
@@ -136,7 +145,7 @@ class TicketingEventController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate(
-            $this->validationRules(),
+            $this->validationRules(null, $request->input('enabled_payment_methods', [])),
             $this->validationMessages()
         );
 
@@ -153,6 +162,7 @@ class TicketingEventController extends Controller
             'member_fee'              => $validated['member_fee'] ?? null,
             'non_member_fee'          => $validated['non_member_fee'] ?? null,
             'enabled_payment_methods' => $validated['enabled_payment_methods'] ?? null,
+            'payment_numbers'         => $validated['payment_numbers'] ?? null,
         ]);
 
         return redirect()
@@ -180,6 +190,7 @@ class TicketingEventController extends Controller
                 'member_fee'              => $ticketingEvent->member_fee,
                 'non_member_fee'          => $ticketingEvent->non_member_fee,
                 'enabled_payment_methods' => $ticketingEvent->enabled_payment_methods ?? [],
+                'payment_numbers'         => $ticketingEvent->payment_numbers ?? [],
             ],
         ]);
     }
@@ -191,7 +202,7 @@ class TicketingEventController extends Controller
     public function update(Request $request, TicketingEvent $ticketingEvent)
     {
         $validated = $request->validate(
-            $this->validationRules($ticketingEvent->id),
+            $this->validationRules($ticketingEvent->id, $request->input('enabled_payment_methods', [])),
             $this->validationMessages()
         );
 
@@ -207,6 +218,7 @@ class TicketingEventController extends Controller
             'member_fee'              => $validated['member_fee'] ?? null,
             'non_member_fee'          => $validated['non_member_fee'] ?? null,
             'enabled_payment_methods' => $validated['enabled_payment_methods'] ?? null,
+            'payment_numbers'         => $validated['payment_numbers'] ?? null,
         ]);
 
         return redirect()
@@ -254,6 +266,7 @@ class TicketingEventController extends Controller
             'member_fee'              => $request->input('member_fee'),
             'non_member_fee'          => $request->input('non_member_fee'),
             'enabled_payment_methods' => $request->input('enabled_payment_methods', []),
+            'payment_numbers'         => $request->input('payment_numbers', []),
             'is_preview'              => true,
         ]);
 

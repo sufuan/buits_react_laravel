@@ -22,6 +22,7 @@ class TicketingEvent extends Model
         'member_fee',
         'non_member_fee',
         'enabled_payment_methods',
+        'payment_numbers',
     ];
 
     protected $casts = [
@@ -32,6 +33,7 @@ class TicketingEvent extends Model
         'member_fee'              => 'decimal:2',
         'non_member_fee'          => 'decimal:2',
         'enabled_payment_methods' => 'array',
+        'payment_numbers'         => 'array',
     ];
 
     /**

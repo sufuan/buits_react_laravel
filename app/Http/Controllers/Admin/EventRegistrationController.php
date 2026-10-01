@@ -5,8 +5,10 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\EventRegistration;
 use App\Models\TicketingEvent;
+use App\Mail\RegistrationRejectedMail;
 use App\Mail\TicketVerifiedMail;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
 use Inertia\Inertia;
@@ -154,6 +156,42 @@ class EventRegistrationController extends Controller
     }
 
     /**
+     * Look up a registration by the ticket number encoded in the email barcode.
+     */
+    public function scan(Request $request)
+    {
+        $validated = $request->validate([
+            'ticket_no' => 'required|string|max:100',
+        ]);
+
+        $registration = EventRegistration::with('ticketingEvent')
+            ->where('ticket_no', $validated['ticket_no'])
+            ->first();
+
+        if (!$registration) {
+            return response()->json(['message' => 'No registration was found for this ticket.'], 404);
+        }
+
+        return response()->json([
+            'registration' => [
+                'id'              => $registration->id,
+                'ticket_no'       => $registration->ticket_no,
+                'name'            => $registration->name,
+                'email'           => $registration->email,
+                'phone'           => $registration->phone,
+                'event_title'     => $registration->ticketingEvent?->title,
+                'status'          => $registration->status,
+                'member_id'       => $registration->member_id,
+                'is_member'       => $registration->is_member,
+                'payment_method'  => $registration->payment_method,
+                'transaction_id'  => $registration->transaction_id,
+                'fee_charged'     => $registration->fee_charged,
+                'registered_at'   => $registration->created_at?->toIso8601String(),
+            ],
+        ]);
+    }
+
+    /**
      * Verify a pending registration.
      */
     public function verify(EventRegistration $registration)
@@ -166,10 +204,20 @@ class EventRegistrationController extends Controller
         $registration->ticket_no = 'BUITS-TICK-' . str_pad($registration->id, 4, '0', STR_PAD_LEFT);
         $registration->save();
 
-        Mail::to($registration->email)
-            ->queue(new TicketVerifiedMail($registration->load('ticketingEvent')));
+        try {
+            Mail::to($registration->email)
+                ->send(new TicketVerifiedMail($registration->load('ticketingEvent')));
+        } catch (\Throwable $exception) {
+            Log::error('Event registration approval email failed.', [
+                'registration_id' => $registration->id,
+                'recipient' => $registration->email,
+                'error' => $exception->getMessage(),
+            ]);
 
-        return redirect()->back()->with('success', 'Payment verified! Ticket email dispatched.');
+            return redirect()->back()->with('error', 'Registration approved, but the ticket email could not be sent. Check the mail configuration and logs.');
+        }
+
+        return redirect()->back()->with('success', 'Registration approved and ticket email sent.');
     }
 
     /**
@@ -180,6 +228,19 @@ class EventRegistrationController extends Controller
         $registration->status = 'rejected';
         $registration->save();
 
-        return redirect()->back()->with('success', 'Registration rejected.');
+        try {
+            Mail::to($registration->email)
+                ->send(new RegistrationRejectedMail($registration->load('ticketingEvent')));
+        } catch (\Throwable $exception) {
+            Log::error('Event registration rejection email failed.', [
+                'registration_id' => $registration->id,
+                'recipient' => $registration->email,
+                'error' => $exception->getMessage(),
+            ]);
+
+            return redirect()->back()->with('error', 'Registration rejected, but the rejection email could not be sent. Check the mail configuration and logs.');
+        }
+
+        return redirect()->back()->with('success', 'Registration rejected and email sent.');
     }
 }

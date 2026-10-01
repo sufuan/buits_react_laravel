@@ -34,7 +34,7 @@ class PublicTicketingEventController extends Controller
         return Inertia::render('TicketingEvent/Show', [
             'event'       => $event->only([
                 'id', 'title', 'slug', 'fee', 'deadline', 'status',
-                'requires_payment', 'member_fee', 'non_member_fee', 'enabled_payment_methods'
+                'requires_payment', 'member_fee', 'non_member_fee', 'enabled_payment_methods', 'payment_numbers'
             ]),
             'htmlContent' => $event->event_html_content,
             'formSchema'  => $event->form_schema ?? [],
