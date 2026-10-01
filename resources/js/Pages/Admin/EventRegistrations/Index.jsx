@@ -86,7 +86,7 @@ export default function EventRegistrationsIndex({ registrations, ticketingEvents
     };
 
     const lookupTicket = async (ticketNo) => {
-        const normalizedTicketNo = ticketNo.trim();
+        const normalizedTicketNo = ticketNo.trim().split('|')[0].trim();
         if (!normalizedTicketNo) {
             setScanError('Scan a barcode or enter a ticket number.');
             return;
