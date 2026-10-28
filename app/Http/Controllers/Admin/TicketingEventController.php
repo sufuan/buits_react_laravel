@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\TicketingEvent;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
@@ -37,6 +38,9 @@ class TicketingEventController extends Controller
             'enabled_payment_methods.*' => 'in:bkash,nagad,rocket,bank',
             'payment_numbers'         => 'nullable|array',
             'payment_numbers.*'       => 'nullable|string|max:30|regex:/^[0-9+()\s-]+$/',
+            'popup_image'             => 'nullable|image|max:2048',
+            'show_in_popup'           => 'boolean',
+            'remove_popup_image'      => 'boolean',
         ];
 
         foreach ($enabledPaymentMethods as $method) {
@@ -65,6 +69,8 @@ class TicketingEventController extends Controller
             'non_member_fee.min'                 => 'Non-member fee cannot be negative.',
             'enabled_payment_methods.*.in'       => 'Invalid payment method selected.',
             'payment_numbers.*.regex'             => 'Payment number may only contain numbers, spaces, +, -, and parentheses.',
+            'popup_image.image'                   => 'Popup image must be a valid image.',
+            'popup_image.max'                     => 'Popup image cannot exceed 2MB.',
         ];
     }
 
@@ -163,6 +169,10 @@ class TicketingEventController extends Controller
             'non_member_fee'          => $validated['non_member_fee'] ?? null,
             'enabled_payment_methods' => $validated['enabled_payment_methods'] ?? null,
             'payment_numbers'         => $validated['payment_numbers'] ?? null,
+            'popup_image'             => $request->hasFile('popup_image')
+                ? $request->file('popup_image')->store('ticketing/popups', 'public')
+                : null,
+            'show_in_popup'           => $validated['show_in_popup'] ?? false,
         ]);
 
         return redirect()
@@ -191,6 +201,8 @@ class TicketingEventController extends Controller
                 'non_member_fee'          => $ticketingEvent->non_member_fee,
                 'enabled_payment_methods' => $ticketingEvent->enabled_payment_methods ?? [],
                 'payment_numbers'         => $ticketingEvent->payment_numbers ?? [],
+                'popup_image'             => $ticketingEvent->popup_image ? asset('storage/' . $ticketingEvent->popup_image) : null,
+                'show_in_popup'           => (bool) $ticketingEvent->show_in_popup,
             ],
         ]);
     }
@@ -206,7 +218,7 @@ class TicketingEventController extends Controller
             $this->validationMessages()
         );
 
-        $ticketingEvent->update([
+        $attributes = [
             'title'                   => $validated['title'],
             'slug'                    => $validated['slug'],
             'fee'                     => $validated['fee'] ?? null,
@@ -219,7 +231,21 @@ class TicketingEventController extends Controller
             'non_member_fee'          => $validated['non_member_fee'] ?? null,
             'enabled_payment_methods' => $validated['enabled_payment_methods'] ?? null,
             'payment_numbers'         => $validated['payment_numbers'] ?? null,
-        ]);
+            'show_in_popup'           => $validated['show_in_popup'] ?? false,
+        ];
+
+        if ($request->boolean('remove_popup_image') && $ticketingEvent->popup_image) {
+            Storage::disk('public')->delete($ticketingEvent->popup_image);
+            $attributes['popup_image'] = null;
+        }
+        if ($request->hasFile('popup_image')) {
+            if ($ticketingEvent->popup_image) {
+                Storage::disk('public')->delete($ticketingEvent->popup_image);
+            }
+            $attributes['popup_image'] = $request->file('popup_image')->store('ticketing/popups', 'public');
+        }
+
+        $ticketingEvent->update($attributes);
 
         return redirect()
             ->route('admin.ticketing-events.index')
@@ -231,6 +257,9 @@ class TicketingEventController extends Controller
      */
     public function destroy(TicketingEvent $ticketingEvent)
     {
+        if ($ticketingEvent->popup_image) {
+            Storage::disk('public')->delete($ticketingEvent->popup_image);
+        }
         $ticketingEvent->delete();
 
         return redirect()
@@ -267,6 +296,8 @@ class TicketingEventController extends Controller
             'non_member_fee'          => $request->input('non_member_fee'),
             'enabled_payment_methods' => $request->input('enabled_payment_methods', []),
             'payment_numbers'         => $request->input('payment_numbers', []),
+            'popup_image'             => null,
+            'show_in_popup'           => $request->boolean('show_in_popup'),
             'is_preview'              => true,
         ]);
 

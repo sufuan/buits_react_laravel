@@ -19,11 +19,15 @@ const navItems = [
 
 const NavBar = () => {
   const { url, props } = usePage();
-  const { settings, auth } = props;
+  const { settings, auth, publicPrograms = [] } = props;
   const isVolunteerEnabled = settings?.volunteer_applications_enabled;
+  const areProgramsVisible = publicPrograms.length > 0;
 
   // Dynamically insert Volunteer link if enabled
   const dynamicNavItems = [...navItems];
+  if (areProgramsVisible) {
+    dynamicNavItems.splice(1, 0, { name: "Programs", href: "/programs" });
+  }
   if (isVolunteerEnabled) {
     // Insert before Login (index 4)
     dynamicNavItems.splice(4, 0, { name: "Become a Volunteer", href: "/volunteer-application/create" });

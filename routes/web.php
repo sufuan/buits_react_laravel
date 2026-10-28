@@ -40,6 +40,7 @@ Route::get('/about', function () {
 
 Route::get('/events', [App\Http\Controllers\EventController::class, 'index'])->name('events');
 Route::get('/events/{event}', [App\Http\Controllers\EventController::class, 'show'])->name('events.show');
+Route::get('/programs', [App\Http\Controllers\PublicProgramsController::class, 'index'])->name('programs.index');
 
 Route::get('/previous-committee', [App\Http\Controllers\PreviousCommitteeController::class, 'index'])->name('previous-committee');
 Route::get('/previous-committee/{committee}', [App\Http\Controllers\PreviousCommitteeController::class, 'show'])->name('previous-committee.show');

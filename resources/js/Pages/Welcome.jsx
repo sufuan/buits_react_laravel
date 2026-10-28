@@ -15,6 +15,7 @@ import FirstVideo from '@/Components/HomePage/FirstVideo'
 import BrandSlider from '@/Components/HomePage/BrandSlider'
 import Gallary from '@/Components/HomePage/Gallary'
 import People from '@/Components/HomePage/People'
+import ProgramsPopup from '@/Components/HomePage/ProgramsPopup'
 
 
 function App() {
@@ -47,6 +48,7 @@ function App() {
     <>
       <main className="relative min-h-screen w-screen overflow-x-hidden">
         <NavBar />
+        <ProgramsPopup />
         <Hero />
         {/* <About /> */}
         <Features />

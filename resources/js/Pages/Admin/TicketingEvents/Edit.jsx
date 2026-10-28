@@ -50,6 +50,9 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
         non_member_fee:          ticketingEvent.non_member_fee || '',
         enabled_payment_methods: ticketingEvent.enabled_payment_methods || [],
         payment_numbers:          ticketingEvent.payment_numbers || {},
+        popup_image:              null,
+        show_in_popup:            ticketingEvent.show_in_popup || false,
+        remove_popup_image:       false,
         _method:                 'PUT',
     });
 
@@ -126,6 +129,9 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
         });
         
         if (data.html_file instanceof File) fd.append('html_file', data.html_file);
+        if (data.popup_image instanceof File) fd.append('popup_image', data.popup_image);
+        fd.append('show_in_popup', data.show_in_popup ? '1' : '0');
+        fd.append('remove_popup_image', data.remove_popup_image ? '1' : '0');
 
         post(route('admin.ticketing-events.update', ticketingEvent.slug), {
             data: fd,
@@ -317,6 +323,27 @@ export default function TicketingEventsEdit({ ticketingEvent }) {
                                     </SelectContent>
                                 </Select>
                                 <FieldError message={errors.status} />
+                            </div>
+
+                            <div className="rounded-2xl border border-indigo-100 bg-gradient-to-br from-indigo-50 to-violet-50 p-5">
+                                <div className="flex items-start justify-between gap-5">
+                                    <div>
+                                        <Label htmlFor="show_in_popup" className="text-base font-semibold text-slate-900">Show on public website</Label>
+                                        <p className="mt-1 max-w-xl text-sm text-slate-600">Show this active program in the Programs navigation, public listing, and homepage popup.</p>
+                                    </div>
+                                    <Switch id="show_in_popup" checked={data.show_in_popup} onCheckedChange={(checked) => setData('show_in_popup', checked)} />
+                                </div>
+                                <div className="mt-4">
+                                    {ticketingEvent.popup_image && !data.remove_popup_image && (
+                                        <div className="mb-3 flex items-center gap-3">
+                                            <img src={ticketingEvent.popup_image} alt="" className="h-16 w-28 rounded-lg object-cover" />
+                                            <button type="button" className="text-sm font-semibold text-red-600 hover:text-red-700" onClick={() => setData('remove_popup_image', true)}>Remove current image</button>
+                                        </div>
+                                    )}
+                                    <Label htmlFor="popup_image">Popup image <span className="font-normal text-slate-500">(optional, max 2MB)</span></Label>
+                                    <Input id="popup_image" type="file" accept="image/*" className="mt-2 bg-white" onChange={(e) => { setData('popup_image', e.target.files?.[0] || null); setData('remove_popup_image', false); }} />
+                                    <FieldError message={errors.popup_image} />
+                                </div>
                             </div>
 
                             {/* Payment Settings Section */}

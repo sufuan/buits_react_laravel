@@ -23,6 +23,8 @@ class TicketingEvent extends Model
         'non_member_fee',
         'enabled_payment_methods',
         'payment_numbers',
+        'popup_image',
+        'show_in_popup',
     ];
 
     protected $casts = [
@@ -34,6 +36,7 @@ class TicketingEvent extends Model
         'non_member_fee'          => 'decimal:2',
         'enabled_payment_methods' => 'array',
         'payment_numbers'         => 'array',
+        'show_in_popup'           => 'boolean',
     ];
 
     /**

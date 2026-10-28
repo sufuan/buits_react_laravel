@@ -2,6 +2,8 @@
 
 namespace App\Http\Middleware;
 
+use App\Http\Controllers\PublicProgramsController;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Middleware;
@@ -31,6 +33,7 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $admin = Auth::guard('admin')->user();
+        $runningPrograms = PublicProgramsController::runningEvents();
 
         return [
             ...parent::share($request),
@@ -53,6 +56,7 @@ class HandleInertiaRequests extends Middleware
             'settings' => [
                 'volunteer_applications_enabled' => \App\Models\Setting::where('key', 'volunteer_applications_enabled')->value('value') === 'true',
             ],
+            'publicPrograms' => $runningPrograms,
             'flash' => [
                 'success' => session('success'),
                 'error' => session('error'),
