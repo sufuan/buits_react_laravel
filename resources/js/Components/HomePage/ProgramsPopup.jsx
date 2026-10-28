@@ -6,10 +6,14 @@ export default function ProgramsPopup() {
     const { props } = usePage();
     const programs = props.publicPrograms || [];
     const [visible, setVisible] = useState(false);
+    const program = programs[0];
+    const dismissalKey = program
+        ? `buits-program-popup-${program.id}-${program.popupImage || 'fallback'}`
+        : null;
 
     useEffect(() => {
         if (programs.length === 0) return;
-        const key = `buits-program-popup-${programs[0].id}`;
+        const key = `buits-program-popup-${programs[0].id}-${programs[0].popupImage || 'fallback'}`;
         const dismissedAt = Number(window.localStorage.getItem(key));
         const dismissedRecently = Number.isFinite(dismissedAt)
             && dismissedAt > 0
@@ -19,13 +23,12 @@ export default function ProgramsPopup() {
             const timer = window.setTimeout(() => setVisible(true), 900);
             return () => window.clearTimeout(timer);
         }
-    }, [programs.length, programs[0]?.id]);
+    }, [programs.length, programs[0]?.id, programs[0]?.popupImage]);
 
     if (programs.length === 0) return null;
 
-    const program = programs[0];
     const dismiss = () => {
-        window.localStorage.setItem(`buits-program-popup-${program.id}`, String(Date.now()));
+        window.localStorage.setItem(dismissalKey, String(Date.now()));
         setVisible(false);
     };
 
