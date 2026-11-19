@@ -106,7 +106,7 @@
                 href="https://www.facebook.com/groups/buitsorg/?ref=share&mibextid=NSMWBT">https://www.facebook.com/groups/buitsorg/?ref=share&mibextid=NSMWBT</a>
         </p>
 
-        <img src="https://www.buits.org/assets/img/logo.png" width="150" height="150" alt="logo">
+        <img src="https://www.buits.org/img/logo.png" width="150" height="150" alt="logo">
 
         <div class="footer">
            
