@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Mail\UserApprovedMail;
 use App\Models\PendingUser;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -88,9 +89,12 @@ class UserApprovalController extends Controller
                 'usertype' => 'member', // Set default usertype to member when approved
             ]);
 
-            // TODO: Send approval emails
-            // Mail::to($newUser->email)->send(new UserApprovedMail($newUser));
-            // Mail::to('info.buits@gmail.com')->send(new AdminNotificationMail($newUser));
+            // Send the approval email to the user (a mail failure must not fail the approval itself)
+            try {
+                Mail::to($newUser->email)->send(new UserApprovedMail($newUser));
+            } catch (\Exception $mailException) {
+                Log::error('Failed to send approval email: ' . $mailException->getMessage());
+            }
 
             // Remove the pending user after successful approval
             $pendingUser->delete();
@@ -234,6 +238,13 @@ class UserApprovalController extends Controller
                         'is_approved' => true,
                         'usertype' => 'member', // Set default usertype to member when approved
                     ]);
+
+                    // Send the approval email to the user (a mail failure must not fail the approval itself)
+                    try {
+                        Mail::to($newUser->email)->send(new UserApprovedMail($newUser));
+                    } catch (\Exception $mailException) {
+                        Log::error('Failed to send bulk approval email: ' . $mailException->getMessage());
+                    }
 
                     // Delete pending user record
                     $pendingUser->delete();
