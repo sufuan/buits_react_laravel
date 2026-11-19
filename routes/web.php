@@ -33,6 +33,8 @@ use App\Http\Controllers\CertificateVerificationController;
 Route::get('/certificate/verify/{certificateNumber}', [CertificateVerificationController::class, 'verify'])->name('certificate.verify');
 
 
+Route::get('/sitemap.xml', [\App\Http\Controllers\SitemapController::class, 'index'])->name('sitemap');
+
 // Public navigation routes
 Route::get('/about', function () {
     return Inertia::render('About');
